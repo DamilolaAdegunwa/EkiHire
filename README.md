@@ -15,8 +15,8 @@ Advertiser are again charged a percentage of the sales fee for each item sold.
 
 For starters, building a native app is the recommended approach to us in  app development. This allows for the creation of a custom app for each operating system and ensures better performance, speed, security and the ability to get access to the built-in smart phone capabilities like geo-location and maps. 
 
-#The core features involved in HireEki App development are as follows:
-#Customer Features
+# The core features involved in HireEki App development are as follows:
+# Customer Features
 User login and registration.
 User profile
 Search
@@ -30,7 +30,7 @@ Transaction history
 Customer support including an SOS button and lot more...
 
 
-#Admin Panel Functionality
+# Admin Panel Functionality
 
 Secure login access
 
@@ -48,12 +48,7 @@ Integration with Google Analytics
 
 Wallet Creation
 
-
-#Stages & Costs for the HireEki App Development
-
-Before we proceed with the HireEki app development cost, it is very much necessary to make you fully understand how the app software is actually created from clickable prototype to production (market-ready product).
-
-#Essentially, the entire process is divided into a few phases, namely:
+# Essentially, the entire process is divided into a few phases, namely:
 
 Pre-development Stage (also known as the discovery or research phase) – 4 weeks
 
@@ -81,12 +76,11 @@ Project management
 
 Team review
 
-#Please Note:
+# Please Note:
 
-The discovery stage starts with planning in order to complete the project successfully. It is at this stage that the client or business owner/analyst (you) and a software architect (from us) would meet and properly align the business requirements with the technical implementation so as to create a product backlog. The product backlog would serve as a list of all the features the HireEki app would need. Then, the UI designer creates/designs the interface and user experience of the application based on the required features in the product backlog.
+The discovery stage starts with planning in order to complete the project successfully. It is at this stage that the client or business owner/analyst and a software architect would meet and properly align the business requirements with the technical implementation so as to create a product backlog. The product backlog would serve as a list of all the features the HireEki app would need. Then, the UI designer creates/designs the interface and user experience of the application based on the required features in the product backlog.
 
-
-#What can be achieved at the discovery stage are as follows:
+# What can be achieved at the discovery stage are as follows:
 
 Finalized app concept
 
@@ -96,6 +90,6 @@ Project architecture plan
 
 Product design (UI/UX, clickable prototype)
 
-#In Conclusion
+# In Conclusion
 
 For a fully featured and functional HireEki app to be successfully developed and properly maintained, it requires a significant large amount of investment both monetarily and time-wise. So, having considered all this, if the cost of development above befits your budget then, we can proceed with a mutual agreement as the development of the mobile application proceeds accordingly after an initial 50% deposit of the development cost above has been made. The remaining 50% would be made as soon as we reach the last stage of development (deployment).
