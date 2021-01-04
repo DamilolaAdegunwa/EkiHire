@@ -1,7 +1,7 @@
 # EkiHire
 
 
-#1. Project Overview
+# 1. Project Overview
 
 EkiHire is a consumer-to-consumer, business-to-consumer and business-to-business online marketplace.
 EkiHire makes online shopping easier for fashion, electronics, home improvement, commercial appliances, agricultural products and so on. 
@@ -11,7 +11,7 @@ It also provides a marketplace for consumers to purchase goods, avail of service
 The App is free for consumers to use, while advertisers are charged a monthly subscription fee, after a one month free trial period, for the registration of a business page. 
 Advertiser are again charged a percentage of the sales fee for each item sold.
 
-#Features & Tech Stack for the EkiHire App Development
+# Features & Tech Stack for the EkiHire App Development
 
 For starters, building a native app is the recommended approach to us in  app development. This allows for the creation of a custom app for each operating system and ensures better performance, speed, security and the ability to get access to the built-in smart phone capabilities like geo-location and maps. 
 
