@@ -1,0 +1,13 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/EKIHIRE/.vs/EkiHire/v16
+/EKIHIRE/EkiHire.Business/bin/Debug/netstandard2.0
+/EKIHIRE/EkiHire.Business/obj
+/EKIHIRE/EkiHire.Data/obj
+/EKIHIRE/EkiHire.Data/bin/Debug/netstandard2.0
+/EKIHIRE/EkiHire.Core/obj
+/EKIHIRE/EkiHire.Core/bin/Debug/netstandard2.0
+/EKIHIRE/EkiHire.WebAPI/obj
+/EKIHIRE/EkiHire.WebAPI/bin/Debug/net5.0
