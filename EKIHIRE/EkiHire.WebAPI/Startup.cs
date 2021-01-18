@@ -1,3 +1,4 @@
+using EkiHire.Business.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -32,6 +33,10 @@ namespace EkiHire.WebAPI
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EkiHire.WebAPI", Version = "v1" });
             });
+
+            //add services
+            services.AddTransient<IOnboardingService, OnboardingService>();
+            services.AddTransient<IOnboardingService, OnboardingService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -57,3 +62,5 @@ namespace EkiHire.WebAPI
         }
     }
 }
+//1701;1702
+//;NU1605

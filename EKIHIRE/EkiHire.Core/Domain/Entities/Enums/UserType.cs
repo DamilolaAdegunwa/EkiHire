@@ -2,10 +2,14 @@
 {
     public enum UserType
     {
-        Administrator,
-        Employee,
-        Partner,
-        Customer,
-        Captain
+        SuperAdministrator = 0,
+        Administrator = 1,
+        Employee = 2,
+        Partner = 3,
+        Customer = 4,
+        Business = 5,
+        CraftsPerson = 6,
+        Advertiser = 7
     }
 }
+//possibly a model for each of the type should they have very different data structure

@@ -1,7 +1,6 @@
 ﻿using EkiHire.Core.Domain.Entities;
 using EkiHire.Data.Repository;
 using System.Threading.Tasks;
-using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Business.Services
 {

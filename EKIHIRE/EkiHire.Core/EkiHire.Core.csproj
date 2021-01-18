@@ -5,9 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Domain\Entities\Auditing\" />
     <Folder Include="Domain\Entities\Common\" />
-    <Folder Include="Domain\Entities\Enums\" />
+    <Folder Include="Messaging\PushNotification\" />
   </ItemGroup>
 
   <ItemGroup>
