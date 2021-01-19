@@ -8,6 +8,7 @@ namespace EkiHire.Core.Domain.Extensions
 {
     public static class EntityDTOConversion
     {
+        #region Category
         public static IEnumerable<CategoryDTO> ToDTO(this IEnumerable<Category> categories)
         {
             if(categories != null)
@@ -22,5 +23,10 @@ namespace EkiHire.Core.Domain.Extensions
             }
             return null;
         }
+        #endregion
+
+        #region User
+        //public static 
+        #endregion
     }
 }

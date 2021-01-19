@@ -131,7 +131,6 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-
         [HttpPost]
         [Route("ChangePassword")]
         public async Task<ServiceResponse<bool>> ChangePassword(ChangePassordDTO model)
@@ -139,6 +138,16 @@ namespace EkiHire.WebAPI.Controllers
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.ChangePassword(User.FindFirst(JwtClaimTypes.Name)?.Value, model);
                 return new ServiceResponse<bool>(result);
+            });
+        }
+
+        [HttpPost]
+        [Route("Add")]
+        public async Task<IServiceResponse<bool>> AddUser(UserDTO user)
+        {
+            return await HandleApiOperationAsync(async () => {
+                await _userSvc.CreateAsync(user);
+                return new ServiceResponse<bool>(true);
             });
         }
         #endregion

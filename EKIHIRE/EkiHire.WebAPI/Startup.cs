@@ -36,7 +36,7 @@ namespace EkiHire.WebAPI
 
             //add services
             services.AddTransient<IOnboardingService, OnboardingService>();
-            services.AddTransient<IOnboardingService, OnboardingService>();
+            //services.AddTransient<IOnboardingService, OnboardingService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

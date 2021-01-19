@@ -27,9 +27,11 @@ namespace EkiHire.Business.Services
         Task UpdateAsync(User user);
         Task<IList<string>> GetUserRoles(User user);
         Task<IdentityResult> CreateAsync(User user);
+        public Task<IdentityResult> CreateAsync(UserDTO user);
         Task<User> FindFirstAsync(Expression<Func<User, bool>> predicate);
         Task<bool> ExistAsync(Expression<Func<User, bool>> predicate);
         Task<IdentityResult> CreateAsync(User user, string password);
+        public Task<IdentityResult> CreateAsync(UserDTO user, string password);
         Task<IdentityResult> AddToRoleAsync(User user, string role);
         string HashPassword(User user, string password);
         Task<IList<User>> GetUsersInRoleAsync(string role);
@@ -165,7 +167,10 @@ namespace EkiHire.Business.Services
         {
             return CreateAsync(user);
         }
-
+        public Task<IdentityResult> CreateAsync(UserDTO user)
+        {
+            return _userManager.CreateAsync(user);
+        }
         Task<User> IUserService.FindFirstAsync(Expression<Func<User, bool>> filter)
         {
             return FindFirstAsync(filter);
@@ -180,7 +185,10 @@ namespace EkiHire.Business.Services
         {
             return CreateAsync(user, password);
         }
-
+        public Task<IdentityResult> CreateAsync(UserDTO user, string password)
+        {
+            return _userManager.CreateAsync(user);
+        }
         Task<IdentityResult> IUserService.AddToRoleAsync(User user, string role)
         {
             return AddToRoleAsync(user, role);
