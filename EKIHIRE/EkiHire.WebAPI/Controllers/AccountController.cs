@@ -142,12 +142,57 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("Add")]
+        [Route("Add")]/*SignUp - Create your account*/
         public async Task<IServiceResponse<bool>> AddUser(UserDTO user)
         {
             return await HandleApiOperationAsync(async () => {
                 await _userSvc.CreateAsync(user);
                 return new ServiceResponse<bool>(true);
+            });
+        }
+        [HttpPost]
+        [Route("ContinueWithFacebook")]/**/
+        public async Task<IServiceResponse<bool>> ContinueWithFacebook(UserDTO user)
+        {
+            return await HandleApiOperationAsync(async () => {
+
+                return new ServiceResponse<bool>(true);
+            });
+        }
+        [HttpPost]
+        [Route("ContinueWithGmail")]/**/
+        public async Task<IServiceResponse<bool>> ContinueWithGmail(UserDTO user)
+        {
+            return await HandleApiOperationAsync(async () => {
+
+                return new ServiceResponse<bool>(true);
+            });
+        }
+        [HttpPost]
+        [Route("ContinueWithLinkedIn")]/**/
+        public async Task<IServiceResponse<bool>> ContinueWithLinkedIn(UserDTO user)
+        {
+            return await HandleApiOperationAsync(async () => {
+
+                return new ServiceResponse<bool>(true);
+            });
+        }
+        [HttpGet]
+        [Route("PrivacyPolicy")]/**/
+        public async Task<IServiceResponse<string>> PrivacyPolicy()
+        {
+            return await HandleApiOperationAsync(async () => {
+
+                return new ServiceResponse<string>(null);
+            });
+        }
+        [HttpGet]
+        [Route("TermsOfService")]/**/
+        public async Task<IServiceResponse<string>> TermsOfService()
+        {
+            return await HandleApiOperationAsync(async () => {
+
+                return new ServiceResponse<string>(null);
             });
         }
         #endregion
