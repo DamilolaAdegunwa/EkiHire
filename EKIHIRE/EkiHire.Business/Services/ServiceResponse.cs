@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Travel.Business.Services
+namespace EkiHire.Business.Services
 {
     public interface IServiceResponse<T>
     {

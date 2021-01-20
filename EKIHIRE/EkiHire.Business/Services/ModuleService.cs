@@ -10,7 +10,7 @@ namespace EkiHire.Business.Services
     {
 
     }
-    public class ModuleService
+    public class ModuleService: IModuleService
     {
         readonly IRepository<Module> _repo;
         private readonly IServiceHelper _serviceHelper;

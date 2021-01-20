@@ -4,7 +4,10 @@ using System.Text;
 
 namespace EkiHire.Business.Services
 {
-    public class WalletService
+    public interface IWalletService
+    {
+    }
+    public class WalletService: IWalletService
     {
     }
 }

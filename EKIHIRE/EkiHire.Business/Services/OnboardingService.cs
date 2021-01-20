@@ -14,8 +14,8 @@ namespace EkiHire.Business.Services
 
     public class OnboardingService: IOnboardingService
     {
-        readonly IRepository<Onboarding> _onboardingRepo;
-        readonly IRepository<Category> _categoryRepo;
+        private readonly IRepository<Onboarding> _onboardingRepo;
+        private readonly IRepository<Category> _categoryRepo;
         private readonly IServiceHelper _serviceHelper;
         public OnboardingService(
             IRepository<Onboarding> onboardingRepo,

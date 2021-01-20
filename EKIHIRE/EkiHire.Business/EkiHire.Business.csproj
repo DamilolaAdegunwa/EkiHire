@@ -5,6 +5,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\**" />
+    <EmbeddedResource Remove="Services\**" />
+    <None Remove="Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Services\ClaimsProvider.cs" />
+    <Compile Include="Services\ErrorCodeService.cs" />
+    <Compile Include="Services\RoleService.cs" />
+    <Compile Include="Services\ServiceHelper.cs" />
+    <Compile Include="Services\ServiceResponse.cs" />
+    <Compile Include="Services\UserService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\EkiHire.Core\EkiHire.Core.csproj" />
     <ProjectReference Include="..\EkiHire.Data\EkiHire.Data.csproj" />
   </ItemGroup>
