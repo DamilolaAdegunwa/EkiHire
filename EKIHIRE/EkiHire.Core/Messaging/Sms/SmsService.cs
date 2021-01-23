@@ -37,7 +37,7 @@ namespace EkiHire.Core.Messaging.Sms
             var recipient = model.Recipient.ArrayToCommaSeparatedString().UrlEncode();
             
 
-            var url = "http://www.ogosms.com/dynamicapi/?username=LibraMotors&password=Libra123$&sender=LIBMOT.COM&numbers=" + recipient + "&message=" + smsBody;
+            var url = "http://www.ogosms.com/dynamicapi/?username=EkiHire&password=ekihire123$&sender=EKIHIRE.COM&numbers=" + recipient + "&message=" + smsBody;
             var senderModel = new SMSSenderModel
             {
                 ApiUrl = url,
@@ -57,7 +57,7 @@ namespace EkiHire.Core.Messaging.Sms
                 {
                     from= "23434565",
                     id = $"{Clock.Now.ToFileTimeUtc()}",
-                    sender_mask = "LIBMOT",
+                    sender_mask = "EkiHire",
                     to = model.Recipient,
                     body = model.Message,
                 }),

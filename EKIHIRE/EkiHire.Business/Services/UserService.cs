@@ -4,6 +4,7 @@ using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Exceptions;
 using EkiHire.Core.Messaging.Email;
 using EkiHire.Core.Utils;
+using EkiHire.Data.Repository;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +46,7 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateProfile(string userName, UserProfileDTO model);
         Task<bool> IsInRoleAsync(User user, string role);
         Task<IdentityResult> RemoveFromRolesAsync(User user, IEnumerable<string> roles);
+        Task<bool> ResendVerificationCode(string username);
     }
 
     public class UserService : IUserService
@@ -52,11 +54,15 @@ namespace EkiHire.Business.Services
 
         private readonly UserManager<User> _userManager;
         private readonly AppConfig appConfig;
+        private readonly IRepository<User> _userRepository;
 
         private readonly IServiceHelper _svcHelper;
         private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
-        public UserService(UserManager<User> userManager, IServiceHelper svcHelper,
+        public UserService(
+            UserManager<User> userManager, 
+            IServiceHelper svcHelper,
+            IRepository<User> userRepository,
             IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
             IOptions<AppConfig> _appConfig)
@@ -298,7 +304,7 @@ namespace EkiHire.Business.Services
                 ["Otp"] = user.OTP
             };
 
-            var mail = new Mail(appConfig.AppEmail, "Libmot.com: Password Reset OTP", user.Email)
+            var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Password Reset OTP", user.Email)
             {
                 BodyIsFile = true,
                 BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail)
@@ -454,6 +460,29 @@ namespace EkiHire.Business.Services
             var result = await _userManager.UpdateAsync(user);
 
             return result.Succeeded;
+        }
+
+        public async Task<bool> ResendVerificationCode(string username)
+        {
+            var user = _userRepository.FirstOrDefault(u => u.UserName == username);
+            if(user != null)
+            {
+                var replacement = new StringDictionary
+                {
+                    ["FirstName"] = user.FirstName,
+                    ["ActivationCode"] = user.AccountConfirmationCode
+                };
+
+                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                {
+                    BodyIsFile = true,
+                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                };
+
+                await _mailSvc.SendMailAsync(mail, replacement);
+                return true;
+            }
+            return false;
         }
     }
 }

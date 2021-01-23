@@ -3,9 +3,9 @@
     public abstract class CoreConstants
     {
         public const string DefaultAccount = "administrator@Travel.com";
-        public const string WebBookingAccount = "web@libmot.com";
-        public const string IosBookingAccount = "ios@libmot.com";
-        public const string AndroidBookingAccount = "android@libmot.com";
+        public const string WebBookingAccount = "web@EkiHire.com";
+        public const string IosBookingAccount = "ios@EkiHire.com";
+        public const string AndroidBookingAccount = "android@EkiHire.com";
         public const string DateFormat = "dd MMMM, yyyy";
         public const string TimeFormat = "hh:mm tt";
         public const string SystemDateFormat = "dd/MM/yyyy";

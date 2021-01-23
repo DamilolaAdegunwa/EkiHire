@@ -109,7 +109,7 @@ namespace EkiHire.WebAPI
             services.RegisterGenericRepos(typeof(ApplicationDbContext));
 
             services.AddScoped<IErrorCodeService, ErrorCodeService>();
-            
+            services.AddScoped<IRepository<ErrorCode>, EfCoreRepository<DbContext, ErrorCode>>();
 
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();

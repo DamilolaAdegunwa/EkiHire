@@ -10,7 +10,7 @@ using EkiHire.Core.Domain.DataTransferObjects;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class User : IdentityUser<int>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime
+    public class User : IdentityUser<int>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
     {
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
@@ -45,6 +45,27 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsActive { get; set; }
         public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
+
+        public bool IsTransient()
+        {
+            if (EqualityComparer<int>.Default.Equals(Id, default(int)))
+            {
+                return true;
+            }
+
+            //Workaround for EF Core since it sets int/long to min value when attaching to dbcontext
+            if (typeof(int) == typeof(int))
+            {
+                return Convert.ToInt32(Id) <= 0;
+            }
+
+            if (typeof(int) == typeof(long))
+            {
+                return Convert.ToInt64(Id) <= 0;
+            }
+
+            return false;
+        }
 
         //implicit conversion
         public static implicit operator User(UserDTO user)

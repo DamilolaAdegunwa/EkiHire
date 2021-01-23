@@ -7,9 +7,13 @@ using System.Threading.Tasks;
 
 namespace EkiHire.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class HomeController : ControllerBase
+    public class HomeController : BaseController
     {
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return Ok("EkiHire.Web Api is running");
+        }
     }
 }

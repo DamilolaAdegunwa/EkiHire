@@ -100,7 +100,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("Activate")]
+        [Route("Activate")]/*verify and activate or deny*/
         public async Task<ServiceResponse<UserDTO>> Activate(string usernameOrEmail, string activationCode)
         {
             return await HandleApiOperationAsync(async () => {
@@ -195,6 +195,21 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<string>(null);
             });
         }
+        [HttpPost]
+        [Route("ResendVerificationCode")]
+        public async Task<IServiceResponse<bool>> ResendVerificationCode(string username)
+        {
+            
+            return await HandleApiOperationAsync(async () => {
+                var result = await _userSvc.ResendVerificationCode(username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("Signin")]
+
         #endregion
 
         #region default from boilerplate
