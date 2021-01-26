@@ -47,6 +47,7 @@ namespace EkiHire.Business.Services
         Task<bool> IsInRoleAsync(User user, string role);
         Task<IdentityResult> RemoveFromRolesAsync(User user, IEnumerable<string> roles);
         Task<bool> ResendVerificationCode(string username);
+        Task<bool> TestEmail();
     }
 
     public class UserService : IUserService
@@ -483,6 +484,27 @@ namespace EkiHire.Business.Services
                 return true;
             }
             return false;
+        }
+		public async Task<bool> TestEmail()
+        {
+			try{
+				var replacement = new StringDictionary
+                {
+                    ["FirstName"] = "Damilola Adegunwa",
+                    ["ActivationCode"] = "FAKE123456"
+                };
+
+                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
+                {
+                    BodyIsFile = true,
+                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                };
+
+                await _mailSvc.SendMailAsync(mail, replacement);
+                return true;
+			}catch(Exception e){
+				return false;
+			}
         }
     }
 }

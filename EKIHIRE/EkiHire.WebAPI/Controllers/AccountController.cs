@@ -11,6 +11,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using EkiHire.Business.Services;
+using System.Net;
+using System.Net.Mail;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 namespace EkiHire.WebAPI.Controllers
 {
@@ -100,7 +102,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("Activate")]/*verify and activate or deny*/
+        [Route("Activate")]/*verify and activate/deny account*/
         public async Task<ServiceResponse<UserDTO>> Activate(string usernameOrEmail, string activationCode)
         {
             return await HandleApiOperationAsync(async () => {
@@ -111,7 +113,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("ForgotPassword/{usernameOrEmail}")]
+        [Route("ForgotPassword/{usernameOrEmail}")] /*Indicate Password Forget and get OTP for new*/
         public async Task<ServiceResponse<bool>> ForgotPassword(string usernameOrEmail)
         {
             return await HandleApiOperationAsync(async () => {
@@ -122,7 +124,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("ResetPassword")]
+        [Route("ResetPassword")]/*remove old password and input new password*/
         public async Task<ServiceResponse<bool>> ResetPassword(PassordResetDTO model)
         {
             return await HandleApiOperationAsync(async () => {
@@ -132,7 +134,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("ChangePassword")]
+        [Route("ChangePassword")]/*create new password*/
         public async Task<ServiceResponse<bool>> ChangePassword(ChangePassordDTO model)
         {
             return await HandleApiOperationAsync(async () => {
@@ -151,7 +153,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost]
-        [Route("ContinueWithFacebook")]/**/
+        [Route("ContinueWithFacebook")]/*Login via Facebook*/
         public async Task<IServiceResponse<bool>> ContinueWithFacebook(UserDTO user)
         {
             return await HandleApiOperationAsync(async () => {
@@ -160,7 +162,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost]
-        [Route("ContinueWithGmail")]/**/
+        [Route("ContinueWithGmail")]/*Login via Gmail*/
         public async Task<IServiceResponse<bool>> ContinueWithGmail(UserDTO user)
         {
             return await HandleApiOperationAsync(async () => {
@@ -169,7 +171,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost]
-        [Route("ContinueWithLinkedIn")]/**/
+        [Route("ContinueWithLinkedIn")]/*Login via LinkedIn*/
         public async Task<IServiceResponse<bool>> ContinueWithLinkedIn(UserDTO user)
         {
             return await HandleApiOperationAsync(async () => {
@@ -178,7 +180,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpGet]
-        [Route("PrivacyPolicy")]/**/
+        [Route("PrivacyPolicy")]/*Our Privacy Policy*/
         public async Task<IServiceResponse<string>> PrivacyPolicy()
         {
             return await HandleApiOperationAsync(async () => {
@@ -187,7 +189,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpGet]
-        [Route("TermsOfService")]/**/
+        [Route("TermsOfService")]/*Our Terms Of Service*/
         public async Task<IServiceResponse<string>> TermsOfService()
         {
             return await HandleApiOperationAsync(async () => {
@@ -206,10 +208,43 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+		
+        [AllowAnonymous]
+		[HttpGet]
+		[Route("TestEmail")]
+		public async Task<IServiceResponse<bool>> TestEmail()
+		{
+            //
+            var fromAddress = new MailAddress("contact@ekihire.com", "EkiHire");
+            var toAddress = new MailAddress("damee1993@gmail.com", "Damilola Adegunwa");
+            const string fromPassword = "ekihireapp1";
+            const string subject = "My Email Test";
+            const string body = "This is awesome!!";
 
-        [HttpPost]
-        [Route("Signin")]
-
+            var smtp = new SmtpClient
+            {
+                Host = "smtp.gmail.com",
+                Port = 587,
+                EnableSsl = true,
+                DeliveryMethod = SmtpDeliveryMethod.Network,
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+            };
+            using (var message = new MailMessage(fromAddress, toAddress)
+            {
+                Subject = subject,
+                Body = body
+            })
+            {
+                smtp.Send(message);
+            }
+            //
+            return await HandleApiOperationAsync(async () => {
+                var result = await _userSvc.TestEmail();
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+		}
         #endregion
 
         #region default from boilerplate

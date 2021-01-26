@@ -5,10 +5,10 @@ using EkiHire.Core.Domain.Entities.Common;
 namespace EkiHire.Core.Domain.Entities.Auditing
 {
     /// <summary>
-    /// A shortcut of <see cref="FullAuditedEntity{TPrimaryKey}"/> for most used primary key type (<see cref="int"/>).
+    /// A shortcut of <see cref="FullAuditedEntity{TPrimaryKey}"/> for most used primary key type (<see cref="long"/>).
     /// </summary>
     [Serializable]
-    public abstract class FullAuditedEntity : FullAuditedEntity<int>, IEntity
+    public abstract class FullAuditedEntity : FullAuditedEntity<long>, IEntity
     {
 
     }

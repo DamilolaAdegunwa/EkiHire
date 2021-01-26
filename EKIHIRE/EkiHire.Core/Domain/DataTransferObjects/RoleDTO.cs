@@ -8,7 +8,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
     {
         public string Name { get; set; }
         public bool IsActive { get; set; }
-        public int Id { get; set; }
+        public long Id { get; set; }
         public string[] Claims { get; set; }
     }
 }

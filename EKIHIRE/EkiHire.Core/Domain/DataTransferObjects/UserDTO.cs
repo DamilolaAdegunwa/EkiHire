@@ -11,7 +11,7 @@ using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class UserDTO : IdentityUser<int>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime
+    public class UserDTO : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime
     {
         public string FirstName { get; set; }
         public string MiddleName { get; set; }

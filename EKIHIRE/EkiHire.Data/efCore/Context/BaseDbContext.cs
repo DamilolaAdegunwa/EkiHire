@@ -23,7 +23,7 @@ namespace EkiHire.Data.efCore.Context
     /// <summary>
     /// Base class for all DbContext classes in the application.
     /// </summary>
-    public abstract class BaseDbContext : IdentityDbContext<User, Role, int>
+    public abstract class BaseDbContext : IdentityDbContext<User, Role, long>
     {
         /// <summary>
         /// Reference to GUID generator.

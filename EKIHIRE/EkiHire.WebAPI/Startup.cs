@@ -111,6 +111,8 @@ namespace EkiHire.WebAPI
             services.AddScoped<IErrorCodeService, ErrorCodeService>();
             services.AddScoped<IRepository<ErrorCode>, EfCoreRepository<DbContext, ErrorCode>>();
 
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRepository<User>, EfCoreRepository<DbContext, User>>();
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
 

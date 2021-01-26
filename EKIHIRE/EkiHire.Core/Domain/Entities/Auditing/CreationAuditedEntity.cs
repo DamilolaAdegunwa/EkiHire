@@ -6,10 +6,10 @@ using EkiHire.Core.Domain.Entities.Common;
 namespace EkiHire.Core.Domain.Entities.Auditing
 {
     /// <summary>
-    /// A shortcut of <see cref="CreationAuditedEntity{TPrimaryKey}"/> for most used primary key type (<see cref="int"/>).
+    /// A shortcut of <see cref="CreationAuditedEntity{TPrimaryKey}"/> for most used primary key type (<see cref="long"/>).
     /// </summary>
     [Serializable]
-    public abstract class CreationAuditedEntity : CreationAuditedEntity<int>, IEntity
+    public abstract class CreationAuditedEntity : CreationAuditedEntity<long>, IEntity
     {
 
     }

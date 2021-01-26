@@ -40,14 +40,16 @@ namespace EkiHire.Core.Messaging.Email
         {
             var client = new SmtpClient
             {
+                UseDefaultCredentials = _smtpsettings.UseDefaultCredentials,
                 Host = _smtpsettings.Server,
                 Port = _smtpsettings.Port,
                 EnableSsl = _smtpsettings.EnableSSl,
-                UseDefaultCredentials = _smtpsettings.UseDefaultCredentials
             };
 
             if (!_smtpsettings.UseDefaultCredentials)
+            {
                 client.Credentials = new NetworkCredential(_smtpsettings.UserName, _smtpsettings.Password);
+            }
             return client;
         }
 

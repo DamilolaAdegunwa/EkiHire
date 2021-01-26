@@ -10,7 +10,7 @@ using EkiHire.Core.Domain.DataTransferObjects;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class User : IdentityUser<int>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
+    public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
     {
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
@@ -48,7 +48,7 @@ namespace EkiHire.Core.Domain.Entities
 
         public bool IsTransient()
         {
-            if (EqualityComparer<int>.Default.Equals(Id, default(int)))
+            if (EqualityComparer<long>.Default.Equals(Id, default(int)))
             {
                 return true;
             }

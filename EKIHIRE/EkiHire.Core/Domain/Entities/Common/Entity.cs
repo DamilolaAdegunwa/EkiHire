@@ -24,9 +24,9 @@ public interface IEntity<Key>
 
 
     /// <summary>
-    /// A shortcut of <see cref="IEntity{Key}"/> for most used primary key type (<see cref="int"/>).
+    /// A shortcut of <see cref="IEntity{Key}"/> for most used primary key type (<see cref="long"/>).
     /// </summary>
-    public interface IEntity : IEntity<int>
+    public interface IEntity : IEntity<long>
     {
     }
 
@@ -35,7 +35,7 @@ public interface IEntity<Key>
     /// A shortcut of <see cref="Entity{TPrimaryKey}"/> for most used primary key type (<see cref="int"/>).
     /// </summary>
     [Serializable]
-    public abstract class Entity : Entity<int>, IEntity
+    public abstract class Entity : Entity<long>, IEntity
     {
 
     }

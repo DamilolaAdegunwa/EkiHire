@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class Role : IdentityRole<int>
+    public class Role : IdentityRole<long>
     {
         public bool IsActive { get; set; }
         public DateTime? CreationTime { get; set; }

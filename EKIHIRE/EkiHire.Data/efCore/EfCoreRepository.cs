@@ -266,8 +266,8 @@ namespace EkiHire.Data.efCore
         }
     }
 
-    public class EfCoreRepository<TDbContext, TEntity> : EfCoreRepository<TDbContext, TEntity, int>, IRepository<TEntity>
-        where TEntity : class, IEntity<int>
+    public class EfCoreRepository<TDbContext, TEntity> : EfCoreRepository<TDbContext, TEntity, long>, IRepository<TEntity>
+        where TEntity : class, IEntity<long>
         where TDbContext : DbContext
     {
         public EfCoreRepository(IDbContextProvider<TDbContext> dbContextProvider)
