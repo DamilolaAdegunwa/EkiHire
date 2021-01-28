@@ -42,7 +42,7 @@ namespace EkiHire.WebAPI.Utils
 
             if (userMgr.FindByNameAsync(admin.UserName).Result is null) {
 
-                var result = userMgr.CreateAsync(admin, "Lme@adm1n").Result;
+                var result = userMgr.CreateAsync(admin, "EkiHire@adm1n").Result;
 
                 if (result.Succeeded) {
 
@@ -83,7 +83,7 @@ namespace EkiHire.WebAPI.Utils
             Array.ForEach(bookingAccts, bookingAcct => {
                 if (userMgr.FindByNameAsync(bookingAcct.UserName).Result is null) {
 
-                    var result = userMgr.CreateAsync(bookingAcct, "Lme@onl1n3").Result;
+                    var result = userMgr.CreateAsync(bookingAcct, "EkiHire@onl1n3").Result;
                 }
             });
         }

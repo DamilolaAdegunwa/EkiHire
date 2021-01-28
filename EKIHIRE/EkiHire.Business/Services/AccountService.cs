@@ -4,6 +4,7 @@ using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Exceptions;
 using EkiHire.Core.Messaging.Email;
 using EkiHire.Core.Messaging.Sms;
+using EkiHire.Core.Model;
 using EkiHire.Core.Utils;
 using EkiHire.Data.Repository;
 using EkiHire.Data.UnitOfWork;
@@ -27,6 +28,7 @@ namespace EkiHire.Business.Services
         Account FirstOrDefault(Expression<Func<Account, bool>> filter);
         IQueryable<Account> GetAll();
         Task<AccountDTO> GetAccountsByemailAsync(string email);
+        //Task AddAccount(AccountDTO employee);//might be used in the future
         Task AddAccount(AccountDTO employee);
         Task<IPagedList<AccountDTO>> GetAccounts(int pageNumber, int pageSize, string query);
         //Task<int?> GetAssignedTerminal(string email);
@@ -90,33 +92,83 @@ namespace EkiHire.Business.Services
 
         private async Task<bool> AccountExist(string username)
         {
-            return await _repo.ExistAsync(x => x.UserName == username);
+            return await _repo.ExistAsync(x => x.Email == username);
         }
+        public async Task SignUp(LoginViewModel model)
+        {
+            //validate credential
+            if (model == null)
+            {
+                throw await _serviceHelper.GetExceptionAsync("Invalid parameter");
+            }
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                throw await _serviceHelper.GetExceptionAsync("Please input a password");
+            }
+            var user = await _userSvc.FindFirstAsync(x => x.UserName == model.UserName);
 
+            if (user!=null)
+            {
+                throw await _serviceHelper.GetExceptionAsync("User already exist");
+            }
+
+            //sign up a new user
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                user = new User
+                {
+                    UserName = model.UserName,
+                    Email = model.UserName,
+                };
+                var creationStatus = await _userSvc.CreateAsync(user, model.Password);
+
+                if (creationStatus.Succeeded)
+                {
+                    _repo.Insert(new Account
+                    {
+                        UserId = user.Id,
+                    });
+
+                    await SendAccountEmail(user);
+
+                }
+                else
+                {
+                    _unitOfWork.Rollback();
+
+                    throw await _serviceHelper
+                        .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+                }
+                _unitOfWork.Commit();
+            }
+            catch (Exception)
+            {
+
+                _unitOfWork.Rollback();
+                throw;
+            }
+            //send email
+        }
         public async Task AddAccount(AccountDTO account)
         {
             if (account == null)
             {
                 throw await _serviceHelper.GetExceptionAsync("invalid parameter");
             }
-
             //if (account.TerminalId != null && !await IsValidTerminal(account.TerminalId))
             //{
             //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.TERMINAL_NOT_EXIST);
             //}
-
             //if (account.DepartmentId != null && !await IsValidDepartment(account.DepartmentId))
             //{
             //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.DEPARTMENT_NOT_EXIST);
             //}
-
             //account.AccountCode = account.AccountCode.Trim();
-
             //if (await _repo.ExistAsync(v => v.AccountCode == account.AccountCode))
             //{
             //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.EMPLOYEE_EXIST);
             //}
-
             try
             {
                 _unitOfWork.BeginTransaction();
@@ -138,7 +190,7 @@ namespace EkiHire.Business.Services
                     ReferralCode = CommonHelper.GenereateRandonAlphaNumeric()
                 };
 
-                var creationStatus = await _userSvc.CreateAsync(user, "123456");
+                var creationStatus = await _userSvc.CreateAsync(user, account.Password);
 
                 if (creationStatus.Succeeded)
                 {
@@ -190,7 +242,7 @@ namespace EkiHire.Business.Services
                     ["DefaultPassword"] = "123456"
                 };
 
-                var mail = new Mail(appConfig.AppEmail, "Libmot.com: New staff account information", user.Email)
+                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New staff account information", user.Email)
                 {
                     BodyIsFile = true,
                     BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AccountActivationEmail)
@@ -235,7 +287,6 @@ namespace EkiHire.Business.Services
                 select new AccountDTO
                 {
                     Id = employee.Id,
-                    DateOfEmployment = employee.DateOfEmployment,
                     FirstName = employee.User.FirstName,
                     LastName = employee.User.LastName,
                     MiddleName = employee.User.MiddleName,
@@ -311,7 +362,6 @@ namespace EkiHire.Business.Services
                 select new AccountDTO
                 {
                     Id = employee.Id,
-                    DateOfEmployment = employee.DateOfEmployment,
                     FirstName = employee.User.FirstName,
                     LastName = employee.User.LastName,
                     MiddleName = employee.User.MiddleName,
@@ -340,7 +390,6 @@ namespace EkiHire.Business.Services
             var employeeDto = new AccountDTO
             {
                 Id = employee.Id,
-                DateOfEmployment = employee.DateOfEmployment,
                 FirstName = employee.User.FirstName,
                 LastName = employee.User.LastName,
                 MiddleName = employee.User.MiddleName,

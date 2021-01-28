@@ -30,7 +30,7 @@ namespace EkiHire.Core.Utils
                 }
             }
 
-            throw new LMEGenericException("Can not find primary key type of given entity type: " + entityType + ". Be sure that this entity type implements IEntity<TPrimaryKey> interface");
+            throw new EkiHireGenericException("Can not find primary key type of given entity type: " + entityType + ". Be sure that this entity type implements IEntity<TPrimaryKey> interface");
         }
     }
 }

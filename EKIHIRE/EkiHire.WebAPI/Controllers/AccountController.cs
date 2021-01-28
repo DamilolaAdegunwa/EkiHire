@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using EkiHire.Business.Services;
 using System.Net;
 using System.Net.Mail;
+using EkiHire.Core.Model;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 namespace EkiHire.WebAPI.Controllers
 {
@@ -24,12 +25,15 @@ namespace EkiHire.WebAPI.Controllers
         #region main account endpoints
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
-        //private readonly IEmployeeService _employeeService;
+        private readonly IAccountService _accountService;
 
-        public AccountController(IUserService userSvc, IRoleService roleSvc/*, IEmployeeService employeeService*/)
+        public AccountController(IUserService userSvc, IRoleService roleSvc
+            ,IAccountService accountService
+            /*, IEmployeeService employeeService*/)
         {
             _userSvc = userSvc;
             _roleSvc = roleSvc;
+            _accountService = accountService;
             //_employeeService = employeeService;
         }
 
@@ -143,9 +147,10 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("Add")]/*SignUp - Create your account*/
-        public async Task<IServiceResponse<bool>> AddUser(UserDTO user)
+        public async Task<IServiceResponse<bool>> AddUser(LoginViewModel user)
         {
             return await HandleApiOperationAsync(async () => {
                 await _userSvc.CreateAsync(user);
@@ -215,29 +220,31 @@ namespace EkiHire.WebAPI.Controllers
 		public async Task<IServiceResponse<bool>> TestEmail()
 		{
             //
-            var fromAddress = new MailAddress("contact@ekihire.com", "EkiHire");
-            var toAddress = new MailAddress("damee1993@gmail.com", "Damilola Adegunwa");
-            const string fromPassword = "ekihireapp1";
-            const string subject = "My Email Test";
-            const string body = "This is awesome!!";
+            #region email test
+            //var fromAddress = new MailAddress("contact@ekihire.com", "EkiHire");
+            //var toAddress = new MailAddress("damee1993@gmail.com", "Damilola Adegunwa");
+            //const string fromPassword = "ekihireapp1";
+            //const string subject = "My Email Test";
+            //const string body = "This is awesome!!";
 
-            var smtp = new SmtpClient
-            {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-            };
-            using (var message = new MailMessage(fromAddress, toAddress)
-            {
-                Subject = subject,
-                Body = body
-            })
-            {
-                smtp.Send(message);
-            }
+            //var smtp = new SmtpClient
+            //{
+            //    Host = "smtp.gmail.com",
+            //    Port = 587,
+            //    EnableSsl = true,
+            //    DeliveryMethod = SmtpDeliveryMethod.Network,
+            //    UseDefaultCredentials = false,
+            //    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+            //};
+            //using (var message = new MailMessage(fromAddress, toAddress)
+            //{
+            //    Subject = subject,
+            //    Body = body
+            //})
+            //{
+            //    smtp.Send(message);
+            //}
+            #endregion
             //
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.TestEmail();

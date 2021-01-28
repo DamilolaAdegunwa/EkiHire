@@ -65,5 +65,13 @@ namespace EkiHire.Core.Domain.Entities.Auditing
         /// Deletion time of this entity.
         /// </summary>
         public virtual DateTime? DeletionTime { get; set; }
+
+        public interface IFullAuditedEntity<TPrimaryKey> : IFullAudited, IAudited, ICreationAudited, IEntity<TPrimaryKey>
+        {
+
+        }
+
+        public interface IFullAuditedEntity: IFullAuditedEntity<long>
+        { }
     }
 }

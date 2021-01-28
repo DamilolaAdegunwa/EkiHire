@@ -16,7 +16,7 @@ namespace EkiHire.Business.Services
         Task<bool> CreateAsync(RoleDTO role);
         Task<IPagedList<RoleDTO>> Get(int pageNumber, int pageSize, string query);
 
-        Task<RoleDTO> FindByIdAsync(int roleId);
+        Task<RoleDTO> FindByIdAsync(long roleId);
         Task<Role> FindByName(string name);
     }
 
@@ -105,7 +105,7 @@ namespace EkiHire.Business.Services
             return roles.ToPagedListAsync(pageNumber, pageSize);
         }
 
-        public async Task<RoleDTO> FindByIdAsync(int roleId)
+        public async Task<RoleDTO> FindByIdAsync(long roleId)
         {
             var result = await _roleManager.FindByIdAsync($"{roleId}");
 

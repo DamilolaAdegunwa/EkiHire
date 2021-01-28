@@ -228,7 +228,7 @@ namespace EkiHire.Business.Services
             await ValidateUser(user);
 
             if (user.IsConfirmed())
-                throw new LMEGenericException("Your account was activated earlier.");
+                throw new EkiHireGenericException("Your account was activated earlier.");
 
             if (activationCode == user.AccountConfirmationCode)
             {
@@ -240,7 +240,7 @@ namespace EkiHire.Business.Services
             }
             else if (activationCode != user.AccountConfirmationCode)
             {
-                throw new LMEGenericException("Invalid OTP");
+                throw new EkiHireGenericException("Invalid OTP");
                 //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
             }
 
@@ -329,7 +329,7 @@ namespace EkiHire.Business.Services
 
             if (user.OTP != model.Code)
             {
-                throw new LMEGenericException("Invalid OTP");
+                throw new EkiHireGenericException("Invalid OTP");
                 // throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_WRONG_OTP);
             }
 

@@ -15,6 +15,7 @@ namespace EkiHire.Core.Messaging.Email
         public string UserName { get; set; }
         public bool UseDefaultCredentials { get; set; }
         //
+        public string Host { get; set; }
         public X509CertificateCollection ClientCertificates { get; set; }
         public ICredentialsByHost Credentials { get; set; }
         public SmtpDeliveryFormat DeliveryFormat { get; set; }

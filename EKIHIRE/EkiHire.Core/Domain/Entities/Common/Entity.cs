@@ -8,7 +8,7 @@ namespace EkiHire.Core.Domain.Entities.Common
     /// Defines interface for base entity type. All entities in the system must implement this interface.
     /// </summary>
     /// <typeparam name="Key">Type of the primary key of the entity</typeparam>
-public interface IEntity<Key>
+    public interface IEntity<Key>
     {
         /// <summary>
         /// Unique identifier for this entity.

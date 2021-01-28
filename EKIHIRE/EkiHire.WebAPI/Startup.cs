@@ -113,6 +113,12 @@ namespace EkiHire.WebAPI
 
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRepository<User>, EfCoreRepository<DbContext, User>>();
+
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IRepository<Account>, EfCoreRepository<DbContext, Account>>();
+
+            services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IRepository<Wallet>, EfCoreRepository<DbContext, Wallet>>();
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
 
@@ -124,7 +130,7 @@ namespace EkiHire.WebAPI
             //services.AddScoped<IRetailService, RetailService>();
 
             //
-            
+
             //
 
             //services.AddScoped<IWalletNumberService, WalletNumberService>();
@@ -329,7 +335,7 @@ namespace EkiHire.WebAPI
 
             app.UseSwagger();
             app.UseSwaggerUI(options => {
-                options.SwaggerEndpoint(Configuration["App:ServerRootAddress"].EnsureEndsWith('/') + "swagger/v1/swagger.json", "LME.Web API V1");
+                options.SwaggerEndpoint(Configuration["App:ServerRootAddress"].EnsureEndsWith('/') + "swagger/v1/swagger.json", "EkiHire.Web API V1");
             });
 
             app.UseHttpsRedirection();

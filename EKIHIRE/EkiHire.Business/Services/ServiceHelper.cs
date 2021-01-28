@@ -8,7 +8,7 @@ namespace EkiHire.Business.Services
 {
     public interface IServiceHelper
     {
-        Task<LMEGenericException> GetExceptionAsync(string errorCode);
+        Task<EkiHireGenericException> GetExceptionAsync(string errorCode);
         T GetOrUpdateCacheItem<T>(string key, Func<T> update, int? cacheSeconds = null);
         string GetCurrentUserEmail();
         int? GetCurrentUserId();
@@ -59,14 +59,14 @@ namespace EkiHire.Business.Services
             return id is null ? (int?) null : int.Parse(id);
         }
 
-        public async Task<LMEGenericException> GetExceptionAsync(string errorCode)
+        public async Task<EkiHireGenericException> GetExceptionAsync(string errorCode)
         {
             var error = await GetOrUpdateCacheItem(errorCode, async () => await _errorCodesSvc.GetErrorByCodeAsync(errorCode));
 
             if (error is null)
-                throw new LMEGenericException("Error validating your request. Please try again.", errorCode);
+                throw new EkiHireGenericException("Error validating your request. Please try again.", errorCode);
 
-            return new LMEGenericException(error.Message, error.Code);
+            return new EkiHireGenericException(error.Message, error.Code);
         }
 
         public T GetOrUpdateCacheItem<T>(string key, Func<T> update, int? cacheSeconds = null)

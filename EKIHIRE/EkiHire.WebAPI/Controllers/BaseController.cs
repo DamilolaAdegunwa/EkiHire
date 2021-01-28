@@ -49,7 +49,7 @@ namespace EkiHire.WebAPI.Controllers
             try {
 
                 if (!ModelState.IsValid)
-                    throw new LMEGenericException("There were errors in your input, please correct them and try again.",
+                    throw new EkiHireGenericException("There were errors in your input, please correct them and try again.",
                         HttpHelpers.GetStatusCodeValue(HttpStatusCode.BadRequest));
 
                 var actionResponse = await action();
@@ -59,7 +59,7 @@ namespace EkiHire.WebAPI.Controllers
                 serviceResponse.Code = actionResponse.Code ??serviceResponse.Code;
 
             }
-            catch (LMEGenericException ex) {
+            catch (EkiHireGenericException ex) {
 
                 _logger.Warn($"L{lineNo} - {ex.ErrorCode}: {ex.Message}");
 

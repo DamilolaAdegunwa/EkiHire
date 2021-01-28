@@ -1,5 +1,4 @@
-﻿
-using EkiHire.Core.Domain.Entities.Enums;
+﻿using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Utils;
 using Microsoft.AspNetCore.Identity;
 using System;
