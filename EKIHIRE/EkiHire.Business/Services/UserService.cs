@@ -470,7 +470,7 @@ namespace EkiHire.Business.Services
             {
                 var replacement = new StringDictionary
                 {
-                    ["FirstName"] = user.FirstName,
+                    //["FirstName"] = user.FirstName,
                     ["ActivationCode"] = user.AccountConfirmationCode
                 };
 
@@ -490,7 +490,7 @@ namespace EkiHire.Business.Services
 			try{
 				var replacement = new StringDictionary
                 {
-                    ["FirstName"] = "Damilola Adegunwa",
+                    //["FirstName"] = "Damilola Adegunwa",
                     ["ActivationCode"] = "FAKE123456"
                 };
 

@@ -5,7 +5,7 @@ using EkiHire.Core.Domain.Entities.Common;
 
 namespace EkiHire.Core.Domain.Entities
 {
-   public class ErrorCode:Entity
+   public class ErrorCode:Entity<long>
     {
         public string Code { get; set; }
         public string Message { get; set; }

@@ -21,9 +21,9 @@ namespace EkiHire.Data.Migrations
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Account", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .UseIdentityColumn();
 
                     b.Property<string>("Address")
@@ -35,9 +35,6 @@ namespace EkiHire.Data.Migrations
                     b.Property<long?>("CreatorUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime?>("DateOfEmployment")
-                        .HasColumnType("datetime2");
-
                     b.Property<long?>("DeleterUserId")
                         .HasColumnType("bigint");
 
@@ -45,12 +42,6 @@ namespace EkiHire.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeCode")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeePhoto")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
@@ -86,24 +77,18 @@ namespace EkiHire.Data.Migrations
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("RoleName")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<long?>("UserId1")
+                    b.Property<long>("UserId")
                         .HasColumnType("bigint");
-
-                    b.Property<string>("UserName")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Account");
                 });
@@ -139,6 +124,27 @@ namespace EkiHire.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Attraction");
+                });
+
+            modelBuilder.Entity("EkiHire.Core.Domain.Entities.ErrorCode", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .UseIdentityColumn();
+
+                    b.Property<string>("Code")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ErrorCodes_wrot");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Job", b =>
@@ -682,7 +688,9 @@ namespace EkiHire.Data.Migrations
                 {
                     b.HasOne("EkiHire.Core.Domain.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

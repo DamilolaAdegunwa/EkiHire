@@ -149,11 +149,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("Add")]/*SignUp - Create your account*/
-        public async Task<IServiceResponse<bool>> AddUser(LoginViewModel user)
+        [Route("SignUp")]/*SignUp - Create your account*/
+        public async Task<IServiceResponse<bool>> SignUp(LoginViewModel loginModel)
         {
             return await HandleApiOperationAsync(async () => {
-                await _userSvc.CreateAsync(user);
+                await _accountService.SignUp(loginModel);
                 return new ServiceResponse<bool>(true);
             });
         }

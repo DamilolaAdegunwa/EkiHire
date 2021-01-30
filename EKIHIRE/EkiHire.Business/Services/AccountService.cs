@@ -36,6 +36,7 @@ namespace EkiHire.Business.Services
         Task<bool> Verifyotp(string otp);
         Task<AccountDTO> GetAccount(int id);
         Task UpdateAccount(int id, AccountDTO model);
+        Task SignUp(LoginViewModel model);
     }
 
     public class AccountService : IAccountService
@@ -120,6 +121,9 @@ namespace EkiHire.Business.Services
                 {
                     UserName = model.UserName,
                     Email = model.UserName,
+                    AccountConfirmationCode = CommonHelper.GenereateRandonAlphaNumeric(),
+                    EmailConfirmed = false,
+                    PhoneNumberConfirmed = false,
                 };
                 var creationStatus = await _userSvc.CreateAsync(user, model.Password);
 
@@ -130,23 +134,37 @@ namespace EkiHire.Business.Services
                         UserId = user.Id,
                     });
 
-                    await SendAccountEmail(user);
+                    //await SendAccountEmail(user,model.Password);
+                    if (user != null)
+                    {
+                        var replacement = new StringDictionary
+                        {
+                            //["FirstName"] = user.FirstName,
+                            ["ActivationCode"] = user.AccountConfirmationCode
+                        };
 
+                        var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                        {
+                            BodyIsFile = true,
+                            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                        };
+
+                        await _mailSvc.SendMailAsync(mail, replacement);
+                        
+                    }
                 }
                 else
                 {
                     _unitOfWork.Rollback();
 
-                    throw await _serviceHelper
-                        .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+                    throw await _serviceHelper.GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
                 }
                 _unitOfWork.Commit();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
                 _unitOfWork.Rollback();
-                throw;
+                throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
             }
             //send email
         }
@@ -210,7 +228,7 @@ namespace EkiHire.Business.Services
                     });
 
 
-                    await SendAccountEmail(user);
+                    await SendAccountEmail(user, "");
 
                 }
                 else
@@ -230,7 +248,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        private async Task SendAccountEmail(User user)
+        private async Task SendAccountEmail(User user, string password)
         {
             try
             {
@@ -239,7 +257,7 @@ namespace EkiHire.Business.Services
                 {
                     ["FirstName"] = user.FirstName,
                     ["UserName"] = user.UserName,
-                    ["DefaultPassword"] = "123456"
+                    ["DefaultPassword"] = password
                 };
 
                 var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New staff account information", user.Email)
