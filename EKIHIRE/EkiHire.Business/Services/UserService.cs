@@ -1,8 +1,10 @@
 ﻿using EkiHire.Core.Configuration;
 using EkiHire.Core.Domain.DataTransferObjects;
 using EkiHire.Core.Domain.Entities;
+using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Exceptions;
 using EkiHire.Core.Messaging.Email;
+using EkiHire.Core.Model;
 using EkiHire.Core.Utils;
 using EkiHire.Data.Repository;
 using Microsoft.AspNetCore.Hosting;
@@ -38,7 +40,7 @@ namespace EkiHire.Business.Services
         Task<IList<User>> GetUsersInRoleAsync(string role);
         Task<string> GenerateEmailConfirmationTokenAsync(User user);
         Task<UserDTO> ActivateAccount(string usernameOrEmail, string activationCode);
-        Task<UserProfileDTO> GetProfile(string username);
+        Task<UserDTO> GetProfile(string username);
         Task<bool> ForgotPassword(string usernameOrEmail);
         Task<bool> ResetPassword(PassordResetDTO model);
         Task<bool> ChangePassword(string userName, ChangePassordDTO model);
@@ -48,6 +50,13 @@ namespace EkiHire.Business.Services
         Task<IdentityResult> RemoveFromRolesAsync(User user, IEnumerable<string> roles);
         Task<bool> ResendVerificationCode(string username);
         Task<bool> TestEmail();
+        Task<bool> ValidatePassordResetCode(PassordResetDTO model);
+        Task<bool> ChangeName(Name name, string username);
+        Task<bool> ChangeGender(Gender gender, string username);
+        Task<bool> ChangeBirthday(DateTime birthdate, string username);
+        Task<bool> ChangeEmail(string userEmail, string username);
+        Task<bool> ChangePhoneNumber(string userPhoneNumber, string username);
+        Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
     }
 
     public class UserService : IUserService
@@ -216,6 +225,12 @@ namespace EkiHire.Business.Services
             return GenerateEmailConfirmationTokenAsync(user);
         }
 
+        /// <summary>
+        /// Use the given OTP to confirm that the user is authentic
+        /// </summary>
+        /// <param name="usernameOrEmail"></param>
+        /// <param name="activationCode"></param>
+        /// <returns></returns> /*checked*/
         public async Task<UserDTO> ActivateAccount(string usernameOrEmail, string activationCode)
         {
             if (string.IsNullOrEmpty(usernameOrEmail) || string.IsNullOrEmpty(activationCode))
@@ -250,31 +265,39 @@ namespace EkiHire.Business.Services
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                UserId = user.Id,
+                Id = user.Id,
                 Gender = user.Gender,
                 IsActive = user.IsConfirmed(),
                 AccountIsDeleted = user.IsDeleted,
             };
         }
 
-        public async Task<UserProfileDTO> GetProfile(string username)
+        public async Task<UserDTO> GetProfile(string username)
         {
-            var user = await _userManager.FindByNameAsync(username);
+            if (string.IsNullOrEmpty(username))
+            {
+                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+            }
 
-            return user is null ? null : new UserProfileDTO
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            return user is null ? null : new UserDTO
             {
                 Email = user.Email,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Gender = user.Gender.ToString(),
+                Gender = user.Gender,
                 NextOfKin = user.NextOfKinName,
                 NextOfKinPhone = user.NextOfKinPhone,
                 PhoneNumber = user.PhoneNumber,
                 ReferralCode = user.ReferralCode,
-                Address = user.Address,
+                Address = user.Address, 
                 MiddleName = user.MiddleName,
                 DateJoined = user.CreationTime.ToString(CoreConstants.DateFormat),
                 DateOfBirth = user.DateOfBirth,
+                SubscriptionPlanType = user.SubscriptionPlanType
             };
         }
 
@@ -287,21 +310,14 @@ namespace EkiHire.Business.Services
 
             var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
 
-            if (user == null)
-                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
-
-            if (user.IsDeleted)
-                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
-
-            if (user.IsDeleted)
-                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_LOCKED);
+            ValidateUser(user);
 
             user.OTP = CommonHelper.RandomDigits(5);
             await _userManager.UpdateAsync(user);
 
             var replacement = new StringDictionary
             {
-                ["FirstName"] = user.FirstName,
+                ["FirstName"] = user.UserName,
                 ["Otp"] = user.OTP
             };
 
@@ -314,6 +330,24 @@ namespace EkiHire.Business.Services
             await _mailSvc.SendMailAsync(mail, replacement);
 
             return await Task.FromResult(true);
+        }
+
+        public async Task<bool> ValidatePassordResetCode(PassordResetDTO model)
+        {
+            if (string.IsNullOrEmpty(model.UserNameOrEmail))
+            {
+                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+            }
+
+            var user = await FindByNameAsync(model.UserNameOrEmail) ?? await FindByEmailAsync(model.UserNameOrEmail);
+
+            await ValidateUser(user);
+
+            if (user.OTP != model.Code)
+            {
+                throw new EkiHireGenericException("Invalid Reset OTP");
+            }
+            return true;
         }
 
         public async Task<bool> ResetPassword(PassordResetDTO model)
@@ -440,7 +474,11 @@ namespace EkiHire.Business.Services
 
             if (!string.IsNullOrWhiteSpace(model.DateOfBirth) && !string.Equals(user.DateOfBirth, model.DateOfBirth))
             {
-                user.DateOfBirth = model.DateOfBirth;
+                DateTime birthdate;
+                if(DateTime.TryParse(model.DateOfBirth, out birthdate))
+                {
+                    user.DateOfBirth = birthdate;
+                }
             }
 
             if (!string.IsNullOrWhiteSpace(model.NextOfKinPhone) && !string.Equals(user.NextOfKinPhone, model.NextOfKinPhone))
@@ -505,6 +543,140 @@ namespace EkiHire.Business.Services
 			}catch(Exception e){
 				return false;
 			}
+        }
+
+        public async Task<bool> ChangeName(Name name, string username)
+        {
+            if (name == null || string.IsNullOrEmpty(username))
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Invalid data");
+            }
+
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            if (!user.IsConfirmed())
+            {
+                throw new EkiHireGenericException("Your account has not been activated!");
+            }
+            user.FirstName = name.FirstName;
+            user.LastName = name.LastName;
+
+            await UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<bool> ChangeGender(Gender gender, string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Could not identify user");
+            }
+
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            if (!user.IsConfirmed())
+            {
+                throw new EkiHireGenericException("Your account has not been activated!");
+            }
+            user.Gender = gender;
+
+            await UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<bool> ChangeBirthday(DateTime birthdate, string username)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Could not identify user");
+            }
+            if (birthdate == new DateTime())
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Invalid date given");
+            }
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            if (!user.IsConfirmed())
+            {
+                throw new EkiHireGenericException("Your account has not been activated!");
+            }
+            user.DateOfBirth = birthdate;
+
+            await UpdateAsync(user);
+            return true;
+        }
+
+        public async Task<bool> ChangeEmail(string userEmail, string username)
+        {
+            if (string.IsNullOrEmpty(username)/* || string.IsNullOrEmpty(userEmail)*/)
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Could not identify user");
+            }
+            if (string.IsNullOrEmpty(userEmail))
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Invalid data given");
+            }
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            if (!user.IsConfirmed())
+            {
+                throw new EkiHireGenericException("Your account has not been activated!");
+            }
+            user.Email = userEmail;
+
+            await UpdateAsync(user);
+            return true;
+            //I must warn that it is not a good thing to change the UserEmail, especially without verifying that it is the true owner
+            //doing the change (, also you must never allow change to the UserName whatever the reason) so we will need to add OTP 
+            //verification for this step.
+        }
+
+        public async Task<bool> ChangePhoneNumber(string userPhoneNumber, string username)
+        {
+            if (string.IsNullOrEmpty(username)/* || string.IsNullOrEmpty(userEmail)*/)
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Could not identify user");
+            }
+            if (string.IsNullOrEmpty(userPhoneNumber))
+            {
+                //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                throw new EkiHireGenericException("Invalid data given");
+            }
+            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+
+            await ValidateUser(user);
+
+            if (!user.IsConfirmed())
+            {
+                throw new EkiHireGenericException("Your account has not been activated!");
+            }
+            user.PhoneNumber = userPhoneNumber;
+
+            await UpdateAsync(user);
+            return true;
+            //I must warn that it is not a good thing to change the userPhoneNumber, especially without verifying that it is the true owner
+            //doing the change (, also you must never allow change to the UserName whatever the reason) so we will need to add OTP 
+            //verification for this step.
+        }
+
+        public Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph()
+        {
+            throw new NotImplementedException();
         }
     }
 }

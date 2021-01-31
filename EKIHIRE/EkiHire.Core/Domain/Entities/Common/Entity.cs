@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 
 namespace EkiHire.Core.Domain.Entities.Common
@@ -13,6 +15,7 @@ namespace EkiHire.Core.Domain.Entities.Common
         /// <summary>
         /// Unique identifier for this entity.
         /// </summary>
+        
         Key Id { get; set; }
 
         /// <summary>
@@ -51,6 +54,8 @@ namespace EkiHire.Core.Domain.Entities.Common
         /// <summary>
         /// Unique identifier for this entity.
         /// </summary>
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public virtual TPrimaryKey Id { get; set; }
 
         /// <summary>

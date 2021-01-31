@@ -61,10 +61,10 @@ namespace EkiHire.WebAPI.Controllers
             }
             catch (EkiHireGenericException ex) {
 
-                _logger.Warn($"L{lineNo} - {ex.ErrorCode}: {ex.Message}");
+                _logger.Warn($"L{lineNo} - {ex.Message}");
 
                 serviceResponse.ShortDescription = ex.Message;
-                serviceResponse.Code = ex.ErrorCode ?? HttpHelpers.GetStatusCodeValue(HttpStatusCode.BadRequest);
+                serviceResponse.Code = HttpHelpers.GetStatusCodeValue(HttpStatusCode.BadRequest);
 
                 if (!ModelState.IsValid) {
                     serviceResponse.ValidationErrors = ModelState.ToDictionary(

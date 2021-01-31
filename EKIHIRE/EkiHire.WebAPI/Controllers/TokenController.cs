@@ -25,7 +25,7 @@ namespace EkiHire.WebAPI.Controllers
             _roleSvc = rolesvc;
         }
 
-        [HttpPost]/*Sign In*/
+        [HttpPost]/*Sign In - checked*/
         public async Task<IServiceResponse<TokenDTO>> Index([FromBody] LoginModel model)
         {
             return await HandleApiOperationAsync(async () => {

@@ -74,4 +74,16 @@ namespace EkiHire.Core.Domain.Entities.Auditing
         public interface IFullAuditedEntity: IFullAuditedEntity<long>
         { }
     }
+
+    public class FullAuditedEntityDTO
+    {
+        public virtual DateTime CreationTime { get; set; }
+        public virtual long? CreatorUserId { get; set; }
+        public virtual long? DeleterUserId { get; set; }
+        public virtual DateTime? DeletionTime { get; set; }
+        public virtual long Id { get; set; }
+        public virtual bool IsDeleted { get; set; }
+        public virtual DateTime? LastModificationTime { get; set; }
+        public virtual long? LastModifierUserId { get; set; }
+    }
 }

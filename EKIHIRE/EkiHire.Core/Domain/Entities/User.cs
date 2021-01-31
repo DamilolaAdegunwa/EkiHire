@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using EkiHire.Core.Domain.Entities.Auditing;
 using EkiHire.Core.Domain.Entities.Common;
 using EkiHire.Core.Domain.DataTransferObjects;
-
 namespace EkiHire.Core.Domain.Entities
 {
     public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
@@ -31,19 +30,21 @@ namespace EkiHire.Core.Domain.Entities
         public string NextOfKinName { get; set; }
         public string NextOfKinPhone { get; set; }
         public DeviceType LoginDeviceType { get; set; }
-        public int? WalletId { get; set; }
+        //public int? WalletId { get; set; }
         public virtual Wallet Wallet { get; set; }
         public Gender Gender { get; set; }
-        public string DateOfBirth { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public DateTime? LastModificationTime { get; set; }
         public string AccountConfirmationCode { get; set; }
         public string Photo { get; set; }
         public string OTP { get; set; }
         public ICollection<UserRole> UserRoles { get; set; }
+        public ICollection<Post> Posts { get; set; }
         //added
         public bool IsActive { get; set; }
-        public long UserId { get; set; }
+        //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
+        public SubscriptionPlanType SubscriptionPlanType { get; set; }
 
         public bool IsTransient()
         {
@@ -113,12 +114,12 @@ namespace EkiHire.Core.Domain.Entities
                     SecurityStamp = user.SecurityStamp,
                     Title = user.Title,
                     TwoFactorEnabled = user.TwoFactorEnabled,
-                    UserId = user.UserId,
+                    //UserId = user.UserId,
                     UserName = user.UserName,
                     UserRoles = user.UserRoles,
                     UserType = user.UserType,
                     Wallet = user.Wallet,
-                    WalletId = user.WalletId,
+                    //WalletId = user.WalletId,
 
                 };
                 return userDto;

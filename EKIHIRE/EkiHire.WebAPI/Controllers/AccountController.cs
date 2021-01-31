@@ -1,20 +1,16 @@
 ﻿using EkiHire.Business.Services;
 using EkiHire.Core.Domain.DataTransferObjects;
 using EkiHire.Core.Domain.Entities;
+using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Core.Model;
 using EkiHire.WebAPI.Utils;
 using IdentityModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using EkiHire.Business.Services;
-using System.Net;
-using System.Net.Mail;
-using EkiHire.Core.Model;
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 namespace EkiHire.WebAPI.Controllers
 {
     [Authorize]
@@ -80,11 +76,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetProfile")]
-        public async Task<IServiceResponse<UserProfileDTO>> GetCurrentUserProfile()
+        public async Task<IServiceResponse<UserDTO>> GetCurrentUserProfile()
         {
             return await HandleApiOperationAsync(async () => {
 
-                var response = new ServiceResponse<UserProfileDTO>();
+                var response = new ServiceResponse<UserDTO>();
 
                 var profile = await _userSvc.GetProfile(User.FindFirst(JwtClaimTypes.Name)?.Value);
                 response.Object = profile;
@@ -106,7 +102,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("Activate")]/*verify and activate/deny account*/
+        [Route("Activate")]/*verify and activate/deny account - checked*/
         public async Task<ServiceResponse<UserDTO>> Activate(string usernameOrEmail, string activationCode)
         {
             return await HandleApiOperationAsync(async () => {
@@ -117,7 +113,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("ForgotPassword/{usernameOrEmail}")] /*Indicate Password Forget and get OTP for new*/
+        [Route("ForgotPassword/{usernameOrEmail}")] /*Indicate Password Forget and get OTP for new - checked*/
         public async Task<ServiceResponse<bool>> ForgotPassword(string usernameOrEmail)
         {
             return await HandleApiOperationAsync(async () => {
@@ -128,7 +124,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("ResetPassword")]/*remove old password and input new password*/
+        [Route("ResetPassword")]/*remove old password and input new password - checked*/
         public async Task<ServiceResponse<bool>> ResetPassword(PassordResetDTO model)
         {
             return await HandleApiOperationAsync(async () => {
@@ -149,7 +145,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("SignUp")]/*SignUp - Create your account*/
+        [Route("SignUp")]/*SignUp - Create your account (might be modified to take inmore data) - checked*/
         public async Task<IServiceResponse<bool>> SignUp(LoginViewModel loginModel)
         {
             return await HandleApiOperationAsync(async () => {
@@ -157,6 +153,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<bool>(true);
             });
         }
+
+        [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithFacebook")]/*Login via Facebook*/
         public async Task<IServiceResponse<bool>> ContinueWithFacebook(UserDTO user)
@@ -166,6 +164,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<bool>(true);
             });
         }
+
+        [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithGmail")]/*Login via Gmail*/
         public async Task<IServiceResponse<bool>> ContinueWithGmail(UserDTO user)
@@ -175,6 +175,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<bool>(true);
             });
         }
+
+        [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithLinkedIn")]/*Login via LinkedIn*/
         public async Task<IServiceResponse<bool>> ContinueWithLinkedIn(UserDTO user)
@@ -184,6 +186,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<bool>(true);
             });
         }
+
+        [AllowAnonymous]
         [HttpGet]
         [Route("PrivacyPolicy")]/*Our Privacy Policy*/
         public async Task<IServiceResponse<string>> PrivacyPolicy()
@@ -193,6 +197,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<string>(null);
             });
         }
+
+        [AllowAnonymous]
         [HttpGet]
         [Route("TermsOfService")]/*Our Terms Of Service*/
         public async Task<IServiceResponse<string>> TermsOfService()
@@ -202,6 +208,8 @@ namespace EkiHire.WebAPI.Controllers
                 return new ServiceResponse<string>(null);
             });
         }
+
+        [AllowAnonymous]
         [HttpPost]
         [Route("ResendVerificationCode")]
         public async Task<IServiceResponse<bool>> ResendVerificationCode(string username)
@@ -213,79 +221,201 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
-		
-        [AllowAnonymous]
-		[HttpGet]
-		[Route("TestEmail")]
-		public async Task<IServiceResponse<bool>> TestEmail()
-		{
-            //
-            #region email test
-            //var fromAddress = new MailAddress("contact@ekihire.com", "EkiHire");
-            //var toAddress = new MailAddress("damee1993@gmail.com", "Damilola Adegunwa");
-            //const string fromPassword = "ekihireapp1";
-            //const string subject = "My Email Test";
-            //const string body = "This is awesome!!";
 
-            //var smtp = new SmtpClient
-            //{
-            //    Host = "smtp.gmail.com",
-            //    Port = 587,
-            //    EnableSsl = true,
-            //    DeliveryMethod = SmtpDeliveryMethod.Network,
-            //    UseDefaultCredentials = false,
-            //    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-            //};
-            //using (var message = new MailMessage(fromAddress, toAddress)
-            //{
-            //    Subject = subject,
-            //    Body = body
-            //})
-            //{
-            //    smtp.Send(message);
-            //}
-            #endregion
-            //
-            return await HandleApiOperationAsync(async () => {
-                var result = await _userSvc.TestEmail();
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("ValidatePassordResetCode")] /*checked */
+        public async Task<IServiceResponse<bool>> ValidatePassordResetCode(PassordResetDTO model)
+		{
+			return await HandleApiOperationAsync(async () => {
+                var result = await _userSvc.ValidatePassordResetCode(model);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
 		}
+        //      [AllowAnonymous]
+        //[HttpGet]
+        //[Route("TestEmail")]
+        //public async Task<IServiceResponse<bool>> TestEmail()
+        //{
+        //          //
+        //          #region email test
+        //          //var fromAddress = new MailAddress("contact@ekihire.com", "EkiHire");
+        //          //var toAddress = new MailAddress("damee1993@gmail.com", "Damilola Adegunwa");
+        //          //const string fromPassword = "ekihireapp1";
+        //          //const string subject = "My Email Test";
+        //          //const string body = "This is awesome!!";
+
+        //          //var smtp = new SmtpClient
+        //          //{
+        //          //    Host = "smtp.gmail.com",
+        //          //    Port = 587,
+        //          //    EnableSsl = true,
+        //          //    DeliveryMethod = SmtpDeliveryMethod.Network,
+        //          //    UseDefaultCredentials = false,
+        //          //    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+        //          //};
+        //          //using (var message = new MailMessage(fromAddress, toAddress)
+        //          //{
+        //          //    Subject = subject,
+        //          //    Body = body
+        //          //})
+        //          //{
+        //          //    smtp.Send(message);
+        //          //}
+        //          #endregion
+        //          //
+        //          return await HandleApiOperationAsync(async () => {
+        //              var result = await _userSvc.TestEmail();
+        //              var response = new ServiceResponse<bool>(result);
+        //              return response;
+        //          });
+        //}
+        #endregion
+
+        #region profile endpoints
+        [AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpGet]
+        [Route("GetProfile/{usernameOrEmail}")]
+        public async Task<IServiceResponse<UserDTO>> GetProfile(string usernameOrEmail)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var result = await _userSvc.GetProfile(usernameOrEmail);
+                var response = new ServiceResponse<UserDTO>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("ChangeName")]
+        public async Task<IServiceResponse<bool>> ChangeName(Name name)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var username = User.FindFirst(JwtClaimTypes.Name)?.Value;
+                var result = await _userSvc.ChangeName(name, username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("ChangeGender")]
+        public async Task<IServiceResponse<bool>> ChangeGender(Gender gender)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var username = User.FindFirst(JwtClaimTypes.Name)?.Value;
+                bool result = await _userSvc.ChangeGender(gender, username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("ChangeBirthday")]
+        public async Task<IServiceResponse<bool>> ChangeBirthday(DateTime birthdate)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var username = User.FindFirst(JwtClaimTypes.Name)?.Value;
+                bool result = await _userSvc.ChangeBirthday(birthdate, username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("ChangeEmail")]
+        public async Task<IServiceResponse<bool>> ChangeEmail(string userEmail)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var username = User.FindFirst(JwtClaimTypes.Name)?.Value;
+                bool result = await _userSvc.ChangeEmail(userEmail, username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("ChangePhoneNumber")]
+        public async Task<IServiceResponse<bool>> ChangePhoneNumber(string userPhoneNumber)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var username = User.FindFirst(JwtClaimTypes.Name)?.Value;
+                bool result = await _userSvc.ChangePhoneNumber(userPhoneNumber, username);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
+        [HttpPost]
+        [Route("PostTimeGraph")]
+        public async Task<IServiceResponse<IDictionary<DateTime, List<PostDTO>>>> PostTimeGraph()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var result = await _userSvc.PostTimeGraph();
+                var response = new ServiceResponse<IDictionary<DateTime, List<PostDTO>>>(result);
+                return response;
+            });
+        }
+
+        #region APIs in progress
+        //update profile 
+        //Adverts
+        //Followers
+        //Following
+        //Basket
+        //Statistics
+        //Reviews
+        //PremiumPackages
+        //Messages
+        //NewAdsOnSelectedCategory
+        //Explore
+        //Post
+        //Market
+        //inviteFriends
+        //Help(we run on Intercom)
+        //settings
+        //faq, t & c, signout
+        #endregion
         #endregion
 
         #region default from boilerplate
-        // GET: api/<AccountController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
+        //// GET: api/<AccountController>
+        //[HttpGet]
+        //public IEnumerable<string> Get()
+        //{
+        //    return new string[] { "value1", "value2" };
+        //}
 
-        // GET api/<AccountController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+        //// GET api/<AccountController>/5
+        //[HttpGet("{id}")]
+        //public string Get(int id)
+        //{
+        //    return "value";
+        //}
 
-        // POST api/<AccountController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
+        //// POST api/<AccountController>
+        //[HttpPost]
+        //public void Post([FromBody] string value)
+        //{
+        //}
 
-        // PUT api/<AccountController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+        //// PUT api/<AccountController>/5
+        //[HttpPut("{id}")]
+        //public void Put(int id, [FromBody] string value)
+        //{
+        //}
 
-        // DELETE api/<AccountController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
+        //// DELETE api/<AccountController>/5
+        //[HttpDelete("{id}")]
+        //public void Delete(int id)
+        //{
+        //}
         #endregion
     }
 }

@@ -84,10 +84,15 @@ namespace EkiHire.WebAPI
                 , ServiceLifetime.Transient);
 
             services.AddIdentity<User, Role>(options => {
+                //password options
                 options.Password.RequireDigit = false;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
+                options.Password.RequiredLength = 6;
+                options.Password.RequiredUniqueChars = 1;
+
+                //other options
                 options.Lockout.AllowedForNewUsers = false;
                 options.SignIn.RequireConfirmedEmail = true;
                 options.User.RequireUniqueEmail = true;

@@ -13,13 +13,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using EkiHire.Core.Domain.Entities.Enums;
 
 namespace EkiHire.Business.Services
 {
@@ -97,83 +97,103 @@ namespace EkiHire.Business.Services
         }
         public async Task SignUp(LoginViewModel model)
         {
-            //validate credential
+            # region validate credential
+
+            //check that the model carries data
             if (model == null)
             {
                 throw await _serviceHelper.GetExceptionAsync("Invalid parameter");
             }
+            //check that the model carries a password 
             if (string.IsNullOrWhiteSpace(model.Password))
             {
                 throw await _serviceHelper.GetExceptionAsync("Please input a password");
             }
-            var user = await _userSvc.FindFirstAsync(x => x.UserName == model.UserName);
 
+            //check that the user does not already exist
+            var user = await _userSvc.FindFirstAsync(x => x.UserName == model.UserName);
             if (user!=null)
             {
                 throw await _serviceHelper.GetExceptionAsync("User already exist");
             }
 
-            //sign up a new user
-            try
+            //check that the username is a valid email ( the password would be validate by the Identity builder)
+            if(!Regex.IsMatch(model.UserName, @"^[^@\s]+@[^@\s]+\.[^@\s]+$",RegexOptions.IgnoreCase))
             {
-                _unitOfWork.BeginTransaction();
-                user = new User
+                throw await _serviceHelper.GetExceptionAsync("The UserName isn't Invalid Email");
+            }
+
+            //check for valide usertype
+            
+            #endregion
+
+            
+            #region sign up a new user
+            if(model.UserType == UserType.Customer)
+            {
+                try
                 {
-                    UserName = model.UserName,
-                    Email = model.UserName,
-                    AccountConfirmationCode = CommonHelper.GenereateRandonAlphaNumeric(),
-                    EmailConfirmed = false,
-                    PhoneNumberConfirmed = false,
-                };
-                var creationStatus = await _userSvc.CreateAsync(user, model.Password);
-
-                if (creationStatus.Succeeded)
-                {
-                    _repo.Insert(new Account
+                    _unitOfWork.BeginTransaction();
+                    user = new User
                     {
-                        UserId = user.Id,
-                    });
+                        UserName = model.UserName,
+                        Email = model.UserName,
+                        AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
+                        EmailConfirmed = false,
+                        PhoneNumberConfirmed = false,
+                        UserType = model.UserType
+                    };
+                    var creationStatus = await _userSvc.CreateAsync(user, model.Password);
 
-                    //await SendAccountEmail(user,model.Password);
-                    if (user != null)
+                    if (creationStatus.Succeeded)
                     {
-                        var replacement = new StringDictionary
-                        {
-                            //["FirstName"] = user.FirstName,
-                            ["ActivationCode"] = user.AccountConfirmationCode
-                        };
+                        //_repo.Insert(new Account
+                        //{
+                        //    UserId = user.Id,
+                        //});
 
-                        var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                        if (user != null)
                         {
-                            BodyIsFile = true,
-                            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
-                        };
+                            var replacement = new StringDictionary
+                            {
+                                //["FirstName"] = user.FirstName,
+                                ["ActivationCode"] = user.AccountConfirmationCode
+                            };
 
-                        await _mailSvc.SendMailAsync(mail, replacement);
-                        
+                            var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                            {
+                                BodyIsFile = true,
+                                BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                            };
+
+                            await _mailSvc.SendMailAsync(mail, replacement);
+
+                        }
                     }
+                    else
+                    {
+                        _unitOfWork.Rollback();
+
+                        throw await _serviceHelper.GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+                    }
+                    _unitOfWork.Commit();
                 }
-                else
+                catch (Exception ex)
                 {
                     _unitOfWork.Rollback();
-
-                    throw await _serviceHelper.GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+                    throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
                 }
-                _unitOfWork.Commit();
             }
-            catch (Exception ex)
-            {
-                _unitOfWork.Rollback();
-                throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
-            }
-            //send email
+            
+            //the sign up will be adapted for different users types
+            #endregion
         }
-        public async Task AddAccount(AccountDTO account)
+        public async Task AddAccount(AccountDTO account)//Add profile
         {
-            if (account == null)
-            {
-                throw await _serviceHelper.GetExceptionAsync("invalid parameter");
-            }
+            //if (account == null)
+            //{
+            //    throw await _serviceHelper.GetExceptionAsync("invalid parameter");
+            //}
             //if (account.TerminalId != null && !await IsValidTerminal(account.TerminalId))
             //{
             //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.TERMINAL_NOT_EXIST);
@@ -187,65 +207,65 @@ namespace EkiHire.Business.Services
             //{
             //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.EMPLOYEE_EXIST);
             //}
-            try
-            {
-                _unitOfWork.BeginTransaction();
+            //try
+            //{
+            //    _unitOfWork.BeginTransaction();
 
-                var user = new User
-                {
-                    FirstName = account.FirstName,
-                    LastName = account.LastName,
-                    MiddleName = account.MiddleName,
-                    Gender = account.Gender,
-                    Email = account.Email,
-                    PhoneNumber = account.PhoneNumber,
-                    Address = account.Address,
-                    NextOfKinName = account.NextOfKin,
-                    NextOfKinPhone = account.NextOfKinPhone,
-                    EmailConfirmed = true,
-                    PhoneNumberConfirmed = true,
-                    UserName = account.Email,
-                    ReferralCode = CommonHelper.GenereateRandonAlphaNumeric()
-                };
+            //    var user = new User
+            //    {
+            //        FirstName = account.FirstName,
+            //        LastName = account.LastName,
+            //        MiddleName = account.MiddleName,
+            //        Gender = account.Gender,
+            //        Email = account.Email,
+            //        PhoneNumber = account.PhoneNumber,
+            //        Address = account.Address,
+            //        NextOfKinName = account.NextOfKin,
+            //        NextOfKinPhone = account.NextOfKinPhone,
+            //        EmailConfirmed = true,
+            //        PhoneNumberConfirmed = true,
+            //        UserName = account.Email,
+            //        ReferralCode = CommonHelper.GenerateRandonAlphaNumeric()
+            //    };
 
-                var creationStatus = await _userSvc.CreateAsync(user, account.Password);
+            //    var creationStatus = await _userSvc.CreateAsync(user, account.Password);
 
-                if (creationStatus.Succeeded)
-                {
+            //    if (creationStatus.Succeeded)
+            //    {
 
-                    var dbRole = await _roleSvc.FindByIdAsync(account.RoleId);
+            //        var dbRole = await _roleSvc.FindByIdAsync(account.RoleId);
 
-                    if (dbRole != null)
-                    {
-                        await _userSvc.AddToRoleAsync(user, dbRole.Name);
-                    }
+            //        if (dbRole != null)
+            //        {
+            //            await _userSvc.AddToRoleAsync(user, dbRole.Name);
+            //        }
 
-                    _repo.Insert(new Account
-                    {
-                        UserId = user.Id,
+            //        //_repo.Insert(new Account
+            //        //{
+            //        //    UserId = user.Id,
                         
-                        CreatorUserId = _serviceHelper.GetCurrentUserId()
-                    });
+            //        //    CreatorUserId = _serviceHelper.GetCurrentUserId()
+            //        //});
 
 
-                    await SendAccountEmail(user, "");
+            //        await SendAccountEmail(user, "");
 
-                }
-                else
-                {
-                    _unitOfWork.Rollback();
+            //    }
+            //    else
+            //    {
+            //        _unitOfWork.Rollback();
 
-                    throw await _serviceHelper
-                        .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
-                }
-                _unitOfWork.Commit();
-            }
-            catch (Exception)
-            {
+            //        throw await _serviceHelper
+            //            .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+            //    }
+            //    _unitOfWork.Commit();
+            //}
+            //catch (Exception)
+            //{
 
-                _unitOfWork.Rollback();
-                throw;
-            }
+            //    _unitOfWork.Rollback();
+            //    throw;
+            //}
         }
 
         private async Task SendAccountEmail(User user, string password)
@@ -319,7 +339,7 @@ namespace EkiHire.Business.Services
                     //DepartmentId = department.Id,
                     //TerminalId = terminal.Id,
                     //TerminalName = terminal.Name,
-                    Otp = employee.Otp,
+                    OTP = employee.Otp,
                     //OtpIsUsed = employee.OtpIsUsed,
                     //AccountCode = employee.AccountCode,
                 };
@@ -438,7 +458,7 @@ namespace EkiHire.Business.Services
         {
             var employee = _repo.Get(id);
 
-            var user = await _userSvc.FindFirstAsync(x => x.Id == employee.UserId);
+            var user = await _userSvc.FindFirstAsync(x => x.Id == employee.User.Id);
 
             if (user is null)
             {

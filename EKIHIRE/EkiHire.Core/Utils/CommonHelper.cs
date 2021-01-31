@@ -5,7 +5,7 @@ namespace EkiHire.Core.Utils
 {
     public static class CommonHelper
     {
-        public static string GenereateRandonAlphaNumeric()
+        public static string GenerateRandonAlphaNumeric()
         {
             return $"{Guid.NewGuid().ToString().Remove(5).ToUpper()}-{Guid.NewGuid().ToString().Remove(5).ToUpper()}";
         }

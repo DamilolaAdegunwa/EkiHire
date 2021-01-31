@@ -2,11 +2,11 @@
 {
     public enum UserType
     {
-        SuperAdministrator = 0,
+        Customer = 0,  
         Administrator = 1,
         Employee = 2,
         Partner = 3,
-        Customer = 4,
+        SuperAdministrator = 4,
         Business = 5,
         CraftsPerson = 6,
         Advertiser = 7

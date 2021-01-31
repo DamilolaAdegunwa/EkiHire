@@ -16,7 +16,8 @@ namespace EkiHire.Data.efCore.Context
         {
 
         }
-        public DbSet<ErrorCode> ErrorCodes_wrot { get; set; }
+        public DbSet<ErrorCode> ErrorCode { get; set; }
+        public DbSet<Account> Account{ get; set; }
         #region commented dbset
         //public DbSet<Employee> Employees { get; set; }
         //public DbSet<EmployeeRoute> EmployeeRoutes { get; set; }

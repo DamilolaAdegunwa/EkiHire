@@ -137,13 +137,15 @@ namespace EkiHire.Core.Messaging.Email
         protected virtual async Task SendMailAsync(MailBase mail, StringDictionary replacements)
         {
             var message = BuildMailMessage(mail, replacements).Result;
-            try {
+            try 
+            {
                 using (var _smtpClient = GetSmtpClient()) {
                     await _smtpClient.SendMailAsync(message);
                 }
             }
             catch (Exception e) {
                 _logger.LogError(e.Message, e);
+                //throw new Exception(e.Message);
                 throw;
             }
         }
