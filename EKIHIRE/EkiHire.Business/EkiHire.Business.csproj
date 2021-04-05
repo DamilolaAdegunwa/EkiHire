@@ -12,13 +12,19 @@
 
   <ItemGroup>
     <Compile Include="Services\AccountService.cs" />
+    <Compile Include="Services\CategoryService.cs" />
     <Compile Include="Services\ClaimsProvider.cs" />
     <Compile Include="Services\ErrorCodeService.cs" />
     <Compile Include="Services\RoleService.cs" />
+    <Compile Include="Services\SeedService.cs" />
     <Compile Include="Services\ServiceHelper.cs" />
     <Compile Include="Services\ServiceResponse.cs" />
     <Compile Include="Services\UserService.cs" />
     <Compile Include="Services\WalletService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="log4net" Version="2.0.12" />
   </ItemGroup>
 
   <ItemGroup>

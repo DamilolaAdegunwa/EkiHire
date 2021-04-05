@@ -7,6 +7,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class CategoryDTO
     {
+        public string Name { get; set; }
 
         public static implicit operator CategoryDTO(Category category)
         {
@@ -14,7 +15,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
             {
                 var categoryDto = new CategoryDTO
                 {
-
+                    Name = category.Name
                 };
                 return categoryDto;
             }

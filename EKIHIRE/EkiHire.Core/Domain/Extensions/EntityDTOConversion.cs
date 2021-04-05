@@ -25,6 +25,23 @@ namespace EkiHire.Core.Domain.Extensions
         }
         #endregion
 
+        #region sub-categories
+        public static IEnumerable<SubcategoryDTO> ToDTO(this IEnumerable<Subcategory> entities)
+        {
+            if (entities != null)
+            {
+                List<SubcategoryDTO> result = new List<SubcategoryDTO>();
+                foreach (var entity in entities)
+                {
+                    SubcategoryDTO dto = entity;
+                    result.Add(dto);
+                }
+                return result;
+            }
+            return null;
+        }
+        #endregion
+
         #region User
         //public static 
         #endregion

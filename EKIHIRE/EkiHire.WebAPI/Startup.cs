@@ -124,6 +124,11 @@ namespace EkiHire.WebAPI
 
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IRepository<Wallet>, EfCoreRepository<DbContext, Wallet>>();
+
+            services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<IRepository<Category>, EfCoreRepository<DbContext, Category>>();
+            services.AddScoped<IRepository<Subcategory>, EfCoreRepository<DbContext, Subcategory>>();
+
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
 
@@ -312,8 +317,12 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService)
         {
+            #region seeding the db
+            categoryService.SeedCategories();
+            categoryService.SeedRealEstateSubcategories();
+            #endregion end seeding the db
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
