@@ -146,7 +146,7 @@ namespace EkiHire.Core.Messaging.Email
             catch (Exception e) {
                 _logger.LogError(e.Message, e);
                 //throw new Exception(e.Message);
-                throw;
+                //throw;
             }
         }
 

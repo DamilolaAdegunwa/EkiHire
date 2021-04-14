@@ -12,9 +12,11 @@
 
   <ItemGroup>
     <Compile Include="Services\AccountService.cs" />
+    <Compile Include="Services\AdService.cs" />
     <Compile Include="Services\CategoryService.cs" />
     <Compile Include="Services\ClaimsProvider.cs" />
     <Compile Include="Services\ErrorCodeService.cs" />
+    <Compile Include="Services\RealEstateService.cs" />
     <Compile Include="Services\RoleService.cs" />
     <Compile Include="Services\SeedService.cs" />
     <Compile Include="Services\ServiceHelper.cs" />

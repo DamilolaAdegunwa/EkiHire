@@ -167,7 +167,7 @@ namespace EkiHire.Business.Services
                             };
 
                             await _mailSvc.SendMailAsync(mail, replacement);
-
+                            //the email needs to be worked on and be further simplified in it's process flow
                         }
                     }
                     else
@@ -181,7 +181,8 @@ namespace EkiHire.Business.Services
                 catch (Exception ex)
                 {
                     _unitOfWork.Rollback();
-                    throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
+                    throw new Exception("an error occured while trying to signup. Please try again!");
+                    //throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
                 }
             }
             

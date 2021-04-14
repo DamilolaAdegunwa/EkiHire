@@ -143,9 +143,9 @@ namespace EkiHire.Business.Services
                     return true;
                 }
                 var data = new List<string>{
-                    "Real Estate", "Services", "Jobs", "Automobile", "Hotel", "Restaurant",
-                    "Attraction", "Retails", "Phones & Tablets"
+                    "Real Estate", "Services", "Jobs", "Automobile", "Retails", "Hotels", "Attractions", "Restaurant"
                 };
+                //,"Phones & Tablets"
                 _unitOfWork.BeginTransaction();
                 foreach (var d in data)
                 {

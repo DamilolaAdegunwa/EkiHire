@@ -363,6 +363,8 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        
+
         #region APIs in progress
         //update profile 
         //Adverts

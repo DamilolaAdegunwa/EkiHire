@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using EkiHire.Business.Services;
+using EkiHire.Core.Domain.DataTransferObjects;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,8 @@ namespace EkiHire.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class RetailController : ControllerBase
+    public class RetailController : BaseController
     {
+        
     }
 }
