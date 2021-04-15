@@ -1,0 +1,94 @@
+{
+  "categories":
+    [
+      {
+        "Real Estate": {
+          "sub-categories": [
+            { "Houses & Apartments For Sale": "Room, Furniture, Parking, Bedroom, Bathroom" } ,
+            {"Houses & Apartments For Rent": "Room, Furniture, Parking, Bedroom, Bathroom" },
+            {"Commercial Property For Sale": "Room, Furniture, Parking, Bedroom, Bathroom" },
+            {"Commercial Property For Rent": "Room, Furniture, Parking, Bedroom, Bathroom" },
+            { "Land & Plots For Sale": "LandType, SquareMeters, ExchangePossible, BrokerFee" },
+            { "Land & Plots For Rent": "LandType, SquareMeters, ExchangePossible, BrokerFee" },
+            { "Short Lets": "LandType, Condition, Quality, BrokerFee" }  
+          ]
+        }
+      },
+      {
+        "Services": {
+          "sub-categories": [
+            "Agency",
+            "Automotives", //companyname, location
+            "Beauty & Personal Care",
+            "Building & Repair",
+            "Classes & Lessons", //companyname, servicefeature
+            "Cleaning", //companyname, serviceArea
+            "Computer & IT",
+            "Electronics",
+            "Fitness & Sports",
+            "Gardening & Landscaping", //condition,company,servicefeature,typeofservice
+            "Health",
+            "Logistics & Movers", //CompanyName
+            "Manufacturing",
+            "Music & Film",
+            "Party & Events",
+            "Pet Services", //gender, breed
+            "Photography & Videography",
+            "Printing",
+            "Professionals", //companyname, location
+            "Security & Surveillance",
+            "Skills & Talent",
+            "Other",
+            "Leisure" //companyname, location
+          ]
+        }
+      },
+      { "Jobs": { "sub-categories": "" } },
+      { "Automobile": { "sub-categories": "" } },
+      {
+        "Retails": {
+          "sub-categories": [
+            "Agriculture & farming",
+            "Apparel",
+            "Art, Paintings & crafts",
+            "Audio, Books & Movies",
+            "Baby & Toddler Essentials",
+            "Beauty & Personal Care",
+            "Cell Phones, Desktops, Laptops & Tablets",
+            "Construction Materials & Supplies",
+            "Consumer Electronics",
+            "Education",
+            "Electrical Materials & Supplies",
+            "Energy & Power Supplies",
+            "Electrical Materials & Supplies",
+            "Event & Party Supplies",
+            "Fitness & Sports",
+            "Furniture",
+            "Garden",
+            "Gift Ideas & Presents",
+            "Gift Cards & Coupons",
+            "Groceries/FoodStuff",
+            "Hair & Hair Care",
+            "Home Decor & Bedding",
+            "Household Appliances",
+            "Household Supplies",
+            "Industrial Tools & Hardware",
+            "Luggage",
+            "Machinery & Equipment",
+            "Musical Instruments",
+            "Office",
+            "Packaging & Printing",
+            "Pet & Pet Supplies",
+            "Security & Surveillance",
+            "Toys & Games",
+            "Wholesale",
+            "Other"
+
+          ]
+        }
+      },
+      { "Hotels": { "sub-categories": "" } },
+      { "Attractions": { "sub-categories": "" } },
+      { "Restaurant": { "sub-categories": "" } }
+    ]
+}

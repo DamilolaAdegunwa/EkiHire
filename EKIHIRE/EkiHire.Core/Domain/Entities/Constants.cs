@@ -4,7 +4,9 @@ using System.Text;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    class RatingReview
+    public class Keywords
     {
+        public const string KeywordList = "";
     }
+
 }
