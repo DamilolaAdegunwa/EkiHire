@@ -26,8 +26,17 @@ namespace EkiHire.Business.Services
 {
     public interface IAdService
     {
+        Task<bool> AddAd(AdDTO model);
+        Task<bool> CloseAd(long model);
+        Task<bool> EditAd(long model);
+        Task<bool> PromoteAd(long model);
+        Task<bool> CreateAdItem(long[] AdIds);
+        Task<bool> AddAdToItem(long[] AdIds, long ItemId);
+        Task<bool> GroupAdItem(long[] ItemIds, string groupname);
+        Task<bool> AddToCart(long Id);
+        Task<bool> RemoveFromCart(long Id);
     }
-    public class AdService
+    public class AdService: IAdService
     {
         private readonly IRepository<Ad> repository;
         public AdService()
@@ -46,7 +55,7 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<bool> AddAd(long model)
+        public async Task<bool> CloseAd(long model)
         {
             try
             {
@@ -98,6 +107,45 @@ namespace EkiHire.Business.Services
         }
 
         public async Task<bool> AddAdToItem(long[] AdIds, long ItemId)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> GroupAdItem(long[] ItemIds, string groupname)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> AddToCart(long Id)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> RemoveFromCart(long Id)
         {
             try
             {

@@ -92,5 +92,25 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+        //cart
+        [HttpPost, Route("AddToCart")]
+        public async Task<IServiceResponse<bool>> AddToCart(long Id)
+        {
+            return await HandleApiOperationAsync(async () =>
+            {
+                bool result = true;
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+        public async Task<IServiceResponse<bool>> RemoveFromCart(long Id)
+        {
+            return await HandleApiOperationAsync(async () =>
+            {
+                bool result = true;
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
     }
 }

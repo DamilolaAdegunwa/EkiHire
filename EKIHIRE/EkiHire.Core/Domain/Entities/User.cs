@@ -10,6 +10,7 @@ namespace EkiHire.Core.Domain.Entities
 {
     public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
     {
+        #region all user property
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
         public string LastName { get; set; }
@@ -45,7 +46,8 @@ namespace EkiHire.Core.Domain.Entities
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlanType SubscriptionPlanType { get; set; }
-
+        public ICollection<CartItem> CartItems { get; set; } 
+        #endregion
         public bool IsTransient()
         {
             if (EqualityComparer<long>.Default.Equals(Id, default(int)))

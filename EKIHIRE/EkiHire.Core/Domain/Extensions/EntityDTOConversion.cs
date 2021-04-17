@@ -42,6 +42,23 @@ namespace EkiHire.Core.Domain.Extensions
         }
         #endregion
 
+        #region ad
+        public static IEnumerable<AdDTO> ToDTO(this IEnumerable<Ad> entities)
+        {
+            if (entities != null)
+            {
+                List<AdDTO> result = new List<AdDTO>();
+                foreach (var entity in entities)
+                {
+                    AdDTO dto = entity;
+                    result.Add(dto);
+                }
+                return result;
+            }
+            return null;
+        }
+        #endregion
+
         #region real estate
         //public static IEnumerable<RealEstateDTO> ToDTO(this IEnumerable<RealEstate> entities)
         //{
