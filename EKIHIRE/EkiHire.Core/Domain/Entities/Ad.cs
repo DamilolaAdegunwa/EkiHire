@@ -18,6 +18,7 @@ namespace EkiHire.Core.Domain.Entities
         public Subcategory Subcategory { get; set; }
         public string Keywords { get; set; }
         public string Location { get; set; }
+        public Item Item { get; set; }
         //specifics
         public long? Room { get; set; }
         public string Furniture { get; set; }
@@ -37,6 +38,9 @@ namespace EkiHire.Core.Domain.Entities
         public string ServiceArea { get; set; }
         public string ServiceFeature { get; set; }
         public string TypeOfService { get; set; }//inspection, Repair
-        public  { get; set; }
+        public string Topic { get; set; }
+        public string Requirements { get; set; }
+        public string ResumePath { get; set; }
+
     }
 }

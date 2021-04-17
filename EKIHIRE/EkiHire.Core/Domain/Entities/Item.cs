@@ -11,11 +11,13 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)]
         public string Name { get; set; }
         [DataType(DataType.Text)]
-        public string Keyword { get; set; }
+        public string Keywords { get; set; }
         [DataType(DataType.Text)]
         public string ImagePath { get; set; }
         [DataType(DataType.Text)]
         public string GroupName { get; set; }
+        public long Order { get; set; }
         public Subcategory Subcategory { get; set; }
     }
 }
+//category > subcategory > item > class >  subclass 
