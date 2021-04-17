@@ -132,7 +132,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     TypeOfService = model.TypeOfService,
                     VideoPath = model.VideoPath,
                     WorkExperiences = model.WorkExperiences,
-                    Year = model.Year
+                    Year = model.Year,
+                    
                 };
                 return dto;
             }

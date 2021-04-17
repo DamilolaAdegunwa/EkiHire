@@ -11,6 +11,7 @@ namespace EkiHire.Core.Domain.Entities
         public string Name { get; set; }
         [DataType(DataType.Text)]
         public string ImagePath { get; set; }
+        public string ImageString { get; set; }
         public ICollection<Subcategory> Subcategories { get; set; }
     }
 }

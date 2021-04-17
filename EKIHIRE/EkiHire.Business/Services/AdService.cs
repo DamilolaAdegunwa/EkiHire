@@ -30,23 +30,25 @@ namespace EkiHire.Business.Services
         Task<bool> CloseAd(long model);
         Task<bool> EditAd(long model);
         Task<bool> PromoteAd(long model);
-        Task<bool> CreateAdItem(long[] AdIds);
-        Task<bool> AddAdToItem(long[] AdIds, long ItemId);
+        Task<bool> CreateAdItem(ItemDTO model);
+        Task<bool> AddAdToItem(string[] AdIds, long ItemId);
         Task<bool> GroupAdItem(long[] ItemIds, string groupname);
         Task<bool> AddToCart(long Id);
         Task<bool> RemoveFromCart(long Id);
+        Task<IEnumerable<AdDTO>> Search(SearchVM model);
     }
     public class AdService: IAdService
     {
-        private readonly IRepository<Ad> repository;
-        public AdService()
+        private readonly IRepository<Ad> adRepository;
+        public AdService(IRepository<Ad> adRepository)
         {
-
+            this.adRepository = adRepository;
         }
         public async Task<bool> AddAd(AdDTO model)
         {
             try
             {
+                
                 return true;
             }
             catch (Exception ex)
@@ -93,7 +95,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> CreateAdItem(long[] AdIds)
+        public async Task<bool> CreateAdItem(ItemDTO model)
         {
             try
             {
@@ -106,7 +108,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> AddAdToItem(long[] AdIds, long ItemId)
+        public async Task<bool> AddAdToItem(string[] AdIds, long ItemId)
         {
             try
             {
@@ -155,6 +157,20 @@ namespace EkiHire.Business.Services
             {
 
                 return false;
+            }
+        }
+
+        public async Task<IEnumerable<AdDTO>> Search(SearchVM model)
+        {
+            try
+            {
+                List<AdDTO> result = new List<AdDTO>();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return null;
             }
         }
     }

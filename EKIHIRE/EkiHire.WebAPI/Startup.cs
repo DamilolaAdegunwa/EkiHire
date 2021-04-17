@@ -129,6 +129,8 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<Category>, EfCoreRepository<DbContext, Category>>();
             services.AddScoped<IRepository<Subcategory>, EfCoreRepository<DbContext, Subcategory>>();
 
+            services.AddScoped<IAdService, AdService>();
+            services.AddScoped<IRepository<Ad>, EfCoreRepository<DbContext, Ad>>();
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
 
