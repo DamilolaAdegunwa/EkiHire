@@ -7,25 +7,12 @@
 //using System.Linq;
 //using System.Threading.Tasks;
 
-//namespace EkiHire.WebAPI.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    public class RealEstateController : BaseController
-//    {
-//        private readonly IRealEstateService _realEstateService;
-//        public RealEstateController(IRealEstateService realEstateService)
-//        {
-//            _realEstateService = realEstateService;
-//        }
-
-//        [Route("GetRealEstateAds/{status}")]
-//        public async Task<IServiceResponse<IEnumerable<RealEstateDTO>>> GetRealEstateAds(int? status)
-//        {
-//            return await HandleApiOperationAsync(async () => {
-//                var result = await _realEstateService.GetRealEstateAds(status);
-//                return new ServiceResponse<IEnumerable<RealEstateDTO>>(result);
-//            });
-//        }
-//    }
-//}
+namespace EkiHire.WebAPI.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class RealEstateController : BaseController
+    {
+        
+    }
+}
