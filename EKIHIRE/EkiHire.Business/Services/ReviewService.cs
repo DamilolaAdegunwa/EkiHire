@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace EkiHire.Business.Services
-{
-    class ReviewService
-    {
-    }
-}
+//namespace EkiHire.Business.Services
+//{
+//    class ReviewService
+//    {
+//    }
+//}

@@ -44,7 +44,19 @@
         }
       },
       { "Jobs": { "sub-categories": "" } },
-      { "Automobile": { "sub-categories": "" } },
+      {
+        "Automobile": {
+          "sub-categories": [
+            "Cars",
+            "Trucks & Trailers",
+            "Buses & Micro Buses",
+            "Heavy Equipment",
+            "Vehicle Parts & Accessories",
+            "Motor Cycles & Scooters",
+            "Water Craft & Boats"
+          ]
+        }
+      },
       {
         "Retails": {
           "sub-categories": [

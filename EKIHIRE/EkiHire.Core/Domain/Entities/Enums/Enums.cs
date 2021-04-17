@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EkiHire.Core.Domain.Entities.Enums
 {
-    public enum RealEstateAdsStatus
+    public enum AdsStatus
     {
         ACTIVE = 0,
         INREVIEW = 1,

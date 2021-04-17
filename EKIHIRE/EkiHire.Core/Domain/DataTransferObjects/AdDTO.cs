@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Core.Domain.Entities;
 
-namespace EkiHire.Core.Domain.Entities
+namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class Ad: FullAuditedEntity
+    public class AdDTO
     {
         #region all ad properties
         [DataType(DataType.Text)]
@@ -70,5 +71,72 @@ namespace EkiHire.Core.Domain.Entities
         public string Mileage { get; set; }
 
         #endregion
+
+        #region ad dto
+
+        #endregion
+
+        public static implicit operator AdDTO(Ad model)
+        {
+            if (model != null)
+            {
+                var dto = new AdDTO
+                {
+                    Name = model.Name,
+                    AdClass = model.AdClass,
+                    Address = model.Address,
+                    AdImages = model.AdImages,
+                    AdItems = model.AdItems,
+                    AdsStatus = model.AdsStatus,
+                    Age = model.Age,
+                    Amount = model.Amount,
+                    ServiceArea = model.ServiceArea,
+                    Bathroom = model.Bathroom,
+                    Bedroom = model.Bedroom,
+                    BrokerFee = model.BrokerFee,
+                    CarType = model.CarType,
+                    Certification = model.Certification,
+                    Color = model.Color,
+                    CompanyName = model.CompanyName,
+                    Condition = model.Condition,
+                    Education = model.Education,
+                    EmploymentStatus = model.EmploymentStatus,
+                    ExchangePossible = model.ExchangePossible,
+                    ExpectedSalary = model.ExpectedSalary,
+                    FuelType = model.FuelType,
+                    Furniture = model.Furniture,
+                    Gender = model.Gender,
+                    HighestLevelOfEducation = model.HighestLevelOfEducation,
+                    JobType = model.JobType,
+                    Keywords = model.Keywords,
+                    LandType = model.LandType,
+                    Location = model.Location,
+                    Maker = model.Maker,
+                    Mileage = model.Mileage,
+                    Parking = model.Parking,
+                    PhoneNumber = model.PhoneNumber,
+                    Place = model.Place,
+                    Quality = model.Quality,
+                    Region = model.Region,
+                    Requirements = model.Requirements,
+                    ResumePath = model.ResumePath,
+                    Room = model.Room,
+                    SaveData = model.SaveData,
+                    Seats = model.Seats,
+                    ServiceFeature = model.ServiceFeature,
+                    Skills = model.Skills,
+                    SquareMeters = model.SquareMeters,
+                    Subcategory = model.Subcategory,
+                    Title = model.Title,
+                    Topic = model.Topic,
+                    TypeOfService = model.TypeOfService,
+                    VideoPath = model.VideoPath,
+                    WorkExperiences = model.WorkExperiences,
+                    Year = model.Year
+                };
+                return dto;
+            }
+            return null;
+        }
     }
 }

@@ -29,10 +29,85 @@ namespace EkiHire.Business.Services
     }
     public class AdService
     {
-        //private readonly IRepository<> repository;
-        //public AdService()
-        //{
+        private readonly IRepository<Ad> repository;
+        public AdService()
+        {
 
-        //}
+        }
+        public async Task<bool> AddAd(AdDTO model)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+        public async Task<bool> AddAd(long model)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> EditAd(long model)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+        public async Task<bool> PromoteAd(long model)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> CreateAdItem(long[] AdIds)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> AddAdToItem(long[] AdIds, long ItemId)
+        {
+            try
+            {
+                return true;
+            }
+            catch (Exception ex)
+            {
+
+                return false;
+            }
+        }
     }
 }
