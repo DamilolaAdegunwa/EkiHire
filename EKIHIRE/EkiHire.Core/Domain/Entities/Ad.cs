@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Core.Domain.DataTransferObjects;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -19,16 +20,17 @@ namespace EkiHire.Core.Domain.Entities
         public ICollection<AdImage> AdImages { get; set; }
         public Subcategory Subcategory { get; set; }
         public string Keywords { get; set; }
-        public string Location { get; set; }
-        public ICollection<AdItem> AdItems { get; set; }
+        public string Location { get; set; }//coordinates
+        public bool? IsActive { get; set; }
+        //public ICollection<AdItem> AdItems { get; set; }
         //specifics
         public long? Room { get; set; }
         public string Furniture { get; set; }
         public string Parking { get; set; }
         public long? Bedroom { get; set; }
-        public int? Bathroom { get; set; }
+        public long? Bathroom { get; set; }
         //
-        public string LandType { get; set; }//residentiial land, commercial
+        public string LandType { get; set; }//residential land, commercial
         public decimal? SquareMeters { get; set; }
         public string ExchangePossible { get; set; }
         public string BrokerFee { get; set; }
@@ -70,5 +72,69 @@ namespace EkiHire.Core.Domain.Entities
         public string Mileage { get; set; }
 
         #endregion
+
+        public static implicit operator Ad(AdDTO model)
+        {
+            if (model != null)
+            {
+                Ad output = new Ad
+                {
+                    Name = model.Name,
+                    AdClass = model.AdClass,
+                    Address = model.Address,
+                    AdImages = model.AdImages,
+                    //AdItems = model.AdItems,
+                    AdsStatus = model.AdsStatus,
+                    Age = model.Age,
+                    Amount = model.Amount,
+                    ServiceArea = model.ServiceArea,
+                    Bathroom = model.Bathroom,
+                    Bedroom = model.Bedroom,
+                    BrokerFee = model.BrokerFee,
+                    CarType = model.CarType,
+                    Certification = model.Certification,
+                    Color = model.Color,
+                    CompanyName = model.CompanyName,
+                    Condition = model.Condition,
+                    Education = model.Education,
+                    EmploymentStatus = model.EmploymentStatus,
+                    ExchangePossible = model.ExchangePossible,
+                    ExpectedSalary = model.ExpectedSalary,
+                    FuelType = model.FuelType,
+                    Furniture = model.Furniture,
+                    Gender = model.Gender,
+                    HighestLevelOfEducation = model.HighestLevelOfEducation,
+                    JobType = model.JobType,
+                    Keywords = model.Keywords,
+                    LandType = model.LandType,
+                    Location = model.Location,
+                    Maker = model.Maker,
+                    Mileage = model.Mileage,
+                    Parking = model.Parking,
+                    PhoneNumber = model.PhoneNumber,
+                    Place = model.Place,
+                    Quality = model.Quality,
+                    Region = model.Region,
+                    Requirements = model.Requirements,
+                    ResumePath = model.ResumePath,
+                    Room = model.Room,
+                    SaveData = model.SaveData,
+                    Seats = model.Seats,
+                    ServiceFeature = model.ServiceFeature,
+                    Skills = model.Skills,
+                    SquareMeters = model.SquareMeters,
+                    Subcategory = model.Subcategory,
+                    Title = model.Title,
+                    Topic = model.Topic,
+                    TypeOfService = model.TypeOfService,
+                    VideoPath = model.VideoPath,
+                    WorkExperiences = model.WorkExperiences,
+                    Year = model.Year,
+                    
+                };
+                return output;
+            }
+            return null;
+        }
     }
 }

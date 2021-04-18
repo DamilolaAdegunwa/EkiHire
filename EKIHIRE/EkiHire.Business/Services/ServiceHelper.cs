@@ -2,6 +2,7 @@
 using EkiHire.Core.Exceptions;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EkiHire.Business.Services
@@ -12,6 +13,7 @@ namespace EkiHire.Business.Services
         T GetOrUpdateCacheItem<T>(string key, Func<T> update, int? cacheSeconds = null);
         string GetCurrentUserEmail();
         int? GetCurrentUserId();
+        Task<ClaimsPrincipal> GetCurrentUserAsync();
         string GetCurrentUserTerminal();
         Uri GetAbsoluteUri();
     }
@@ -59,12 +61,18 @@ namespace EkiHire.Business.Services
             return id is null ? (int?) null : int.Parse(id);
         }
 
+        public async Task<ClaimsPrincipal> GetCurrentUserAsync()
+        {
+            var user = _httpContext.HttpContext?.User;
+            return user;
+        }
+
         public async Task<EkiHireGenericException> GetExceptionAsync(string errorCode)
         {
             var error = await GetOrUpdateCacheItem(errorCode, async () => await _errorCodesSvc.GetErrorByCodeAsync(errorCode));
 
             if (error is null)
-                throw new EkiHireGenericException("Error validating your request. Please try again.", errorCode);
+                throw new EkiHireGenericException(errorCode, errorCode);
 
             return new EkiHireGenericException(error.Message, error.Code);
         }

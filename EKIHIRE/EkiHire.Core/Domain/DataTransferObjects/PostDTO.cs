@@ -6,7 +6,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class PostDTO: Post
     {
-        public new ICollection<AttachmentDTO> Attachments { get; set; }
-        public new UserDTO User { get; set; }
+        public new ICollection<Attachment> Attachments { get; set; }
+        public new User User { get; set; }
     }
 }

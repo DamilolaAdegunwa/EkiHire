@@ -19,7 +19,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         [DataType(DataType.Text)]
         public string GroupName { get; set; }
         public long Order { get; set; }
-        public SubcategoryDTO Subcategory { get; set; }
+        public Subcategory Subcategory { get; set; }
         #endregion 
 
         public static implicit operator ItemDTO(Item model)

@@ -21,13 +21,14 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public Subcategory Subcategory { get; set; }
         public string Keywords { get; set; }
         public string Location { get; set; }
-        public ICollection<AdItem> AdItems { get; set; }
+        public bool? IsActive { get; set; }
+        //public ICollection<AdItem> AdItems { get; set; }
         //specifics
         public long? Room { get; set; }
         public string Furniture { get; set; }
         public string Parking { get; set; }
         public long? Bedroom { get; set; }
-        public int? Bathroom { get; set; }
+        public long? Bathroom { get; set; }
         //
         public string LandType { get; set; }//residentiial land, commercial
         public decimal? SquareMeters { get; set; }
@@ -86,7 +87,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     AdClass = model.AdClass,
                     Address = model.Address,
                     AdImages = model.AdImages,
-                    AdItems = model.AdItems,
+                    //AdItems = model.AdItems,
                     AdsStatus = model.AdsStatus,
                     Age = model.Age,
                     Amount = model.Amount,

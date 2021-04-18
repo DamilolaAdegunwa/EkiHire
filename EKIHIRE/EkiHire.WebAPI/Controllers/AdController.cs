@@ -25,12 +25,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("AddAd")]
         public async Task<IServiceResponse<bool>> AddAd(AdDTO model)
-        {
-            var x = System.Threading.Thread.CurrentPrincipal.Identity.Name;
-            var y = "";
+        {//System.Threading.Thread.CurrentPrincipal.Identity.Name;
+
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.AddAd(model);
+                bool result = await adService.AddAd(model, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -41,18 +40,18 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.CloseAd(adId);
+                bool result = await adService.CloseAd(adId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
         }
 
         [HttpPost, Route("EditAd")]
-        public async Task<IServiceResponse<bool>> EditAd(long adId)
+        public async Task<IServiceResponse<bool>> EditAd(AdDTO dto, long adId)
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.EditAd(adId);
+                bool result = await adService.EditAd(dto, adId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -63,7 +62,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.PromoteAd(adId);
+                bool result = await adService.PromoteAd(adId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -74,18 +73,18 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.CreateAdItem(model);
+                bool result = await adService.CreateItem(model, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
         }
 
         [HttpPost, Route("AddAdToItem")]
-        public async Task<IServiceResponse<bool>> AddAdToItem(string[] keywords, long ItemId)
+        public async Task<IServiceResponse<bool>> AddAdToItem(List<string> keywords, long ItemId)
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.AddAdToItem(keywords, ItemId);
+                bool result = await adService.EditItemKeywords(keywords, ItemId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -96,7 +95,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.GroupAdItem(ItemIds, groupname);
+                bool result = await adService.GroupAdItems(ItemIds, groupname, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -107,7 +106,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.AddToCart(adId);
+                bool result = await adService.AddAdToCart(adId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -117,7 +116,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.RemoveFromCart(adId);
+                bool result = await adService.RemoveAdFromCart(adId, User.Identity.Name);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -127,7 +126,7 @@ namespace EkiHire.WebAPI.Controllers
         public async Task<IServiceResponse<IEnumerable<AdDTO>>> Search(SearchVM model)
         {
             return await HandleApiOperationAsync(async () => {
-                IEnumerable<AdDTO> result = await adService.Search(model);
+                IEnumerable<AdDTO> result = await adService.Search(model, User.Identity.Name);
                 var response = new ServiceResponse<IEnumerable<AdDTO>>(result);
                 return response;
             });

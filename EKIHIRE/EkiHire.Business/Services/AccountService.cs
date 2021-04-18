@@ -123,7 +123,7 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync("The UserName isn't Invalid Email");
             }
 
-            //check for valide usertype
+            //check for validate usertype
             
             #endregion
 
