@@ -7,5 +7,8 @@ namespace EkiHire.Core.Model
 {
     public class SearchVM
     {
+        public string SearchText { get; set; }
+        public List<string> Keywords { get; set; }
+        public string SubcategoryId { get; set; }
     }
 }

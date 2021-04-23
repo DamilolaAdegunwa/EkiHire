@@ -22,6 +22,8 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Core.Collections.Extensions;
+using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Business.Services
 {
     public interface IAdService
@@ -44,13 +46,15 @@ namespace EkiHire.Business.Services
         private readonly IUserService _userSvc;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Item> itemRepository;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository)
+        private readonly IRepository<UserCart> userCartRepository;
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
             this._userSvc = _userSvc;
             this._unitOfWork = unitOfWork;
             this.itemRepository = itemRepository;
+            this.userCartRepository = userCartRepository;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -534,28 +538,82 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> AddAdToCart(long Id, string username)
+        public async Task<bool> AddAdToCart(long adId, string username)
         {
             try
             {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var ad = adRepository.Get(adId);
+                if(ad == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+                }
+                #endregion
+                #region add ad to cart
+                var data = new UserCart
+                {
+                    Ad = ad,
+                    User = user
+                };
+                _unitOfWork.BeginTransaction();
+                userCartRepository.InsertAsync(data);
+                _unitOfWork.Commit();
+                #endregion
                 return true;
             }
             catch (Exception ex)
             {
-
+                _unitOfWork.Rollback();
+                //logger
                 return false;
             }
         }
 
-        public async Task<bool> RemoveAdFromCart(long Id, string username)
+        public async Task<bool> RemoveAdFromCart(long adId, string username)
         {
             try
             {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var ad = adRepository.Get(adId);
+                if (ad == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+                }
+                #endregion
+                #region add ad to cart
+                var data = new UserCart
+                {
+                    Ad = ad,
+                    User = user
+                };
+                _unitOfWork.BeginTransaction();
+                userCartRepository.DeleteAsync(data);
+                _unitOfWork.Commit();
+                #endregion
                 return true;
             }
             catch (Exception ex)
             {
-
+                _unitOfWork.Rollback();
+                //logger
                 return false;
             }
         }
@@ -565,13 +623,43 @@ namespace EkiHire.Business.Services
             try
             {
                 List<AdDTO> result = new List<AdDTO>();
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
+                }
+                #endregion
+                #region filter based on the search entry
+                var ad = adRepository.GetAll().Where(a =>
+                (a.Subcategory.Id.ToString() == model.SubcategoryId || string.IsNullOrWhiteSpace(model.SubcategoryId))
+                && ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
+                && (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
+                );
 
+                result = ad.ToDTO().ToList();
+                #endregion
                 return result;
             }
             catch (Exception ex)
             {
+                _unitOfWork.Rollback();
+                //logger
                 return null;
             }
+        }
+        public static List<string> Split(string str, string separator)
+        {
+            var resp = str.Split(new[] { separator }, StringSplitOptions.None).ToList();
+            return resp;
         }
     }
 }

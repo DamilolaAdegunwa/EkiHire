@@ -5,3 +5,5 @@ from the package manager console, choosing EkiHire.Data as the Default project
 EntityFrameworkCore\Enable-Migrations
 EntityFrameworkCore\Add-Migration <migration-class-name>
 EntityFrameworkCore\Update-database
+
+paid $16.50 then $9.10 to move to advanced
