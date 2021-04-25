@@ -145,7 +145,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("SignUp")]/*SignUp - Create your account (might be modified to take inmore data) - checked*/
+        [Route("SignUp")]/*SignUp - Create your account */
         public async Task<IServiceResponse<bool>> SignUp(LoginViewModel loginModel)
         {
             return await HandleApiOperationAsync(async () => {

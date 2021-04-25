@@ -61,7 +61,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using EkiHire.Data.Repository;
-
+using log4net;
 namespace EkiHire.WebAPI
 {
     public class Startup
@@ -77,6 +77,7 @@ namespace EkiHire.WebAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging();
             #region Identity
 
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -131,20 +132,17 @@ namespace EkiHire.WebAPI
 
             services.AddScoped<IAdService, AdService>();
             services.AddScoped<IRepository<Ad>, EfCoreRepository<DbContext, Ad>>();
+            services.AddScoped<IRepository<Item>, EfCoreRepository<DbContext, Item>>();
+            services.AddScoped<IRepository<UserCart>, EfCoreRepository<DbContext, UserCart>>();
+
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
-
             //services.AddScoped<IAccountService,AccountService>();
             //services.AddScoped<IAttractionService, AttractionService>();
             //services.AddScoped<IJobService, JobService>();
             //services.AddScoped<IModuleService, ModuleService>();
             //services.AddScoped<IRealEstateService, RealEstateService>();
             //services.AddScoped<IRetailService, RetailService>();
-
-            //
-
-            //
-
             //services.AddScoped<IWalletNumberService, WalletNumberService>();
             //services.AddScoped<ICouponService, CouponService>();
             //services.AddScoped<ICustomerService, CustomerService>();
@@ -319,8 +317,9 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory)
         {
+            loggerFactory.AddLog4Net();
             #region seeding the db
             categoryService.SeedCategories();
             categoryService.SeedRealEstateSubcategories();

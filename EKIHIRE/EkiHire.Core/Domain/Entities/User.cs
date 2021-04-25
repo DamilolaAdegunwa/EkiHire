@@ -47,6 +47,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlanType SubscriptionPlanType { get; set; }
         public ICollection<UserCart> CartItems { get; set; } 
+        
         #endregion
         public bool IsTransient()
         {

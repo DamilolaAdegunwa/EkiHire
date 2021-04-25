@@ -19,7 +19,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-
+using log4net;
+using System.Reflection;
 namespace EkiHire.Business.Services
 {
     public interface IUserService
@@ -65,10 +66,10 @@ namespace EkiHire.Business.Services
         private readonly UserManager<User> _userManager;
         private readonly AppConfig appConfig;
         private readonly IRepository<User> _userRepository;
-
         private readonly IServiceHelper _svcHelper;
         private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
@@ -82,6 +83,7 @@ namespace EkiHire.Business.Services
             _mailSvc = mailSvc;
             appConfig = _appConfig.Value;
             _hostingEnvironment = hostingEnvironment;
+            _userRepository = userRepository;
         }
 
         protected virtual Task<IdentityResult> CreateAsync(User user)
@@ -241,9 +243,25 @@ namespace EkiHire.Business.Services
             var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
 
             await ValidateUser(user);
-
+            UserDTO userDto = new UserDTO();
             if (user.IsConfirmed())
-                throw new EkiHireGenericException("Your account was activated earlier.");
+            {
+                userDto = user;
+                return userDto;
+                //return user == null ? null : new UserDTO
+                //{
+                //    PhoneNumber = user.PhoneNumber,
+                //    Email = user.Email,
+                //    FirstName = user.FirstName,
+                //    LastName = user.LastName,
+                //    Id = user.Id,
+                //    Gender = user.Gender,
+                //    IsActive = user.IsConfirmed(),
+                //    AccountIsDeleted = user.IsDeleted,
+                //};
+                //throw new EkiHireGenericException("Your account was activated earlier.");
+            }
+
 
             if (activationCode == user.AccountConfirmationCode)
             {
@@ -252,24 +270,26 @@ namespace EkiHire.Business.Services
                 user.PhoneNumberConfirmed = true;
 
                 await UpdateAsync(user);
+
             }
             else if (activationCode != user.AccountConfirmationCode)
             {
                 throw new EkiHireGenericException("Invalid OTP");
                 //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
             }
-
-            return user == null ? null : new UserDTO
-            {
-                PhoneNumber = user.PhoneNumber,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Id = user.Id,
-                Gender = user.Gender,
-                IsActive = user.IsConfirmed(),
-                AccountIsDeleted = user.IsDeleted,
-            };
+            userDto = user;
+            return userDto;
+            //return user == null ? null : new UserDTO
+            //{
+            //    PhoneNumber = user.PhoneNumber,
+            //    Email = user.Email,
+            //    FirstName = user.FirstName,
+            //    LastName = user.LastName,
+            //    Id = user.Id,
+            //    Gender = user.Gender,
+            //    IsActive = user.IsConfirmed(),
+            //    AccountIsDeleted = user.IsDeleted,
+            //};
         }
 
         public async Task<UserDTO> GetProfile(string username)
@@ -503,25 +523,34 @@ namespace EkiHire.Business.Services
 
         public async Task<bool> ResendVerificationCode(string username)
         {
-            var user = _userRepository.FirstOrDefault(u => u.UserName == username);
-            if(user != null)
+            try
             {
-                var replacement = new StringDictionary
+                var user = _userRepository.FirstOrDefault(u => u.UserName == username);
+                if (user != null)
                 {
-                    //["FirstName"] = user.FirstName,
-                    ["ActivationCode"] = user.AccountConfirmationCode
-                };
+                    var replacement = new StringDictionary
+                    {
+                        //["FirstName"] = user.FirstName,
+                        ["ActivationCode"] = user.AccountConfirmationCode
+                    };
 
-                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
-                {
-                    BodyIsFile = true,
-                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
-                };
+                    var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                    {
+                        BodyIsFile = true,
+                        BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                    };
 
-                await _mailSvc.SendMailAsync(mail, replacement);
-                return true;
+                    await _mailSvc.SendMailAsync(mail, replacement);
+                    return true;
+                }
+                return false;
             }
-            return false;
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {ex.StackTrace}", ex);
+                return false;
+            }
+            
         }
 		public async Task<bool> TestEmail()
         {

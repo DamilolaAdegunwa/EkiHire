@@ -7,7 +7,7 @@ using EkiHire.Core.Domain.Entities.Enums;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class AdRating: FullAuditedEntity
+    public class AdFeedback: FullAuditedEntity
     {
         public long UserId { get; set; }
         public long AdId { get; set; }

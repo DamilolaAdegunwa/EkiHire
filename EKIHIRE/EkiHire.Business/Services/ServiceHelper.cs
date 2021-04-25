@@ -71,10 +71,11 @@ namespace EkiHire.Business.Services
         {
             var error = await GetOrUpdateCacheItem(errorCode, async () => await _errorCodesSvc.GetErrorByCodeAsync(errorCode));
 
-            if (error is null)
-                throw new EkiHireGenericException(errorCode, errorCode);
+            //if (error is null)
+            //    throw new EkiHireGenericException(errorCode, errorCode);
 
-            return new EkiHireGenericException(error.Message, error.Code);
+            //return new EkiHireGenericException(error.Message, error.Code);
+            return new EkiHireGenericException(errorCode, errorCode);
         }
 
         public T GetOrUpdateCacheItem<T>(string key, Func<T> update, int? cacheSeconds = null)

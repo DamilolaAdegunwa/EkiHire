@@ -24,6 +24,9 @@ using System.Text.RegularExpressions;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Collections.Extensions;
 using EkiHire.Core.Domain.Extensions;
+using log4net;
+using System.Reflection;
+
 namespace EkiHire.Business.Services
 {
     public interface IAdService
@@ -42,12 +45,14 @@ namespace EkiHire.Business.Services
     public class AdService: IAdService
     {
         private readonly IRepository<Ad> adRepository;
+        private readonly IRepository<AdFeedback> adFeedbackRepository;
         private readonly IServiceHelper _serviceHelper;
         private readonly IUserService _userSvc;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Item> itemRepository;
         private readonly IRepository<UserCart> userCartRepository;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository)
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -55,9 +60,11 @@ namespace EkiHire.Business.Services
             this._unitOfWork = unitOfWork;
             this.itemRepository = itemRepository;
             this.userCartRepository = userCartRepository;
+            this.adFeedbackRepository = adFeedbackRepository;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
+            Ad ad = new Ad();
             try
             {
                 #region validate credential
@@ -92,7 +99,7 @@ namespace EkiHire.Business.Services
 
                 #region add ad to the db
                 _unitOfWork.BeginTransaction();
-                Ad ad = model;
+                ad = model;
                 //audit props
                 ad.CreationTime = DateTime.Now;
                 ad.CreatorUserId = user.Id;
@@ -114,7 +121,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"user ({username}) could not add a new ad");
                 return false;
             }
         }
@@ -149,7 +156,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger;
+                log.Error($"error while trying to close ad for user ({username}) :: stackTrace => {ex.StackTrace}", ex);
                 return false;
             }
         }
@@ -401,7 +408,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger;
+                log.Error($"error while editing ad for user ({username}) :: stackTrace => {ex.StackTrace}", ex);
                 return false;
             }
         }
@@ -436,7 +443,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger;
+                log.Error($"error while promoting ad for user ({username}) :: stackTrace => {ex.StackTrace}", ex);
                 return false;
             }
         }
@@ -464,7 +471,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"error while trying to create Item :: stackTrace => {ex.StackTrace}", ex);
                 return false;
             }
         }
@@ -661,6 +668,72 @@ namespace EkiHire.Business.Services
             var resp = str.Split(new[] { separator }, StringSplitOptions.None).ToList();
             return resp;
         }
+
+        #region reviews
+        public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var ad = adRepository.Get(adId);
+                if (ad == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+                }
+                #endregion
+
+                var result = new List<AdFeedback>();
+
+                result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
+                && (a.AdId == adId || adId == 0)).ToListAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name} ",ex);
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId  = 0)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var ad = adRepository.Get(adId);
+                if (ad == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+                }
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                return null;
+            }
+        }
+        #endregion
     }
 }
 //show premium ads first

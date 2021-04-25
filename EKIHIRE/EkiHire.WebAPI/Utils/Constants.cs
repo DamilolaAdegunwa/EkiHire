@@ -17,4 +17,8 @@ namespace EkiHire.WebAPI.Utils
             internal const string Paystack = "Payment:PayStack";
         }
     }
+    public class ErrorContants : CoreConstants
+    {
+        public const string InvalidData = "You entered an invalid data!";
+    }
 }

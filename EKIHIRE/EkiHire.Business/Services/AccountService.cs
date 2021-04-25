@@ -20,23 +20,26 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using EkiHire.Core.Domain.Entities.Enums;
-
+using log4net;
+using System.Reflection;
 namespace EkiHire.Business.Services
 {
     public interface IAccountService
     {
-        Account FirstOrDefault(Expression<Func<Account, bool>> filter);
-        IQueryable<Account> GetAll();
+        Task<bool> AccountExist(string username);
+        //Account FirstOrDefault(Expression<Func<Account, bool>> filter);
+        //IQueryable<Account> GetAll();
         Task<AccountDTO> GetAccountsByemailAsync(string email);
         //Task AddAccount(AccountDTO employee);//might be used in the future
-        Task AddAccount(AccountDTO employee);
+        //Task AddAccount(AccountDTO employee);
         Task<IPagedList<AccountDTO>> GetAccounts(int pageNumber, int pageSize, string query);
         //Task<int?> GetAssignedTerminal(string email);
         //Task UpdateAccountOtp(int employeeId, string otp);
-        Task<bool> Verifyotp(string otp);
+        //Task<bool> VerifyOTP(string otp);
         Task<AccountDTO> GetAccount(int id);
         Task UpdateAccount(int id, AccountDTO model);
         Task SignUp(LoginViewModel model);
+        Task SendAccountCredentials(User user, string password);
     }
 
     public class AccountService : IAccountService
@@ -44,27 +47,21 @@ namespace EkiHire.Business.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceHelper _serviceHelper;
         private readonly IRepository<Account> _repo;
-        //private readonly IRepository<Terminal> _terminalRepo;
         private readonly IRepository<Wallet> _walletRepo;
-        //private readonly IRepository<Department> _departmentRepo;
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
-        //private readonly IReferralService _referralSvc;
         private readonly ISMSService _smsSvc;
         private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IGuidGenerator _guidGenerator;
         private readonly AppConfig appConfig;
-
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         public AccountService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
-            //IRepository<Terminal> terminalRepo,
             IRepository<Wallet> walletRepo,
-            //IRepository<Department> departmentRepo,
             IServiceHelper serviceHelper,
             IUserService userSvc,
             IRoleService roleSvc,
-            //IReferralService referralSvc,
             ISMSService smsSvc,
             IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
@@ -73,12 +70,9 @@ namespace EkiHire.Business.Services
         {
             _unitOfWork = unitOfWork;
             _repo = employeeRepo;
-            //_terminalRepo = terminalRepo;
             _walletRepo = walletRepo;
-            //_departmentRepo = departmentRepo;
             _serviceHelper = serviceHelper;
             _userSvc = userSvc;
-            //_referralSvc = referralSvc;
             _smsSvc = smsSvc;
             _mailSvc = mailSvc;
             appConfig = _appConfig.Value;
@@ -86,12 +80,7 @@ namespace EkiHire.Business.Services
             _guidGenerator = guidGenerator;
             _roleSvc = roleSvc;
         }
-
-
-
-
-
-        private async Task<bool> AccountExist(string username)
+        public async Task<bool> AccountExist(string username)
         {
             return await _repo.ExistAsync(x => x.Email == username);
         }
@@ -124,10 +113,8 @@ namespace EkiHire.Business.Services
             }
 
             //check for validate usertype
-            
             #endregion
 
-            
             #region sign up a new user
             if(model.UserType == UserType.Customer)
             {
@@ -167,6 +154,7 @@ namespace EkiHire.Business.Services
                             };
 
                             await _mailSvc.SendMailAsync(mail, replacement);
+                            //SendAccountCredentials(user, model.Password);
                             //the email needs to be worked on and be further simplified in it's process flow
                         }
                     }
@@ -181,7 +169,9 @@ namespace EkiHire.Business.Services
                 catch (Exception ex)
                 {
                     _unitOfWork.Rollback();
-                    throw new Exception("an error occured while trying to signup. Please try again!");
+                    var errMsg = "an error occured while trying to signup. Please try again!";
+                    log.Error(errMsg, ex);
+                    throw new Exception(errMsg);
                     //throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
                 }
             }
@@ -189,87 +179,86 @@ namespace EkiHire.Business.Services
             //the sign up will be adapted for different users types
             #endregion
         }
-        public async Task AddAccount(AccountDTO account)//Add profile
-        {
-            //if (account == null)
-            //{
-            //    throw await _serviceHelper.GetExceptionAsync("invalid parameter");
-            //}
-            //if (account.TerminalId != null && !await IsValidTerminal(account.TerminalId))
-            //{
-            //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.TERMINAL_NOT_EXIST);
-            //}
-            //if (account.DepartmentId != null && !await IsValidDepartment(account.DepartmentId))
-            //{
-            //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.DEPARTMENT_NOT_EXIST);
-            //}
-            //account.AccountCode = account.AccountCode.Trim();
-            //if (await _repo.ExistAsync(v => v.AccountCode == account.AccountCode))
-            //{
-            //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.EMPLOYEE_EXIST);
-            //}
-            //try
-            //{
-            //    _unitOfWork.BeginTransaction();
+        //public async Task AddAccount(AccountDTO account)//Add profile
+        //{
+        //    //if (account == null)
+        //    //{
+        //    //    throw await _serviceHelper.GetExceptionAsync("invalid parameter");
+        //    //}
+        //    //if (account.TerminalId != null && !await IsValidTerminal(account.TerminalId))
+        //    //{
+        //    //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.TERMINAL_NOT_EXIST);
+        //    //}
+        //    //if (account.DepartmentId != null && !await IsValidDepartment(account.DepartmentId))
+        //    //{
+        //    //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.DEPARTMENT_NOT_EXIST);
+        //    //}
+        //    //account.AccountCode = account.AccountCode.Trim();
+        //    //if (await _repo.ExistAsync(v => v.AccountCode == account.AccountCode))
+        //    //{
+        //    //    throw await _serviceHelper.GetExceptionAsync(ErrorConstants.EMPLOYEE_EXIST);
+        //    //}
+        //    //try
+        //    //{
+        //    //    _unitOfWork.BeginTransaction();
 
-            //    var user = new User
-            //    {
-            //        FirstName = account.FirstName,
-            //        LastName = account.LastName,
-            //        MiddleName = account.MiddleName,
-            //        Gender = account.Gender,
-            //        Email = account.Email,
-            //        PhoneNumber = account.PhoneNumber,
-            //        Address = account.Address,
-            //        NextOfKinName = account.NextOfKin,
-            //        NextOfKinPhone = account.NextOfKinPhone,
-            //        EmailConfirmed = true,
-            //        PhoneNumberConfirmed = true,
-            //        UserName = account.Email,
-            //        ReferralCode = CommonHelper.GenerateRandonAlphaNumeric()
-            //    };
+        //    //    var user = new User
+        //    //    {
+        //    //        FirstName = account.FirstName,
+        //    //        LastName = account.LastName,
+        //    //        MiddleName = account.MiddleName,
+        //    //        Gender = account.Gender,
+        //    //        Email = account.Email,
+        //    //        PhoneNumber = account.PhoneNumber,
+        //    //        Address = account.Address,
+        //    //        NextOfKinName = account.NextOfKin,
+        //    //        NextOfKinPhone = account.NextOfKinPhone,
+        //    //        EmailConfirmed = true,
+        //    //        PhoneNumberConfirmed = true,
+        //    //        UserName = account.Email,
+        //    //        ReferralCode = CommonHelper.GenerateRandonAlphaNumeric()
+        //    //    };
 
-            //    var creationStatus = await _userSvc.CreateAsync(user, account.Password);
+        //    //    var creationStatus = await _userSvc.CreateAsync(user, account.Password);
 
-            //    if (creationStatus.Succeeded)
-            //    {
+        //    //    if (creationStatus.Succeeded)
+        //    //    {
 
-            //        var dbRole = await _roleSvc.FindByIdAsync(account.RoleId);
+        //    //        var dbRole = await _roleSvc.FindByIdAsync(account.RoleId);
 
-            //        if (dbRole != null)
-            //        {
-            //            await _userSvc.AddToRoleAsync(user, dbRole.Name);
-            //        }
+        //    //        if (dbRole != null)
+        //    //        {
+        //    //            await _userSvc.AddToRoleAsync(user, dbRole.Name);
+        //    //        }
 
-            //        //_repo.Insert(new Account
-            //        //{
-            //        //    UserId = user.Id,
+        //    //        //_repo.Insert(new Account
+        //    //        //{
+        //    //        //    UserId = user.Id,
                         
-            //        //    CreatorUserId = _serviceHelper.GetCurrentUserId()
-            //        //});
+        //    //        //    CreatorUserId = _serviceHelper.GetCurrentUserId()
+        //    //        //});
 
 
-            //        await SendAccountEmail(user, "");
+        //    //        await SendAccountEmail(user, "");
 
-            //    }
-            //    else
-            //    {
-            //        _unitOfWork.Rollback();
+        //    //    }
+        //    //    else
+        //    //    {
+        //    //        _unitOfWork.Rollback();
 
-            //        throw await _serviceHelper
-            //            .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
-            //    }
-            //    _unitOfWork.Commit();
-            //}
-            //catch (Exception)
-            //{
+        //    //        throw await _serviceHelper
+        //    //            .GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+        //    //    }
+        //    //    _unitOfWork.Commit();
+        //    //}
+        //    //catch (Exception)
+        //    //{
 
-            //    _unitOfWork.Rollback();
-            //    throw;
-            //}
-        }
-
-        private async Task SendAccountEmail(User user, string password)
+        //    //    _unitOfWork.Rollback();
+        //    //    throw;
+        //    //}
+        //}
+        public async Task SendAccountCredentials(User user, string password)
         {
             try
             {
@@ -281,7 +270,7 @@ namespace EkiHire.Business.Services
                     ["DefaultPassword"] = password
                 };
 
-                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New staff account information", user.Email)
+                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New User Account Information", user.Email)
                 {
                     BodyIsFile = true,
                     BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AccountActivationEmail)
@@ -289,21 +278,12 @@ namespace EkiHire.Business.Services
 
                 await _mailSvc.SendMailAsync(mail, replacement);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                log.Error($"could not send credentials for user : {user.UserName}");
             }
         }
-
-        public Account FirstOrDefault(Expression<Func<Account, bool>> filter)
-        {
-            return _repo.FirstOrDefault(filter);
-        }
-
-        public IQueryable<Account> GetAll()
-        {
-            return _repo.GetAll();
-        }
-
+        #region account
         public Task<AccountDTO> GetAccountsByemailAsync(string email)
         {
             var employees =
@@ -347,36 +327,6 @@ namespace EkiHire.Business.Services
 
             return employees.AsNoTracking().FirstOrDefaultAsync();
         }
-
-        public async Task<bool> Verifyotp(string otp)
-        {
-
-
-            //var email = await _userSvc.FindByNameAsync(_serviceHelper.GetCurrentUserEmail());
-            //var operationManager = await GetOperationManager(email.Email);
-            //if (operationManager.Otp == otp && !operationManager.OtpIsUsed)
-            //{
-            //    await UpdateUsedAccountOtp(operationManager.Id);
-            //    return true;
-            //}
-            return false;
-
-
-        }
-        //public async Task<List<AccountDTO>> GetAllAccountByTerminalId(int terminalId)
-        //{
-
-        //    var employee = await GetTerminalAccounts(terminalId);
-
-        //    if (employee == null)
-        //    {
-        //        //throw await _helper.GetExceptionAsync(ErrorConstants.EMPLOYEE_NOT_EXIST);
-        //        return new List<AccountDTO>();
-        //    }
-
-        //    return employee;
-
-        //}
 
         public Task<IPagedList<AccountDTO>> GetAccounts(int pageNumber, int pageSize, string query)
         {
@@ -494,5 +444,6 @@ namespace EkiHire.Business.Services
             await _userSvc.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
         }
+        #endregion
     }
 }

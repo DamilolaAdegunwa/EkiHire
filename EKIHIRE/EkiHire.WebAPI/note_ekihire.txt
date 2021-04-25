@@ -7,3 +7,4 @@ EntityFrameworkCore\Add-Migration <migration-class-name>
 EntityFrameworkCore\Update-database
 
 paid $16.50 then $9.10 to move to advanced
+still not sure what basket or market is!
