@@ -274,7 +274,7 @@ namespace EkiHire.WebAPI.Controllers
         #endregion
 
         #region profile endpoints
-        [AllowAnonymous]/*TO-BE-REMOVED*/
+        //[AllowAnonymous]/*TO-BE-REMOVED*/
         [HttpGet]
         [Route("GetProfile/{usernameOrEmail}")]
         public async Task<IServiceResponse<UserDTO>> GetProfile(string usernameOrEmail)
@@ -362,28 +362,6 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
-
-        
-
-        #region APIs in progress
-        //update profile 
-        //Adverts
-        //Followers
-        //Following
-        //Basket
-        //Statistics
-        //Reviews
-        //PremiumPackages
-        //Messages
-        //NewAdsOnSelectedCategory
-        //Explore
-        //Post
-        //Market
-        //inviteFriends
-        //Help(we run on Intercom)
-        //settings
-        //faq, t & c, signout
-        #endregion
         #endregion
 
         #region default from boilerplate
@@ -421,3 +399,4 @@ namespace EkiHire.WebAPI.Controllers
         #endregion
     }
 }
+//accts (users), profile

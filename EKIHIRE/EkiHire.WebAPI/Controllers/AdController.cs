@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 using EkiHire.WebAPI.ViewModels;
 using EkiHire.Core.Model;
 using Microsoft.AspNetCore.Authorization;
+using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.WebAPI.Controllers
 {
@@ -18,9 +19,11 @@ namespace EkiHire.WebAPI.Controllers
     public class AdController : BaseController
     {
         private readonly IAdService adService;
-        public AdController(IAdService adService)
+        private readonly ICategoryService categoryService;
+        public AdController(IAdService adService, ICategoryService categoryService)
         {
             this.adService = adService;
+            this.categoryService = categoryService;
         }
 
         [HttpPost, Route("AddAd")]
@@ -68,8 +71,8 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost, Route("CreateAdItem")]
-        public async Task<IServiceResponse<bool>> CreateAdItem(ItemDTO model)
+        [HttpPost, Route("CreateItem")]
+        public async Task<IServiceResponse<bool>> CreateItem(ItemDTO model)
         {
             return await HandleApiOperationAsync(async () =>
             {
@@ -79,8 +82,8 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost, Route("AddAdToItem")]
-        public async Task<IServiceResponse<bool>> AddAdToItem(List<string> keywords, long ItemId)
+        [HttpPost, Route("EditItemKeywords")]
+        public async Task<IServiceResponse<bool>> EditItemKeywords(List<string> keywords, long ItemId)
         {
             return await HandleApiOperationAsync(async () =>
             {
@@ -131,5 +134,84 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+        //[AllowAnonymous]
+        [HttpGet]
+        [Route("GetCategories")]
+        public async Task<IServiceResponse<IEnumerable<CategoryDTO>>> GetCategories()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<CategoryDTO>>();
+                var data = await categoryService.GetCategories();
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpGet]
+        [Route("GetCategory/{id}")]
+        public async Task<IServiceResponse<CategoryDTO>> GetCategory(long id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<CategoryDTO>();
+                var data = await categoryService.GetCategory(id);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpGet]
+        [Route("GetSubcategoriesByCategoryId/{categoryId}")]
+        public async Task<IServiceResponse<IEnumerable<SubcategoryDTO>>> GetSubcategoriesByCategoryId(long categoryId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<SubcategoryDTO>>();
+                var data = await categoryService.GetSubcategoriesByCategoryId(categoryId);
+                response.Object = data;
+                return response;
+            });
+        }
+        //review
+        [HttpGet]
+        [Route("AdFeedbackByUser/{adIds}")]
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackByUser(long[] adIds = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
+                var data = await adService.AdFeedbackByUser(User.Identity.Name, adIds);
+                response.Object = data;
+                return response;
+            });
+        }
+        [HttpGet]
+        [Route("AdFeedbackForUser/{adIds}")]
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackForUser(long[] adIds = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
+                var data = await adService.AdFeedbackForUser(User.Identity.Name, adIds);
+                response.Object = data;
+                return response;
+            });
+        }
+        #region APIs in progress
+        //update profile 
+        //Adverts
+        //Followers
+        //Following
+        //Basket
+        //Statistics
+        //Reviews
+        //PremiumPackages
+        //Messages
+        //NewAdsOnSelectedCategory
+        //Explore
+        //Post
+        //Market
+        //inviteFriends
+        //Help(we run on Intercom)
+        //settings
+        //faq, t & c, signout
+        #endregion
     }
 }
+//ad, categories

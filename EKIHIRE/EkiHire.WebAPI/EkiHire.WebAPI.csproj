@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <Compile Remove="Controllers\AttractionController.cs" />
+    <Compile Remove="Controllers\CategoryController.cs" />
     <Compile Remove="Controllers\JobController.cs" />
     <Compile Remove="Controllers\OnboardingController.cs" />
     <Compile Remove="Controllers\ProfileController.cs" />

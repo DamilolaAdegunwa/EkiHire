@@ -34,6 +34,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long CategoryId);
         Task<bool> SeedCategories();
         Task<bool> SeedRealEstateSubcategories();
+        Task<CategoryDTO> GetCategory(long Id);
     }
     public class CategoryService : ICategoryService
     {

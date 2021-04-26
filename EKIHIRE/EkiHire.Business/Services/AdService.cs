@@ -41,9 +41,9 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
         Task<IEnumerable<AdDTO>> Search(SearchVM model, string username);
-        Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
+        //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long[] adIds = null);
-        Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
+        //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null);
     }
     public class AdService: IAdService
@@ -674,41 +674,41 @@ namespace EkiHire.Business.Services
         }
 
         #region reviews
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0)
-        {
-            try
-            {
-                #region validation
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-                }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-                }
-                var ad = adRepository.Get(adId);
-                if (ad == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
-                }
-                #endregion
+        //public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0)
+        //{
+        //    try
+        //    {
+        //        #region validation
+        //        if (string.IsNullOrWhiteSpace(username))
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+        //        }
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+        //        if (user == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+        //        }
+        //        var ad = adRepository.Get(adId);
+        //        if (ad == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+        //        }
+        //        #endregion
 
-                var result = new List<AdFeedback>();
+        //        var result = new List<AdFeedback>();
 
-                result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
-                && (a.AdId == adId || adId == 0)
-                ).ToListAsync();
+        //        result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
+        //        && (a.AdId == adId || adId == 0)
+        //        ).ToListAsync();
 
-                return result;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}",ex);
-                return null;
-            }
-        }
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}",ex);
+        //        return null;
+        //    }
+        //}
         public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long[] adIds = null)
         {
             try
@@ -736,37 +736,37 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId  = 0)
-        {
-            try
-            {
-                #region validation
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-                }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-                }
-                var ad = adRepository.Get(adId);
-                if (ad == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
-                }
-                #endregion
-                var result = await adFeedbackRepository.GetAll().Where(a => adRepository.Get(a.AdId).User.UserName == username
-                && (a.AdId == adId || adId == 0)
-                ).ToListAsync();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
-                return null;
-            }
-        }
+        //public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId  = 0)
+        //{
+        //    try
+        //    {
+        //        #region validation
+        //        if (string.IsNullOrWhiteSpace(username))
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+        //        }
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+        //        if (user == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+        //        }
+        //        var ad = adRepository.Get(adId);
+        //        if (ad == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+        //        }
+        //        #endregion
+        //        var result = await adFeedbackRepository.GetAll().Where(a => adRepository.Get(a.AdId).User.UserName == username
+        //        && (a.AdId == adId || adId == 0)
+        //        ).ToListAsync();
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+        //        return null;
+        //    }
+        //}
         public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null)
         {
             try
