@@ -70,6 +70,8 @@ namespace EkiHire.Core.Domain.Entities
         public string CarType { get; set; }
         public string FuelType { get; set; }
         public string Mileage { get; set; }
+        //
+        public User User { get; set; }
 
         #endregion
 
@@ -130,7 +132,7 @@ namespace EkiHire.Core.Domain.Entities
                     VideoPath = model.VideoPath,
                     WorkExperiences = model.WorkExperiences,
                     Year = model.Year,
-                    
+                    User = model.User
                 };
                 return output;
             }

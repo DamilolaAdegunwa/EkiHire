@@ -128,7 +128,7 @@ namespace EkiHire.Business.Services
         }
         public async Task<IList<string>> GetUserRolesAsync(string username)
         {
-            var user = await _userManager.FindByEmailAsync(username);
+            var user = await _userManager.FindByNameAsync(username);
             return await _userManager.GetRolesAsync(user);
         }
         protected virtual Task<User> FindByEmailAsync(string email)
@@ -230,17 +230,17 @@ namespace EkiHire.Business.Services
         /// <summary>
         /// Use the given OTP to confirm that the user is authentic
         /// </summary>
-        /// <param name="usernameOrEmail"></param>
+        /// <param name="username"></param>
         /// <param name="activationCode"></param>
         /// <returns></returns> /*checked*/
-        public async Task<UserDTO> ActivateAccount(string usernameOrEmail, string activationCode)
+        public async Task<UserDTO> ActivateAccount(string username, string activationCode)
         {
-            if (string.IsNullOrEmpty(usernameOrEmail) || string.IsNullOrEmpty(activationCode))
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(activationCode))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
             UserDTO userDto = new UserDTO();
@@ -299,7 +299,7 @@ namespace EkiHire.Business.Services
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -328,7 +328,7 @@ namespace EkiHire.Business.Services
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
+            var user = await FindByNameAsync(usernameOrEmail);
 
             ValidateUser(user);
 
@@ -354,12 +354,12 @@ namespace EkiHire.Business.Services
 
         public async Task<bool> ValidatePassordResetCode(PassordResetDTO model)
         {
-            if (string.IsNullOrEmpty(model.UserNameOrEmail))
+            if (string.IsNullOrEmpty(model.UserName))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(model.UserNameOrEmail) ?? await FindByEmailAsync(model.UserNameOrEmail);
+            var user = await FindByNameAsync(model.UserName);
 
             await ValidateUser(user);
 
@@ -372,12 +372,12 @@ namespace EkiHire.Business.Services
 
         public async Task<bool> ResetPassword(PassordResetDTO model)
         {
-            if (string.IsNullOrEmpty(model.UserNameOrEmail))
+            if (string.IsNullOrEmpty(model.UserName))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(model.UserNameOrEmail) ?? await FindByEmailAsync(model.UserNameOrEmail);
+            var user = await FindByNameAsync(model.UserName);
 
             await ValidateUser(user);
 
@@ -402,14 +402,14 @@ namespace EkiHire.Business.Services
             return true;
         }
 
-        public async Task<bool> ChangePassword(string usernameOrEmail, ChangePassordDTO model)
+        public async Task<bool> ChangePassword(string username, ChangePassordDTO model)
         {
-            if (string.IsNullOrEmpty(usernameOrEmail))
+            if (string.IsNullOrEmpty(username))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -451,14 +451,14 @@ namespace EkiHire.Business.Services
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_LOCKED);
         }
 
-        public async Task<bool> UpdateProfile(string usernameOrEmail, UserProfileDTO model)
+        public async Task<bool> UpdateProfile(string username, UserProfileDTO model)
         {
-            if (string.IsNullOrEmpty(usernameOrEmail))
+            if (string.IsNullOrEmpty(username))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(usernameOrEmail) ?? await FindByEmailAsync(usernameOrEmail);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -582,7 +582,7 @@ namespace EkiHire.Business.Services
                 throw new EkiHireGenericException("Invalid data");
             }
 
-            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -605,7 +605,7 @@ namespace EkiHire.Business.Services
                 throw new EkiHireGenericException("Could not identify user");
             }
 
-            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -631,7 +631,7 @@ namespace EkiHire.Business.Services
                 //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
                 throw new EkiHireGenericException("Invalid date given");
             }
-            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
@@ -657,7 +657,7 @@ namespace EkiHire.Business.Services
                 //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
                 throw new EkiHireGenericException("Invalid data given");
             }
-            var user = await FindByNameAsync(username) ?? await FindByEmailAsync(username);
+            var user = await FindByNameAsync(username);
 
             await ValidateUser(user);
 
