@@ -193,6 +193,30 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpGet]
+        [Route("GetFollowers")]
+        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowers(string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Follow>>();
+                var data = await adService.GetFollowers(User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpGet]
+        [Route("GetFollowing")]
+        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowing(string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Follow>>();
+                var data = await adService.GetFollowing(User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
         #region APIs in progress
         //update profile 
         //Adverts

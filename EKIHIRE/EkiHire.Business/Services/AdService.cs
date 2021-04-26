@@ -45,6 +45,8 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long[] adIds = null);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null);
+        Task<IEnumerable<Follow>> GetFollowers(string username);
+        Task<IEnumerable<Follow>> GetFollowing(string username);
     }
     public class AdService: IAdService
     {
@@ -56,7 +58,8 @@ namespace EkiHire.Business.Services
         private readonly IRepository<Item> itemRepository;
         private readonly IRepository<UserCart> userCartRepository;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository)
+        private readonly IRepository<Follow> followRepository;
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -65,6 +68,7 @@ namespace EkiHire.Business.Services
             this.itemRepository = itemRepository;
             this.userCartRepository = userCartRepository;
             this.adFeedbackRepository = adFeedbackRepository;
+            this.followRepository = followRepository;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -790,6 +794,58 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                return null;
+            }
+        }
+        #endregion
+        #region follow
+        public async Task<IEnumerable<Follow>> GetFollowers(string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                var result = new List<Follow>();
+                result = await followRepository.GetAll().Where(f => f.Following.UserName == username).ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"an error occured while trying to get {username} followers:: stack-trace - {ex.StackTrace}", ex);
+                return null;
+            }
+        }
+        public async Task<IEnumerable<Follow>> GetFollowing(string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                var result = new List<Follow>();
+                result = await followRepository.GetAll().Where(f => f.Follower.UserName == username).ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"an error occured while trying to get people {username} is following:: stack-trace - {ex.StackTrace}", ex);
                 return null;
             }
         }
