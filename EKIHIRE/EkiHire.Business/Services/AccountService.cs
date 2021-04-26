@@ -169,8 +169,8 @@ namespace EkiHire.Business.Services
                 catch (Exception ex)
                 {
                     _unitOfWork.Rollback();
-                    var errMsg = "an error occured while trying to signup. Please try again!";
-                    log.Error(errMsg, ex);
+                    var errMsg = $"an error occured while trying to signup. Please try again!";
+                    log.Error($"{errMsg} :: stack trace - {ex.StackTrace} :: exception message - {ex.Message}", ex);
                     throw new Exception(errMsg);
                     //throw await _serviceHelper.GetExceptionAsync("an error occured!"); ;
                 }
