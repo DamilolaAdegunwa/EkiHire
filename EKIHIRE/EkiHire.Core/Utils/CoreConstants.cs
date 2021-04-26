@@ -13,7 +13,6 @@ namespace EkiHire.Core.Utils
         public const string DateFormat = "dd MMMM, yyyy";
         public const string TimeFormat = "hh:mm tt";
         public const string SystemDateFormat = "dd/MM/yyyy";
-
         public class Roles
         {
             public const string Admin = "Administrator";
@@ -29,15 +28,15 @@ namespace EkiHire.Core.Utils
 
         public class Url
         {
-            public const string PasswordResetEmail = "messaging/emailtemplates/password-resetcode-email.html";
-            public const string AccountActivationEmail = "messaging/emailtemplates/account-email.html";
-            public const string BookingSuccessEmail = "messaging/emailtemplates/confirm-email.html";
-            public const string BookingAndReturnSuccessEmail = "messaging/emailtemplates/confirm-return-email.html";
-            public const string ActivationCodeEmail = "messaging/emailtemplates/activation-code-email.html";
-            public const string BookingUnSuccessEmail = "messaging/emailtemplates/failed-email.html";
-            public const string RescheduleSuccessEmail = "messaging/emailtemplates/reschedule-success.html";
-            public const string AdminHireBookingEmail = "messaging/emailtemplates/hirebooking-admin.html";
-            public const string CustomerHireBookingEmail = "messaging/emailtemplates/hirebooking.html";
+            public const string PasswordResetEmail = "wwwroot/messaging/emailtemplates/password-resetcode-email.html";
+            public const string AccountActivationEmail = "wwwroot/messaging/emailtemplates/account-email.html";
+            public const string BookingSuccessEmail = "wwwroot/messaging/emailtemplates/confirm-email.html";
+            public const string BookingAndReturnSuccessEmail = "wwwroot/messaging/emailtemplates/confirm-return-email.html";
+            public const string ActivationCodeEmail = "wwwroot/messaging/emailtemplates/activation-code-email.html";
+            public const string BookingUnSuccessEmail = "wwwroot/messaging/emailtemplates/failed-email.html";
+            public const string RescheduleSuccessEmail = "wwwroot/messaging/emailtemplates/reschedule-success.html";
+            public const string AdminHireBookingEmail = "wwwroot/messaging/emailtemplates/hirebooking-admin.html";
+            public const string CustomerHireBookingEmail = "wwwroot/messaging/emailtemplates/hirebooking.html";
         }
 
         public class AdOptions
