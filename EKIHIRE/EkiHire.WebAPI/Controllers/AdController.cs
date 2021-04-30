@@ -171,8 +171,8 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         //review
-        [HttpGet]
-        [Route("AdFeedbackByUser/{adIds}")]
+        [HttpPost]
+        [Route("AdFeedbackByUser")]
         public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackByUser(long[] adIds = null)
         {
             return await HandleApiOperationAsync(async () => {
@@ -182,8 +182,8 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
-        [HttpGet]
-        [Route("AdFeedbackForUser/{adIds}")]
+        [HttpPost]
+        [Route("AdFeedbackForUser")]
         public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackForUser(long[] adIds = null)
         {
             return await HandleApiOperationAsync(async () => {
