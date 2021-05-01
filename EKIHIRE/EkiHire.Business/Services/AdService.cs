@@ -47,6 +47,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
+        
     }
     public class AdService: IAdService
     {

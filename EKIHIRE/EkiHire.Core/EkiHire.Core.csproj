@@ -5,6 +5,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Domain\Entities\RealEstate.cs" />
+    <Compile Remove="Domain\Entities\RealEstateCategory.cs" />
+    <Compile Remove="Domain\Entities\RealEstateImage.cs" />
+    <Compile Remove="Domain\Entities\RealEstateStatus.cs" />
+    <Compile Remove="Domain\Entities\Retail.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Domain\Entities\Common\" />
     <Folder Include="Messaging\PushNotification\" />
     <Folder Include="Utils\Enums\" />

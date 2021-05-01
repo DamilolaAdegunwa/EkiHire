@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace EkiHire.Core.Domain.Entities
-{
-    public class RealEstateCategory
-    {
+//namespace EkiHire.Core.Domain.Entities
+//{
+//    public class RealEstateCategory
+//    {
 
-    }
-}
+//    }
+//}

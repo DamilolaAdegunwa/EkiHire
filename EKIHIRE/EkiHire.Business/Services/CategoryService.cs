@@ -25,16 +25,20 @@ using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Domain.Extensions;
 using Microsoft.Extensions.Logging;
 using log4net;
-
+using System.Reflection;
 namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<IEnumerable<CategoryDTO>> GetCategories();
-        Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long CategoryId);
+        Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null);
+        Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
-        Task<bool> SeedRealEstateSubcategories();
+        //Task<bool> SeedRealEstateSubcategories();
         Task<CategoryDTO> GetCategory(long Id);
+        Task<bool> SetCategory(CategoryDTO model, string username);
+        Task<bool> SetSubcategory(SubcategoryDTO model, string username);
+        Task<object> GetAllItemGroupsForSubcategory(string username);
+        
     }
     public class CategoryService : ICategoryService
     {
@@ -54,7 +58,7 @@ namespace EkiHire.Business.Services
         private readonly AppConfig appConfig;
         private readonly IRepository<Category> _categoryRepo;
         private readonly IRepository<Subcategory> _subcategoryRepo;
-        private readonly ILog _logger;
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         public CategoryService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             //IRepository<Terminal> terminalRepo,
@@ -90,8 +94,6 @@ namespace EkiHire.Business.Services
             _roleSvc = roleSvc;
             _categoryRepo = categoryRepo;
             _subcategoryRepo = subcategoryRepo;
-
-            _logger = LogManager.GetLogger(typeof(CategoryService));
         }
 
         public async Task<IEnumerable<CategoryDTO>> GetCategories()
@@ -105,6 +107,64 @@ namespace EkiHire.Business.Services
             {
 
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
+            }
+        }
+
+        public async Task<bool> SetCategory(CategoryDTO model, string username)
+        {
+            try
+            {
+                #region validate the data given
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if(model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
+                }
+                var entity = _categoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
+                if (entity != null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Category already exist!!");
+                }
+                #endregion
+
+                #region Set the Category
+                Category data = new Category
+                {
+                    Name = model.Name,
+                    ImagePath = model.ImagePath,
+                    ImageString = model.ImageString,
+                    Subcategories = model.Subcategories,
+
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0
+                };
+                _unitOfWork.BeginTransaction();
+                _categoryRepo.InsertAsync(data);
+                _unitOfWork.Commit();
+                #endregion
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                return false;
             }
         }
         public async Task<CategoryDTO> GetCategory(long Id)
@@ -176,53 +236,53 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> SeedRealEstateSubcategories()
-        {
-            try
-            {
-                var category = _categoryRepo.GetAll().Where(x => x.Name == "Real Estate")?.FirstOrDefault();
-                var realEstateSub = _subcategoryRepo.GetAll().Where(x => x.Category.Id == category.Id).FirstOrDefault();
-                if(realEstateSub != null)
-                {
-                    return true;
-                }
-                var realEstateSubcategories = new List<string>()
-                {
-                    "Houses & Apartments For Sale",
-                    "Houses & Apartments For Rent",
-                    "Commercial Property For Sale",
-                    "Commercial Property For Rent",
-                    "Land & Plots For Sale",
-                    "Land & Plots For Rent",
-                    "Short Lets"
-                };
-                _unitOfWork.BeginTransaction();
-                foreach(var s in realEstateSubcategories)
-                {
-                    var body = new Subcategory
-                    {
-                        Category = category,
-                        CreationTime = DateTime.Now,
-                        CreatorUserId = null,
-                        DeleterUserId = null,
-                        DeletionTime = null,
-                        IsDeleted = false,
-                        LastModificationTime = DateTime.Now,
-                        LastModifierUserId = null,
-                        Name = s,
+        //public async Task<bool> SeedRealEstateSubcategories()
+        //{
+        //    try
+        //    {
+        //        var category = _categoryRepo.GetAll().Where(x => x.Name == "Real Estate")?.FirstOrDefault();
+        //        var realEstateSub = _subcategoryRepo.GetAll().Where(x => x.Category.Id == category.Id).FirstOrDefault();
+        //        if(realEstateSub != null)
+        //        {
+        //            return true;
+        //        }
+        //        var realEstateSubcategories = new List<string>()
+        //        {
+        //            "Houses & Apartments For Sale",
+        //            "Houses & Apartments For Rent",
+        //            "Commercial Property For Sale",
+        //            "Commercial Property For Rent",
+        //            "Land & Plots For Sale",
+        //            "Land & Plots For Rent",
+        //            "Short Lets"
+        //        };
+        //        _unitOfWork.BeginTransaction();
+        //        foreach(var s in realEstateSubcategories)
+        //        {
+        //            var body = new Subcategory
+        //            {
+        //                Category = category,
+        //                CreationTime = DateTime.Now,
+        //                CreatorUserId = null,
+        //                DeleterUserId = null,
+        //                DeletionTime = null,
+        //                IsDeleted = false,
+        //                LastModificationTime = DateTime.Now,
+        //                LastModifierUserId = null,
+        //                Name = s,
                         
-                    };
-                    await _subcategoryRepo.InsertAsync(body);
-                }
-                _unitOfWork.Commit();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _unitOfWork.Rollback();
-                _logger.Error("An error occured while trying to seed real estate sub categories", ex);
-                return false;
-            }
-        }
+        //            };
+        //            await _subcategoryRepo.InsertAsync(body);
+        //        }
+        //        _unitOfWork.Commit();
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _unitOfWork.Rollback();
+        //        log.Error("An error occured while trying to seed real estate sub categories", ex);
+        //        return false;
+        //    }
+        //}
     }
 }
