@@ -212,7 +212,43 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Follow>>();
-                var data = await adService.GetFollowing(User.Identity.Name);
+                var data = await adService.GetFollowing(username??User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddCategory")]
+        public async Task<IServiceResponse<bool>> AddCategory(CategoryDTO model, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await categoryService.AddCategory(model, username??User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddSubcategory")]
+        public async Task<IServiceResponse<bool>> AddSubcategory(SubcategoryDTO model, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await categoryService.AddSubcategory(model, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetAllItemGroupsForSubcategory")]
+        public async Task<IServiceResponse<List<IGrouping<string, Item>>>> GetAllItemGroupsForSubcategory(long subId, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<List<IGrouping<string, Item>>>();
+                var data = await categoryService.GetAllItemGroupsForSubcategory(subId, username ?? User.Identity.Name);
                 response.Object = data;
                 return response;
             });

@@ -33,11 +33,10 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null);
         Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
-        //Task<bool> SeedRealEstateSubcategories();
         Task<CategoryDTO> GetCategory(long Id);
-        Task<bool> SetCategory(CategoryDTO model, string username);
-        Task<bool> SetSubcategory(SubcategoryDTO model, string username);
-        Task<object> GetAllItemGroupsForSubcategory(string username);
+        Task<bool> AddCategory(CategoryDTO model, string username);
+        Task<bool> AddSubcategory(SubcategoryDTO model, string username);
+        Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
         
     }
     public class CategoryService : ICategoryService
@@ -59,6 +58,7 @@ namespace EkiHire.Business.Services
         private readonly IRepository<Category> _categoryRepo;
         private readonly IRepository<Subcategory> _subcategoryRepo;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
+        private readonly IRepository<Item> _itemRepository;
         public CategoryService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             //IRepository<Terminal> terminalRepo,
@@ -74,8 +74,9 @@ namespace EkiHire.Business.Services
             IGuidGenerator guidGenerator,
             IOptions<AppConfig> _appConfig,
             IRepository<Category> categoryRepo,
-            IRepository<Subcategory> subcategoryRepo
-            
+            IRepository<Subcategory> subcategoryRepo,
+            IRepository<Item> _itemRepository
+
             )
         {
             _unitOfWork = unitOfWork;
@@ -94,9 +95,10 @@ namespace EkiHire.Business.Services
             _roleSvc = roleSvc;
             _categoryRepo = categoryRepo;
             _subcategoryRepo = subcategoryRepo;
+            this._itemRepository = _itemRepository;
         }
 
-        public async Task<IEnumerable<CategoryDTO>> GetCategories()
+        public async Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null)
         {
             try
             {
@@ -107,64 +109,6 @@ namespace EkiHire.Business.Services
             {
 
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
-            }
-        }
-
-        public async Task<bool> SetCategory(CategoryDTO model, string username)
-        {
-            try
-            {
-                #region validate the data given
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-                }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-                }
-                if(model == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
-                }
-                var entity = _categoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
-                if (entity != null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Category already exist!!");
-                }
-                #endregion
-
-                #region Set the Category
-                Category data = new Category
-                {
-                    Name = model.Name,
-                    ImagePath = model.ImagePath,
-                    ImageString = model.ImageString,
-                    Subcategories = model.Subcategories,
-
-                    //basic properties
-                    CreationTime = DateTime.Now,
-                    CreatorUserId = user.Id,
-                    IsDeleted = false,
-                    LastModificationTime = DateTime.Now,
-                    LastModifierUserId = user.Id,
-                    DeleterUserId = null,
-                    DeletionTime = null,
-                    Id = 0
-                };
-                _unitOfWork.BeginTransaction();
-                _categoryRepo.InsertAsync(data);
-                _unitOfWork.Commit();
-                #endregion
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _unitOfWork.Rollback();
-                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
-                return false;
             }
         }
         public async Task<CategoryDTO> GetCategory(long Id)
@@ -180,11 +124,11 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get category :: {ex}");
             }
         }
-        public async Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long CategoryId)
+        public async Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null)
         {
             try
             {
-                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId).ToList().ToDTO();
+                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToList().ToDTO();
                 return result;
             }
             catch (Exception ex)
@@ -235,6 +179,153 @@ namespace EkiHire.Business.Services
                 //throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }
+        public async Task<bool> AddCategory(CategoryDTO model, string username)
+        {
+            try
+            {
+                #region validate the data given
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
+                }
+                var entity = _categoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
+                if (entity != null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Category already exist!!");
+                }
+                #endregion
+
+                #region Set the Category
+                Category data = new Category
+                {
+                    Name = model.Name,
+                    ImagePath = model.ImagePath,
+                    ImageString = model.ImageString,
+                    Subcategories = model.Subcategories,
+
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0
+                };
+                _unitOfWork.BeginTransaction();
+                _categoryRepo.InsertAsync(data);
+                _unitOfWork.Commit();
+                #endregion
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                return false;
+            }
+        }
+        public async Task<bool> AddSubcategory(SubcategoryDTO model, string username)
+        {
+            try
+            {
+                #region validate the data given
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
+                }
+                var entity = _subcategoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
+                if (entity != null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Subcategory already exist!!");
+                }
+                #endregion
+
+                #region Set the Subcategory
+                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.Category.Id);
+                Subcategory data = new Subcategory
+                {
+                    Name = model.Name,
+                    ImagePath = model.ImagePath,
+                    ImageString = model.ImageString,
+                    Category = cat,
+
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0
+                };
+                _unitOfWork.BeginTransaction();
+                _subcategoryRepo.InsertAsync(data);
+                _unitOfWork.Commit();
+                #endregion
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                return false;
+            }
+        }
+
+        public async Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username)
+        {
+            try
+            {
+                #region validate the data given
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var entity = _subcategoryRepo.FirstOrDefault(x => x.Id == subId);
+                if (entity == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Subcategory does not exist!!");
+                }
+                #endregion
+                /*go to the item table, search out all the ones with subcategoryId = subId, grouped by the groupname*/
+                List<IGrouping<string, Item>> result = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).GroupBy(g => g.GroupName).ToList();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}",ex);
+                return null;
+            }
+        }
 
         //public async Task<bool> SeedRealEstateSubcategories()
         //{
@@ -270,7 +361,7 @@ namespace EkiHire.Business.Services
         //                LastModificationTime = DateTime.Now,
         //                LastModifierUserId = null,
         //                Name = s,
-                        
+
         //            };
         //            await _subcategoryRepo.InsertAsync(body);
         //        }

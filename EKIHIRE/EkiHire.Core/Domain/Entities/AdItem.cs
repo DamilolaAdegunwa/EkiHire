@@ -6,9 +6,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class AdItem: FullAuditedEntity
-    {
-        public Item Item { get; set; }
-        public Ad Ad { get; set; }
-    }
+    //public class AdItem: FullAuditedEntity
+    //{
+    //    public Item Item { get; set; }
+    //    public Ad Ad { get; set; }
+    //}
 }
