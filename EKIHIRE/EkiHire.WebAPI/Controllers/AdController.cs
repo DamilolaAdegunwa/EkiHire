@@ -316,11 +316,35 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAdPropertiesWithValue")]
-        public async Task<IServiceResponse<IEnumerable<AdPropertyValue>>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null)
+        public async Task<IServiceResponse<IEnumerable<AdPropertyValue>>> GetAdPropertiesWithValue(long adid, string username = null, List<long> adPropertyIds = null)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdPropertyValue>>();
                 var data = await adService.GetAdPropertiesWithValue(adid, username ?? User.Identity.Name, adPropertyIds);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddAdProperty")]
+        public async Task<IServiceResponse<bool>> AddAdProperty(AdProperty model, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddAdProperty(model, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddOrUpdateAdPropertyValue")]
+        public async Task<IServiceResponse<bool>> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddOrUpdateAdPropertyValue(model, username ?? User.Identity.Name);
                 response.Object = data;
                 return response;
             });
@@ -340,6 +364,7 @@ namespace EkiHire.WebAPI.Controllers
         //Help(we run on Intercom)
         //settings
         //faq, t & c, signout
+        //postgraph
         #endregion
     }
 }

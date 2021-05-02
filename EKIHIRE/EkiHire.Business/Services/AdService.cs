@@ -53,6 +53,8 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid = null);
         Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username);
         Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null);
+        Task<bool> AddAdProperty(AdProperty model, string username);
+        Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
     }
     public class AdService: IAdService
     {
@@ -1074,6 +1076,134 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
+
+        public async Task<bool> AddAdProperty(AdProperty model, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if(model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid data!");
+                }
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id);
+                if(subcat == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
+                }
+                #endregion
+
+                #region add a new property for ad in the selected subcategory
+                _unitOfWork.BeginTransaction();
+                AdProperty data = new AdProperty
+                {
+                    Name = model.Name,
+                    PropertyType = model.PropertyType,
+                    Range = model.Range,
+                    Subcategory = model.Subcategory,
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0
+                };
+                await _adPropertyRepo.InsertAsync(data);
+                _unitOfWork.Commit();
+                #endregion
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+
+        public async Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid data!");
+                }
+                var ad = adRepository.FirstOrDefault(s => s.Id == model.Ad.Id);
+                if (ad == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid Ad!");
+                }
+                var adProperty = _adPropertyRepo.FirstOrDefault(a => a.Id == model.AdProperty.Id);
+                if (adProperty == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid adProperty!");
+                }
+                var adPropertyValue = _adPropertyValueRepo.FirstOrDefault(a => a.Ad.Id == model.Ad.Id && a.AdProperty.Id == model.AdProperty.Id);
+
+                #endregion
+
+                #region Add Ad Property Value
+                _unitOfWork.BeginTransaction();
+                if (adPropertyValue != null)
+                {
+                    AdPropertyValue data = new AdPropertyValue
+                    {
+                        Ad = model.Ad,
+                        AdProperty = model.AdProperty,
+                        Value = model.Value,
+                        //basic properties
+                        CreationTime = DateTime.Now,
+                        CreatorUserId = user.Id,
+                        IsDeleted = false,
+                        LastModificationTime = DateTime.Now,
+                        LastModifierUserId = user.Id,
+                        DeleterUserId = null,
+                        DeletionTime = null,
+                        Id = 0
+                    };
+                    await _adPropertyValueRepo.InsertAsync(data);
+                }
+                else
+                {
+                    adPropertyValue.Value = model.Value;
+                    await _adPropertyValueRepo.UpdateAsync(adPropertyValue);
+                }
+                _unitOfWork.Commit();
+                #endregion
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        //create new ad property, update ad prop, delete,
         #endregion
     }
 }

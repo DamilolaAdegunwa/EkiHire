@@ -362,6 +362,17 @@ namespace EkiHire.WebAPI.Controllers
         //        return response;
         //    });
         //}
+
+        [HttpPost]
+        [Route("ChangeProfileImage")]
+        public async Task<IServiceResponse<bool>> ChangeProfileImage(string profileImageString, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                bool result = await _userSvc.ChangeProfileImage(profileImageString, username?? User.FindFirst(JwtClaimTypes.Name)?.Value);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
         #endregion
 
         #region default from boilerplate

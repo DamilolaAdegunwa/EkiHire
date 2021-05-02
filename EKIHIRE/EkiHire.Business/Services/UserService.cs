@@ -21,6 +21,8 @@ using System.Text;
 using System.Threading.Tasks;
 using log4net;
 using System.Reflection;
+using EkiHire.Data.UnitOfWork;
+
 namespace EkiHire.Business.Services
 {
     public interface IUserService
@@ -58,6 +60,7 @@ namespace EkiHire.Business.Services
         Task<bool> ChangeEmail(string userEmail, string username);
         Task<bool> ChangePhoneNumber(string userPhoneNumber, string username);
         //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
+        Task<bool> ChangeProfileImage(string profileImageString, string username);
     }
 
     public class UserService : IUserService
@@ -70,13 +73,15 @@ namespace EkiHire.Business.Services
         private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
+        private readonly IUnitOfWork _unitOfWork;
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
             IRepository<User> userRepository,
             IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
-            IOptions<AppConfig> _appConfig)
+            IOptions<AppConfig> _appConfig,
+            IUnitOfWork unitOfWork)
         {
             _userManager = userManager;
             _svcHelper = svcHelper;
@@ -707,5 +712,33 @@ namespace EkiHire.Business.Services
         //{
         //    throw new NotImplementedException();
         //}
+
+        public async Task<bool> ChangeProfileImage(string profileImageString, string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                    throw new EkiHireGenericException("Could not identify user");
+                }
+                var user = await FindByNameAsync(username);
+                await ValidateUser(user);
+                if (!user.IsConfirmed())
+                {
+                    throw new EkiHireGenericException("Your account has not been activated!");
+                }
+                user.Image = profileImageString;
+                await UpdateAsync(user);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+            
+        }
     }
 }

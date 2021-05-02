@@ -9,5 +9,9 @@ namespace EkiHire.Business.Services
     }
     public class WalletService: IWalletService
     {
+        public WalletService()
+        {
+
+        }
     }
 }
