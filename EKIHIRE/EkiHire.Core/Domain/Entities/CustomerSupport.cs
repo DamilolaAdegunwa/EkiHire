@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace EkiHire.Core.Domain.Entities
-{
-    public class CustomerSupport
-    {
-    }
-}
+//namespace EkiHire.Core.Domain.Entities
+//{
+//    public class CustomerSupport
+//    {
+//    }
+//}

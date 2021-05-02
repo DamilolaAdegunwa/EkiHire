@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace EkiHire.Core.Domain.DataTransferObjects
-{
-    public class ModuleDTO
-    {
-    }
-}
+//namespace EkiHire.Core.Domain.DataTransferObjects
+//{
+//    public class ModuleDTO
+//    {
+//    }
+//}

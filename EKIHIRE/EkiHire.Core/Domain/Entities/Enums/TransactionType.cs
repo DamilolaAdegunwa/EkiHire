@@ -6,6 +6,6 @@ namespace EkiHire.Core.Domain.Entities.Enums
 {
     public enum TransactionType
     {
-
+        DebitCard = 0
     }
 }

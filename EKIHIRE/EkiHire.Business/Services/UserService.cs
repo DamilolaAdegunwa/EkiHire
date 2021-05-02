@@ -57,7 +57,7 @@ namespace EkiHire.Business.Services
         Task<bool> ChangeBirthday(DateTime birthdate, string username);
         Task<bool> ChangeEmail(string userEmail, string username);
         Task<bool> ChangePhoneNumber(string userPhoneNumber, string username);
-        Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
+        //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
     }
 
     public class UserService : IUserService
@@ -309,13 +309,13 @@ namespace EkiHire.Business.Services
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 Gender = user.Gender,
-                NextOfKin = user.NextOfKinName,
+                NextOfKinName = user.NextOfKinName,
                 NextOfKinPhone = user.NextOfKinPhone,
                 PhoneNumber = user.PhoneNumber,
                 ReferralCode = user.ReferralCode,
                 Address = user.Address, 
                 MiddleName = user.MiddleName,
-                DateJoined = user.CreationTime.ToString(CoreConstants.DateFormat),
+                CreationTime = user.CreationTime,
                 DateOfBirth = user.DateOfBirth,
                 SubscriptionPlanType = user.SubscriptionPlanType
             };
@@ -703,9 +703,9 @@ namespace EkiHire.Business.Services
             //verification for this step.
         }
 
-        public Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph()
-        {
-            throw new NotImplementedException();
-        }
+        //public Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph()
+        //{
+        //    throw new NotImplementedException();
+        //}
     }
 }

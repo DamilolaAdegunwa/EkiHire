@@ -40,7 +40,7 @@ namespace EkiHire.Core.Domain.Entities
         public string Photo { get; set; }
         public string OTP { get; set; }
         public ICollection<UserRole> UserRoles { get; set; }
-        public ICollection<Post> Posts { get; set; }
+        //public ICollection<Post> Posts { get; set; }
         //added
         public bool IsActive { get; set; }
         //public long UserId { get; set; }

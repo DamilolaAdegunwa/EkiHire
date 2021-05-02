@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EkiHire.Core.Domain.Entities.Auditing;
-namespace EkiHire.Core.Domain.Entities
-{
-    public class Onboarding: FullAuditedEntity
-    {
-    }
-}
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
+//using EkiHire.Core.Domain.Entities.Auditing;
+//namespace EkiHire.Core.Domain.Entities
+//{
+//    public class Onboarding: FullAuditedEntity
+//    {
+//    }
+//}

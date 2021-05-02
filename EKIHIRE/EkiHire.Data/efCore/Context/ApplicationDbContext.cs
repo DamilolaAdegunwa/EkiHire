@@ -16,9 +16,22 @@ namespace EkiHire.Data.efCore.Context
         {
 
         }
-        public DbSet<ErrorCode> ErrorCode { get; set; }
-        public DbSet<Account> Account{ get; set; }
+        public DbSet<Account> Account { get; set; }
+        public DbSet<Ad> Ad { get; set; }
+        public DbSet<AdFeedback> AdFeedback { get; set; }
+        public DbSet<AdImage> AdImage { get; set; }
+        public DbSet<AdProperty> AdProperty { get; set; }
+        public DbSet<AdPropertyValue> AdPropertyValue { get; set; }
+        public DbSet<Attachment> Attachment { get; set; }
         public DbSet<Category> Category { get; set; }
+        public DbSet<ErrorCode> ErrorCode { get; set; }
+        public DbSet<Follow> Follow { get; set; }
+        public DbSet<Item> Item { get; set; }
+        public DbSet<Keyword> Keyword { get; set; }
+        public DbSet<Subcategory> Subcategory { get; set; }
+        public DbSet<Transaction> Transaction { get; set; }
+        public DbSet<UserCart> UserCart { get; set; }
+        public DbSet<Wallet> Wallet { get; set; }
 
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }

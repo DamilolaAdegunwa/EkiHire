@@ -352,16 +352,16 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         //[AllowAnonymous]/*TO-BE-REMOVED*/
-        [HttpPost]
-        [Route("PostTimeGraph")]
-        public async Task<IServiceResponse<IDictionary<DateTime, List<PostDTO>>>> PostTimeGraph()
-        {
-            return await HandleApiOperationAsync(async () => {
-                var result = await _userSvc.PostTimeGraph();
-                var response = new ServiceResponse<IDictionary<DateTime, List<PostDTO>>>(result);
-                return response;
-            });
-        }
+        //[HttpPost]
+        //[Route("PostTimeGraph")]
+        //public async Task<IServiceResponse<IDictionary<DateTime, List<PostDTO>>>> PostTimeGraph()
+        //{
+        //    return await HandleApiOperationAsync(async () => {
+        //        var result = await _userSvc.PostTimeGraph();
+        //        var response = new ServiceResponse<IDictionary<DateTime, List<PostDTO>>>(result);
+        //        return response;
+        //    });
+        //}
         #endregion
 
         #region default from boilerplate

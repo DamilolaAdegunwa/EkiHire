@@ -314,7 +314,7 @@ namespace EkiHire.Business.Services
                     PhoneNumber = employee.User.PhoneNumber,
                     Address = employee.User.Address,
                     //AccountPhoto = employee.User.Photo,
-                    NextOfKin = employee.User.NextOfKinName,
+                    NextOfKinName = employee.User.NextOfKinName,
                     NextOfKinPhone = employee.User.NextOfKinPhone,
                     //DepartmentName = department.Name,
                     //DepartmentId = department.Id,
@@ -359,7 +359,7 @@ namespace EkiHire.Business.Services
                     PhoneNumber = employee.User.PhoneNumber,
                     Address = employee.User.Address,
                     //AccountPhoto = employee.User.Photo,
-                    NextOfKin = employee.User.NextOfKinName,
+                    NextOfKinName = employee.User.NextOfKinName,
                     NextOfKinPhone = employee.User.NextOfKinPhone,
                     //DepartmentName = department.Name,
                     //DepartmentId = department.Id,
@@ -387,7 +387,7 @@ namespace EkiHire.Business.Services
                 PhoneNumber = employee.User.PhoneNumber,
                 Address = employee.User.Address,
                 //AccountPhoto = employee.User.Photo,
-                NextOfKin = employee.User.NextOfKinName,
+                NextOfKinName = employee.User.NextOfKinName,
                 NextOfKinPhone = employee.User.NextOfKinPhone,
                 //DepartmentId = employee.DepartmentId,
                 //TerminalId = employee.TerminalId,
@@ -427,7 +427,7 @@ namespace EkiHire.Business.Services
             user.Email = model.Email;
             user.PhoneNumber = model.PhoneNumber;
             user.Address = model.Address;
-            user.NextOfKinName = model.NextOfKin;
+            user.NextOfKinName = model.NextOfKinName;
             user.NextOfKinPhone = model.NextOfKinPhone;
 
 

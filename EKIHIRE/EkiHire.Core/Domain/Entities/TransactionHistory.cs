@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace EkiHire.Core.Domain.Entities
-{
-    public class TransactionHistory
-    {
-    }
-}
+//namespace EkiHire.Core.Domain.Entities
+//{
+//    public class TransactionHistory
+//    {
+//        public  MyProperty { get; set; }
+//    }
+//}

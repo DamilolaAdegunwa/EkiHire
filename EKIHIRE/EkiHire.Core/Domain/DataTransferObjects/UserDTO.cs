@@ -13,6 +13,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class UserDTO : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime
     {
+        #region all user property
         public string FirstName { get; set; }
         public string MiddleName { get; set; }
         public string LastName { get; set; }
@@ -42,13 +43,20 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string Photo { get; set; }
         public string OTP { get; set; }
         public ICollection<UserRole> UserRoles { get; set; }
+        //public ICollection<Post> Posts { get; set; }
         //added
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlanType SubscriptionPlanType { get; set; }
-        public string NextOfKin { get; set; }
-        public string DateJoined { get; set; }
+        public ICollection<UserCart> CartItems { get; set; }
+
+        #endregion
+
+        #region user dto props
+
+        #endregion
+
         //implicit conversion
         public static implicit operator UserDTO(User user)
         {
