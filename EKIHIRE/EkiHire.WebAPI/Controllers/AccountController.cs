@@ -374,7 +374,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         #endregion
-
+        //Authentication, Roles and Permissions....
         #region default from boilerplate
         //// GET: api/<AccountController>
         //[HttpGet]

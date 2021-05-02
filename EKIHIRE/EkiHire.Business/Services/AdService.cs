@@ -55,6 +55,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null);
         Task<bool> AddAdProperty(AdProperty model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
+        Task<bool> UpdateAdProperty(AdProperty model, string username);
     }
     public class AdService: IAdService
     {
@@ -136,16 +137,18 @@ namespace EkiHire.Business.Services
 
                 //others
                 ad.IsActive = true;
-                adRepository.InsertAsync(ad);
+                ad.User = user;
+
+                await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
-                _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
                 #endregion
                 return true;
             }
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                log.Error($"user ({username}) could not add a new ad");
+                log.Error($"user ({username}) could not add a new ad {ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
                 return false;
             }
         }
@@ -1100,6 +1103,11 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name);
+                if(adprop != null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
+                }
                 #endregion
 
                 #region add a new property for ad in the selected subcategory
@@ -1203,8 +1211,74 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
+
+        public async Task<bool> UpdateAdProperty(AdProperty model, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null || string.IsNullOrWhiteSpace(model.Name) || string.IsNullOrWhiteSpace(model.PropertyType))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid data!");
+                }
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id);
+                if (subcat == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
+                }
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name);
+                if (adprop != null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
+                }
+                var data = _adPropertyRepo.FirstOrDefault(a => a.Id == model.Id);
+                if(data == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("The property does not exist!");
+                }
+                #endregion
+                data.Name = model.Name;
+                data.Range = string.IsNullOrWhiteSpace(model.Range) ? data.Range : model.Range;
+                data.PropertyType = model.PropertyType;
+
+                _unitOfWork.BeginTransaction();
+                await _adPropertyRepo.UpdateAsync(data);
+                _unitOfWork.Commit();
+
+                return true; 
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
         //create new ad property, update ad prop, delete,
         #endregion
+        public async Task<IEnumerable<Ad>> GetActiveAds()
+        {
+            try
+            {
+                List<Ad> result = new List<Ad>();
+                result = await adRepository.GetAll().Where(a => a.IsActive == true).ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
     }
 }
 //show premium ads first
