@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Domain\Entities\Entities.cs" />
     <Compile Remove="Domain\Entities\RealEstate.cs" />
     <Compile Remove="Domain\Entities\RealEstateCategory.cs" />
     <Compile Remove="Domain\Entities\RealEstateImage.cs" />

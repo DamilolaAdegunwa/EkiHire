@@ -47,7 +47,12 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
-        
+        Task<bool> AddKeywords(List<string> keywords, long subid, string username);
+        Task<bool> EditKeywords(long kwId, string correctedWord, string username);
+        Task<bool> DeleteKeywords(long kwId, string username);
+        Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid = null);
+        Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username);
+        Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null);
     }
     public class AdService: IAdService
     {
@@ -60,7 +65,11 @@ namespace EkiHire.Business.Services
         private readonly IRepository<UserCart> userCartRepository;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         private readonly IRepository<Follow> followRepository;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository)
+        private readonly IRepository<Subcategory> _subcategoryRepo;
+        private readonly IRepository<Keyword> _keywordRepo;
+        private readonly IRepository<AdProperty> _adPropertyRepo;
+        private readonly IRepository<AdPropertyValue> _adPropertyValueRepo;
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -70,6 +79,10 @@ namespace EkiHire.Business.Services
             this.userCartRepository = userCartRepository;
             this.adFeedbackRepository = adFeedbackRepository;
             this.followRepository = followRepository;
+            this._subcategoryRepo = _subcategoryRepo;
+            this._keywordRepo = _keywordRepo;
+            this._adPropertyRepo = _adPropertyRepo;
+            this._adPropertyValueRepo = _adPropertyValueRepo;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -847,6 +860,217 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 log.Error($"an error occured while trying to get people {username} is following:: stack-trace - {ex.StackTrace}", ex);
+                return null;
+            }
+        }
+        #endregion
+        #region keywords
+        public async Task<bool> AddKeywords(List<string> keywords, long subid, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == subid); 
+                if(subcategory == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("The subcategory does not exist");
+                }
+                if(keywords == null || keywords.Count() == 0)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid data!");
+                }
+                #endregion
+                _unitOfWork.BeginTransaction();
+                foreach(var k in keywords)
+                {
+                    Keyword keyword = new Keyword
+                    {
+                        Name = k,
+                        Subcategory = subcategory,
+
+                        //basic properties
+                        CreationTime = DateTime.Now,
+                        CreatorUserId = user.Id,
+                        IsDeleted = false,
+                        LastModificationTime = DateTime.Now,
+                        LastModifierUserId = user.Id,
+                        DeleterUserId = null,
+                        DeletionTime = null,
+                        Id = 0
+                    };
+                    await _keywordRepo.InsertAsync(keyword);
+                }
+                _unitOfWork.Commit();
+                return true;
+                
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        public async Task<bool> EditKeywords(long kwId, string correctedWord, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (string.IsNullOrWhiteSpace(correctedWord))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid data!!");
+                }
+                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId);
+                if (keyword == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("can't find keyword!");
+                }
+                #endregion
+
+                _unitOfWork.BeginTransaction();
+                keyword.Name = correctedWord;
+                await _keywordRepo.InsertAsync(keyword);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        public async Task<bool> DeleteKeywords(long kwId, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId);
+                if (keyword == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("can't find keyword!");
+                }
+                #endregion
+                _unitOfWork.BeginTransaction();
+                await _keywordRepo.DeleteAsync(keyword);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        public async Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid= null)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                List<Keyword> result = new List<Keyword>();
+                result = await _keywordRepo.GetAll().Where(k => (kwIds.Contains(k.Id) || kwIds == null)
+                && (k.Subcategory.Id == subid || subid == null)
+                ).ToListAsync();
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
+        #endregion
+
+        #region ad property and value
+        public async Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                List<AdProperty> result = new List<AdProperty>();
+                result = await _adPropertyRepo.GetAll().Where(a => a.Subcategory.Id == subId).ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                List<AdPropertyValue> result = new List<AdPropertyValue>();
+                result = await _adPropertyValueRepo.GetAllIncluding(x => x.AdProperty).Where(a => a.Ad.Id == adid 
+                && (adPropertyIds.Contains(a.AdProperty.Id) || adPropertyIds == null)
+                ).ToListAsync();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return null;
             }
         }

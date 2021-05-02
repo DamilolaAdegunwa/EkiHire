@@ -7,24 +7,24 @@ using EkiHire.Core.Domain.DataTransferObjects;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class Keyword : FullAuditedEntity
+    public class AdPropertyValue : FullAuditedEntity
     {
-        #region keywords
-        [DataType(DataType.Text)]
-        public string Name { get; set; }
-        public Subcategory Subcategory { get; set; }
+        #region AdPropertyValue
+        public string Value { get; set; }
+        public Ad Ad { get; set; }
+        public AdProperty AdProperty { get; set; }
         #endregion
 
-        public static implicit operator Keyword(KeywordDTO model)
+        public static implicit operator AdPropertyValue(AdPropertyValueDTO model)
         {
             try
             {
-                if(model!=null)
+                if(model != null)
                 {
-                    Keyword response = new Keyword
-                    {
-                        Name = model.Name,
-                        Subcategory = model.Subcategory
+                    AdPropertyValue response = new AdPropertyValue { 
+                        Value = model.Value,
+                        Ad = model.Ad,
+                        AdProperty = model.AdProperty
                     };
                     return response;
                 }

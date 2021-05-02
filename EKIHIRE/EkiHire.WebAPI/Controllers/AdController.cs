@@ -253,11 +253,80 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpPost]
+        [Route("AddKeywords")]
+        public async Task<IServiceResponse<bool>> AddKeywords(List<string> keywords, long subid, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddKeywords(keywords, subid, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("EditKeywords")]
+        public async Task<IServiceResponse<bool>> EditKeywords(long kwId, string correctedWord, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.EditKeywords(kwId, correctedWord, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("DeleteKeywords")]
+        public async Task<IServiceResponse<bool>> DeleteKeywords(long kwId, string username = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeleteKeywords(kwId, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetKeywords")]
+        public async Task<IServiceResponse<IEnumerable<Keyword>>> GetKeywords(string username, long[] kwIds = null, long? subid = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Keyword>>();
+                var data = await adService.GetKeywords( username ?? User.Identity.Name, kwIds, subid);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetAdPropertiesBySubcategory")]
+        public async Task<IServiceResponse<IEnumerable<AdProperty>>> GetAdPropertiesBySubcategory(long subId, string username)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdProperty>>();
+                var data = await adService.GetAdPropertiesBySubcategory(subId, username ?? User.Identity.Name);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetAdPropertiesWithValue")]
+        public async Task<IServiceResponse<IEnumerable<AdPropertyValue>>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdPropertyValue>>();
+                var data = await adService.GetAdPropertiesWithValue(adid, username ?? User.Identity.Name, adPropertyIds);
+                response.Object = data;
+                return response;
+            });
+        }
         #region APIs in progress
         //update profile 
-        //Adverts
-        //Followers
-        //Following
         //Basket
         //Statistics
         //Reviews
