@@ -259,10 +259,16 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Subcategory already exist!!");
                 }
+                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.Category.Id);
+                if (cat == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Category does not exist!!");
+                }
+
                 #endregion
 
                 #region Set the Subcategory
-                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.Category.Id);
+
                 Subcategory data = new Subcategory
                 {
                     Name = model.Name,
@@ -294,7 +300,6 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-
         public async Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username)
         {
             try

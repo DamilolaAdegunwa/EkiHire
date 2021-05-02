@@ -12,6 +12,7 @@ namespace EkiHire.Core.Domain.Entities
         #region AdProperty
         public string Name { get; set; }
         public string PropertyType { get; set; }
+        public string Range { get; set; }
         public Subcategory Subcategory { get; set; }
         #endregion
 
