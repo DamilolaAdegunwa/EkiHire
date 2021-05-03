@@ -31,7 +31,7 @@ namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<string> GetCategories(long[] catIds = null);//IEnumerable<Category>
+        Task<IEnumerable<Category>> GetCategories(long[] catIds = null);//IEnumerable<Category>
         Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
         Task<bool> SeedSubcategories();
@@ -100,13 +100,13 @@ namespace EkiHire.Business.Services
             this._itemRepository = _itemRepository;
         }
 
-        public async Task<string> GetCategories(long[] catIds = null)//Task<IEnumerable<Category>>
+        public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null)//Task<IEnumerable<Category>>
         {
             try
             {
                 var result =  _categoryRepo.GetAllIncluding(x => x.Subcategories).ToList();
                 var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-                return json;
+                return result;
             }
             catch (Exception ex)
             {

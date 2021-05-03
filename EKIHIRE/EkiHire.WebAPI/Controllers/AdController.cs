@@ -139,10 +139,10 @@ namespace EkiHire.WebAPI.Controllers
         //[AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
-        public async Task<IServiceResponse<string>> GetCategories()
+        public async Task<IServiceResponse<IEnumerable<Category>>> GetCategories()
         {//IEnumerable<Category>
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<string>();//IEnumerable<Category>
+                var response = new ServiceResponse<IEnumerable<Category>>();//
                 var data = await categoryService.GetCategories();
                 response.Object = data;
                 return response;
