@@ -26,11 +26,12 @@ using EkiHire.Core.Domain.Extensions;
 using Microsoft.Extensions.Logging;
 using log4net;
 using System.Reflection;
+using Newtonsoft.Json;
 namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<IEnumerable<Category>> GetCategories(long[] catIds = null);
+        Task<string> GetCategories(long[] catIds = null);//IEnumerable<Category>
         Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
         Task<bool> SeedSubcategories();
@@ -99,16 +100,16 @@ namespace EkiHire.Business.Services
             this._itemRepository = _itemRepository;
         }
 
-        public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null)
+        public async Task<string> GetCategories(long[] catIds = null)//Task<IEnumerable<Category>>
         {
             try
             {
                 var result =  _categoryRepo.GetAllIncluding(x => x.Subcategories).ToList();
-                return result;
+                var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+                return json;
             }
             catch (Exception ex)
             {
-
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }

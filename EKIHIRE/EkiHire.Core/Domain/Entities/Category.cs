@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.DataTransferObjects;
-
+using Newtonsoft.Json;
 namespace EkiHire.Core.Domain.Entities
 {
     public class Category : FullAuditedEntity

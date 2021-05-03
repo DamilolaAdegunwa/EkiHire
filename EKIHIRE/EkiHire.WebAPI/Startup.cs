@@ -64,6 +64,8 @@ using EkiHire.Data.Repository;
 using log4net;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
+using Newtonsoft.Json.Linq;
+
 namespace EkiHire.WebAPI
 {
     public class Startup
@@ -261,18 +263,11 @@ namespace EkiHire.WebAPI
             services.AddTransient<IWebClient, WebClient>();
             services.AddSingleton<IGuidGenerator>((s) => SequentialGuidGenerator.Instance);
 
-            services.AddControllers();
-            //services.AddControllers().AddNewtonsoftJson(options =>
-            //{
-            //    // Use the default property (Pascal) casing
-            //    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-
-            //    // Configure a custom converter
-            //    //options.SerializerOptions.Converters.Add(new MyCustomJsonConverter());
-            //    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-            //    //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-            //    //options.JsonSerializerOptions.PropertyNamingPolicy = null;
-            //});
+            //services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            });
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EkiHire.WebAPI", Version = "v1" });
@@ -294,10 +289,9 @@ namespace EkiHire.WebAPI
             });
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddJsonOptions(o =>
+                .AddNewtonsoftJson(options =>
                 {
-                    //o.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-                    //o.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
         }
 
@@ -335,7 +329,7 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IRepository<Category> _categoryRepo)
         {
             loggerFactory.AddLog4Net();
             #region seeding the db
