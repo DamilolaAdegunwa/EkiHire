@@ -43,7 +43,13 @@
           ]
         }
       },
-      { "Jobs": { "sub-categories": "" } },
+      {
+        "Jobs": {
+          "sub-categories": [
+            "Account", "Administrative", "Advert & Marketing", "Architecture", "Beauty", "Consultnat", "Driver", "Engineering", "Farming", "HealthCare", "Hotel", "House Keeping", "Human Resouces", "IT & Software", "Internship", "Legal", "Logistics", "Management", "manufacturing", "Nanny", "Oil & Gas", "Others...", "Part-Time", "Quality Control / Assurance", "research", "Resturant", "Retail", "Sales & Telemarketing", "Security", "Sports", "Teaching", "technology", "Travel & Tourism"
+          ]
+        }
+      },
       {
         "Automobile": {
           "sub-categories": [
@@ -100,7 +106,13 @@
         }
       },
       { "Hotels": { "sub-categories": "" } },
-      { "Attractions": { "sub-categories": "" } },
+      {
+        "Attractions": {
+          "sub-categories": [
+            "Cinema", "Bar & Lounges", "Parks"
+          ]
+        }
+      },
       { "Restaurant": { "sub-categories": "" } }
     ]
 }

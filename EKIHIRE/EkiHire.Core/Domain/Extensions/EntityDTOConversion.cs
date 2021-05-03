@@ -23,6 +23,20 @@ namespace EkiHire.Core.Domain.Extensions
             }
             return null;
         }
+        public static IEnumerable<Category> ToEntity(this IEnumerable<CategoryDTO> categories)
+        {
+            if (categories != null)
+            {
+                List<Category> entities = new List<Category>();
+                foreach (var c in categories)
+                {
+                    Category entity = c;
+                    entities.Add(entity);
+                }
+                return entities;
+            }
+            return null;
+        }
         #endregion
 
         #region sub-categories

@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
+
 namespace EkiHire.Core.Domain.Entities
 {
     public class Subcategory : FullAuditedEntity
@@ -14,6 +16,7 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)]
         public string ImageString { get; set; }
         public Category Category { get; set; }
+        
         public static implicit operator Subcategory(SubcategoryDTO model)
         {
             if (model != null)

@@ -30,10 +30,11 @@ namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null);
-        Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null);
+        Task<IEnumerable<Category>> GetCategories(long[] catIds = null);
+        Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
-        Task<CategoryDTO> GetCategory(long Id);
+        Task<bool> SeedSubcategories();
+        Task<Category> GetCategory(long Id);
         Task<bool> AddCategory(CategoryDTO model, string username);
         Task<bool> AddSubcategory(SubcategoryDTO model, string username);
         Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
@@ -98,11 +99,11 @@ namespace EkiHire.Business.Services
             this._itemRepository = _itemRepository;
         }
 
-        public async Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null)
+        public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null)
         {
             try
             {
-                var result =  _categoryRepo.GetAll().AsEnumerable().ToDTO();
+                var result =  _categoryRepo.GetAllIncluding(x => x.Subcategories).ToList();
                 return result;
             }
             catch (Exception ex)
@@ -111,11 +112,11 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }
-        public async Task<CategoryDTO> GetCategory(long Id)
+        public async Task<Category> GetCategory(long Id)
         {
             try
             {
-                CategoryDTO result = _categoryRepo.Get(Id);
+                Category result = _categoryRepo.Get(Id);
                 return result;
             }
             catch (Exception ex)
@@ -124,11 +125,11 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get category :: {ex}");
             }
         }
-        public async Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null)
+        public async Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null)
         {
             try
             {
-                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToList().ToDTO();
+                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToList();
                 return result;
             }
             catch (Exception ex)
@@ -332,53 +333,201 @@ namespace EkiHire.Business.Services
             }
         }
 
-        //public async Task<bool> SeedRealEstateSubcategories()
-        //{
-        //    try
-        //    {
-        //        var category = _categoryRepo.GetAll().Where(x => x.Name == "Real Estate")?.FirstOrDefault();
-        //        var realEstateSub = _subcategoryRepo.GetAll().Where(x => x.Category.Id == category.Id).FirstOrDefault();
-        //        if(realEstateSub != null)
-        //        {
-        //            return true;
-        //        }
-        //        var realEstateSubcategories = new List<string>()
-        //        {
-        //            "Houses & Apartments For Sale",
-        //            "Houses & Apartments For Rent",
-        //            "Commercial Property For Sale",
-        //            "Commercial Property For Rent",
-        //            "Land & Plots For Sale",
-        //            "Land & Plots For Rent",
-        //            "Short Lets"
-        //        };
-        //        _unitOfWork.BeginTransaction();
-        //        foreach(var s in realEstateSubcategories)
-        //        {
-        //            var body = new Subcategory
-        //            {
-        //                Category = category,
-        //                CreationTime = DateTime.Now,
-        //                CreatorUserId = null,
-        //                DeleterUserId = null,
-        //                DeletionTime = null,
-        //                IsDeleted = false,
-        //                LastModificationTime = DateTime.Now,
-        //                LastModifierUserId = null,
-        //                Name = s,
+        public async Task<bool> SeedSubcategories()
+        {
+            try
+            {
+                Dictionary<Category, List<string>> catAndSub = new Dictionary<Category, List<string>>();
+                #region (1) Real Estate
+                var reCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Real Estate");
+                var reSubData = new List<string>()
+                {
+                    "Houses & Apartments For Sale",
+                    "Houses & Apartments For Rent",
+                    "Commercial Property For Sale",
+                    "Commercial Property For Rent",
+                    "Land & Plots For Sale",
+                    "Land & Plots For Rent",
+                    "Short Lets"
+                };
+                catAndSub.Add(reCat,reSubData);
+                #endregion
 
-        //            };
-        //            await _subcategoryRepo.InsertAsync(body);
-        //        }
-        //        _unitOfWork.Commit();
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _unitOfWork.Rollback();
-        //        log.Error("An error occured while trying to seed real estate sub categories", ex);
-        //        return false;
-        //    }
-        //}
+                #region (2) SERVICES
+                var servicesCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Services");
+                var servicesSubData = new List<string>
+                {
+                    "Agency",
+                    "Automotives", //companyname, location
+                    "Beauty & Personal Care",
+                    "Building & Repair",
+                    "Classes & Lessons", //companyname, servicefeature
+                    "Cleaning", //companyname, serviceArea
+                    "Computer & IT",
+                    "Electronics",
+                    "Fitness & Sports",
+                    "Gardening & Landscaping", //condition,company,servicefeature,typeofservice
+                    "Health",
+                    "Logistics & Movers", //CompanyName
+                    "Manufacturing",
+                    "Music & Film",
+                    "Party & Events",
+                    "Pet Services", //gender, breed
+                    "Photography & Videography",
+                    "Printing",
+                    "Professionals", //companyname, location
+                    "Security & Surveillance",
+                    "Skills & Talent",
+                    "Other",
+                    "Leisure" //companyname, location
+                };
+                catAndSub.Add(servicesCat, servicesSubData);
+                #endregion
+
+                #region (3) Jobs
+                var JobsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Jobs");
+                var JobsSubData = new List<string> {
+            "Account", "Administrative", "Advert & Marketing", "Architecture", "Beauty", "Consultnat", "Driver", "Engineering", "Farming", "HealthCare", "Hotel", "House Keeping", "Human Resouces", "IT & Software", "Internship", "Legal", "Logistics", "Management", "Manufacturing", "Nanny", "Oil & Gas", "Others...", "Part-Time", "Quality Control / Assurance", "Research", "Restaurant", "Retail", "Sales & Telemarketing", "Security", "Sports", "Teaching", "technology", "Travel & Tourism"
+                };
+                catAndSub.Add(JobsCat, JobsSubData);
+                #endregion
+
+                #region (4) Automobile
+                var AutomobileCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Automobile");
+                var AutomobileSubData = new List<string>{
+                    "Cars",
+                    "Trucks & Trailers",
+                    "Buses & Micro Buses",
+                    "Heavy Equipment",
+                    "Vehicle Parts & Accessories",
+                    "Motor Cycles & Scooters",
+                    "Water Craft & Boats"
+                };
+                catAndSub.Add(AutomobileCat, AutomobileSubData);
+                #endregion
+
+                #region (5) Retails
+                var RetailsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Retails");
+                var RetailsSubData = new List<string> {
+                "Agriculture & farming",
+                "Apparel",
+                "Art, Paintings & crafts",
+                "Audio, Books & Movies",
+                "Baby & Toddler Essentials",
+                "Beauty & Personal Care",
+                "Cell Phones, Desktops, Laptops & Tablets",
+                "Construction Materials & Supplies",
+                "Consumer Electronics",
+                "Education",
+                "Electrical Materials & Supplies",
+                "Energy & Power Supplies",
+                "Electrical Materials & Supplies",
+                "Event & Party Supplies",
+                "Fitness & Sports",
+                "Furniture",
+                "Garden",
+                "Gift Ideas & Presents",
+                "Gift Cards & Coupons",
+                "Groceries/FoodStuff",
+                "Hair & Hair Care",
+                "Home Decor & Bedding",
+                "Household Appliances",
+                "Household Supplies",
+                "Industrial Tools & Hardware",
+                "Luggage",
+                "Machinery & Equipment",
+                "Musical Instruments",
+                "Office",
+                "Packaging & Printing",
+                "Pet & Pet Supplies",
+                "Security & Surveillance",
+                "Toys & Games",
+                "Wholesale",
+                "Other"
+                };
+                catAndSub.Add(RetailsCat, RetailsSubData);
+                #endregion
+
+                #region (6) Hotels
+                var HotelsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Hotels");
+                var HotelsSubData = new List<string> { 
+                
+                };
+                catAndSub.Add(HotelsCat, HotelsSubData);
+                #endregion
+
+                #region (7) Attractions
+                var AttractionsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Attractions");
+                var AttractionsSubData = new List<string> {
+                    "Cinema", "Bar & Lounges", "Parks"
+                };
+                catAndSub.Add(AttractionsCat, AttractionsSubData);
+                #endregion
+
+                #region (8) Restaurant
+                var RestaurantCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Restaurant");
+                var RestaurantSubData = new List<string> {
+                
+                };
+                catAndSub.Add(RestaurantCat, RestaurantSubData);
+                #endregion
+
+                await SaveEachSubcategories(catAndSub);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                return false;
+            }
+        }
+
+        public async Task<bool> SaveEachSubcategories(Dictionary<Category, List<string>> catAndSub)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                foreach(var kv in catAndSub)
+                {
+                    foreach (var name in kv.Value)//subcategories
+                    {
+                        var test = _subcategoryRepo.FirstOrDefault(x => true);
+                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(test);
+                        var subData = _subcategoryRepo.FirstOrDefault(x => x.Category.Id == kv.Key.Id && kv.Key.Name == name);//category = kv.Key
+                        if (subData != null)
+                        {
+                            continue;
+                        }
+                        var body = new Subcategory
+                        {
+                            Category = kv.Key,
+                            Name = name,
+                            ImagePath = null,
+                            ImageString = null,
+                            //basic properties
+                            CreationTime = DateTime.Now,
+                            CreatorUserId = null,
+                            IsDeleted = false,
+                            LastModificationTime = DateTime.Now,
+                            LastModifierUserId = null,
+                            DeleterUserId = null,
+                            DeletionTime = null,
+                            Id = 0
+
+                        };
+                        await _subcategoryRepo.InsertAsync(body);
+                    }
+                }
+                _unitOfWork.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                return false;
+            }
+        }
     }
 }

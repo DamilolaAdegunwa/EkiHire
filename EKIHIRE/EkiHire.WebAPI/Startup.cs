@@ -62,6 +62,8 @@ using System.Text;
 using System.Threading.Tasks;
 using EkiHire.Data.Repository;
 using log4net;
+using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 namespace EkiHire.WebAPI
 {
     public class Startup
@@ -260,6 +262,17 @@ namespace EkiHire.WebAPI
             services.AddSingleton<IGuidGenerator>((s) => SequentialGuidGenerator.Instance);
 
             services.AddControllers();
+            //services.AddControllers().AddNewtonsoftJson(options =>
+            //{
+            //    // Use the default property (Pascal) casing
+            //    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+
+            //    // Configure a custom converter
+            //    //options.SerializerOptions.Converters.Add(new MyCustomJsonConverter());
+            //    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+            //    //options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+            //    //options.JsonSerializerOptions.PropertyNamingPolicy = null;
+            //});
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "EkiHire.WebAPI", Version = "v1" });
@@ -327,6 +340,7 @@ namespace EkiHire.WebAPI
             loggerFactory.AddLog4Net();
             #region seeding the db
             categoryService.SeedCategories();
+            categoryService.SeedSubcategories();
             #endregion end seeding the db
             if (env.IsDevelopment())
             {

@@ -141,6 +141,15 @@ namespace EkiHire.Business.Services
 
                 await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
+
+                if(model.AdPropertyValue != null && model.AdPropertyValue.Count > 0)
+                {
+                    foreach(var p in model.AdPropertyValue)
+                    {
+                        await AddOrUpdateAdPropertyValue(p, username);
+                    }
+                }
+
                 await _unitOfWork.SaveChangesAsync();
                 #endregion
                 return true;
@@ -677,6 +686,7 @@ namespace EkiHire.Business.Services
                 (a.Subcategory.Id.ToString() == model.SubcategoryId || string.IsNullOrWhiteSpace(model.SubcategoryId))
                 && ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
                 && (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
+                && (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
                 );
 
                 result = ad.ToDTO().ToList();
@@ -1279,6 +1289,18 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
+
+        //public async Task<bool> PostAds()
+        //{
+        //    try
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //}
     }
 }
 //show premium ads first

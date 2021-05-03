@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
+using Newtonsoft.Json;
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class SubcategoryDTO
@@ -12,6 +13,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string ImagePath { get; set; }
         [DataType(DataType.Text)]
         public string ImageString { get; set; }
+
         public Category Category { get; set; }
 
         public static implicit operator SubcategoryDTO(Subcategory model)

@@ -23,6 +23,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string Location { get; set; }
         public bool? IsActive { get; set; }
         //public ICollection<AdItem> AdItems { get; set; }
+        public ICollection<AdPropertyValue> AdPropertyValue { get; set; }
         //specifics
         public long? Room { get; set; }
         public string Furniture { get; set; }
@@ -90,6 +91,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Address = model.Address,
                     AdImages = model.AdImages,
                     //AdItems = model.AdItems,
+                    AdPropertyValue = model.AdPropertyValue,
                     AdsStatus = model.AdsStatus,
                     Age = model.Age,
                     Amount = model.Amount,

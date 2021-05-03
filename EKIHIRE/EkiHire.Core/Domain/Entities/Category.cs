@@ -26,7 +26,8 @@ namespace EkiHire.Core.Domain.Entities
                     Name = categoryDto.Name,
                     ImagePath = categoryDto.ImagePath,
                     ImageString = categoryDto.ImageString,
-                    Subcategories = categoryDto.Subcategories
+                    Subcategories = categoryDto.Subcategories,
+                    Id = categoryDto.Id,
                 };
                 return category;
             }

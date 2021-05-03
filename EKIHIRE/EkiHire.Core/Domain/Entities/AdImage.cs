@@ -9,5 +9,6 @@ namespace EkiHire.Core.Domain.Entities
     public class AdImage: FullAuditedEntity
     {
         public string ImagePath { get; set; }
+        public string ImageString { get; set; }
     }
 }

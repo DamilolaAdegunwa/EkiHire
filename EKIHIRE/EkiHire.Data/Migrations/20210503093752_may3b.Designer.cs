@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210503093752_may3b")]
+    partial class may3b
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1262,7 +1264,7 @@ namespace EkiHire.Data.Migrations
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.AdPropertyValue", b =>
                 {
                     b.HasOne("EkiHire.Core.Domain.Entities.Ad", "Ad")
-                        .WithMany("AdPropertyValue")
+                        .WithMany()
                         .HasForeignKey("AdId");
 
                     b.HasOne("EkiHire.Core.Domain.Entities.AdProperty", "AdProperty")
@@ -1416,8 +1418,6 @@ namespace EkiHire.Data.Migrations
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Ad", b =>
                 {
                     b.Navigation("AdImages");
-
-                    b.Navigation("AdPropertyValue");
 
                     b.Navigation("WorkExperiences");
                 });

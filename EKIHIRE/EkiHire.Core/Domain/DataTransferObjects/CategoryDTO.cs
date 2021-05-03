@@ -16,6 +16,9 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public ICollection<Subcategory> Subcategories { get; set; }
         #endregion
 
+        #region other props
+        public long Id { get; set; }
+        #endregion
         public static implicit operator CategoryDTO(Category category)
         {
             if(category != null)
@@ -25,7 +28,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Name = category.Name,
                     ImagePath = category.ImagePath,
                     ImageString = category.ImageString,
-                    Subcategories = category.Subcategories
+                    Subcategories = category.Subcategories,
+                    Id = category.Id
                 };
                 return categoryDto;
             }

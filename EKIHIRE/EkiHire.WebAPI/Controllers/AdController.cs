@@ -139,10 +139,10 @@ namespace EkiHire.WebAPI.Controllers
         //[AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
-        public async Task<IServiceResponse<IEnumerable<CategoryDTO>>> GetCategories()
+        public async Task<IServiceResponse<IEnumerable<Category>>> GetCategories()
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<CategoryDTO>>();
+                var response = new ServiceResponse<IEnumerable<Category>>();
                 var data = await categoryService.GetCategories();
                 response.Object = data;
                 return response;
@@ -151,10 +151,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetCategory/{id}")]
-        public async Task<IServiceResponse<CategoryDTO>> GetCategory(long id)
+        public async Task<IServiceResponse<Category>> GetCategory(long id)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<CategoryDTO>();
+                var response = new ServiceResponse<Category>();
                 var data = await categoryService.GetCategory(id);
                 response.Object = data;
                 return response;
@@ -163,10 +163,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetSubcategoriesByCategoryId/{categoryId}")]
-        public async Task<IServiceResponse<IEnumerable<SubcategoryDTO>>> GetSubcategoriesByCategoryId(long categoryId)
+        public async Task<IServiceResponse<IEnumerable<Subcategory>>> GetSubcategoriesByCategoryId(long categoryId)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<SubcategoryDTO>>();
+                var response = new ServiceResponse<IEnumerable<Subcategory>>();
                 var data = await categoryService.GetSubcategoriesByCategoryId(categoryId);
                 response.Object = data;
                 return response;
