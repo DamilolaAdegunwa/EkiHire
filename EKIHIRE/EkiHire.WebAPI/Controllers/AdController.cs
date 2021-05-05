@@ -221,7 +221,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("AddCategory")]
+        [Route("AddCategory/{username:minlength(0)?}")]
         public async Task<IServiceResponse<bool>> AddCategory(CategoryDTO model, string username = null)
         {
             return await HandleApiOperationAsync(async () => {
