@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210505193131_fixItem3")]
+    partial class fixItem3
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -379,7 +381,7 @@ namespace EkiHire.Data.Migrations
                     b.Property<string>("Range")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("SubcategoryId")
+                    b.Property<long>("SubcategoryId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
@@ -1257,7 +1259,9 @@ namespace EkiHire.Data.Migrations
                 {
                     b.HasOne("EkiHire.Core.Domain.Entities.Subcategory", "Subcategory")
                         .WithMany()
-                        .HasForeignKey("SubcategoryId");
+                        .HasForeignKey("SubcategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Subcategory");
                 });

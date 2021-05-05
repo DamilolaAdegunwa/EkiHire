@@ -221,12 +221,12 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("AddCategory/{username:minlength(0)?}")]
-        public async Task<IServiceResponse<bool>> AddCategory(CategoryDTO model, string username = null)
-        {
+        [Route("AddCategory")]
+        public async Task<IServiceResponse<bool>> AddCategory(CategoryDTO model)
+        {//tested!
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await categoryService.AddCategory(model, username??serviceHelper.GetCurrentUserEmail());
+                var data = await categoryService.AddCategory(model, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -234,11 +234,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddSubcategory")]
-        public async Task<IServiceResponse<bool>> AddSubcategory(SubcategoryDTO model, string username = null)
-        {
+        public async Task<IServiceResponse<bool>> AddSubcategory(SubcategoryDTO model)
+        {//tested - working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await categoryService.AddSubcategory(model, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await categoryService.AddSubcategory(model, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -246,11 +246,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAllItemGroupsForSubcategory")]
-        public async Task<IServiceResponse<List<IGrouping<string, Item>>>> GetAllItemGroupsForSubcategory(long subId, string username = null)
+        public async Task<IServiceResponse<List<IGrouping<string, Item>>>> GetAllItemGroupsForSubcategory(long subId)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<List<IGrouping<string, Item>>>();
-                var data = await categoryService.GetAllItemGroupsForSubcategory(subId, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await categoryService.GetAllItemGroupsForSubcategory(subId, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

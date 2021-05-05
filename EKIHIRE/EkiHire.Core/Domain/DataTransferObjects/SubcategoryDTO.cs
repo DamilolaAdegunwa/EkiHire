@@ -8,13 +8,19 @@ namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class SubcategoryDTO
     {
-        public string Name { get; set; }
-        [DataType(DataType.Text)]
-        public string ImagePath { get; set; }
-        [DataType(DataType.Text)]
-        public string ImageString { get; set; }
+        #region Subcategory
+        //[DataType(DataType.Text)]
+        public virtual string Name { get; set; }
+        //[DataType(DataType.Text)]
+        public virtual string ImagePath { get; set; }
+        //[DataType(DataType.Text)]
+        public virtual string ImageString { get; set; }
 
-        public Category Category { get; set; }
+        //[ForeignKey("CategoryId")]
+        public virtual long? CategoryId { get; set; }
+        public virtual CategoryDTO Category { get; set; }
+
+        #endregion
 
         #region other props
         public long Id { get; set; }
@@ -30,6 +36,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Name = model.Name,
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
+                    CategoryId = model.CategoryId,
                     Category = model.Category
                 };
                 return response;

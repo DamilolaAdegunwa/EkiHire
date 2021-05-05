@@ -261,7 +261,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Subcategory already exist!!");
                 }
-                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.Category.Id);
+                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.CategoryId);
                 if (cat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Category does not exist!!");
@@ -276,7 +276,7 @@ namespace EkiHire.Business.Services
                     Name = model.Name,
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
-                    Category = cat,
+                    CategoryId = cat.Id,
 
                     //basic properties
                     CreationTime = DateTime.Now,
@@ -289,7 +289,7 @@ namespace EkiHire.Business.Services
                     Id = 0
                 };
                 _unitOfWork.BeginTransaction();
-                _subcategoryRepo.InsertAsync(data);
+                await _subcategoryRepo.InsertAsync(data);
                 _unitOfWork.Commit();
                 #endregion
 
@@ -298,7 +298,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                log.Error($"A error occured while trying to set categories - error - {ex.Message} - stackTrack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
                 return false;
             }
         }

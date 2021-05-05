@@ -75,6 +75,8 @@ namespace EkiHire.Core.Domain.Entities.Auditing
         { }
     }
 
+    #region dto audit
+
     public class FullAuditedEntityDTO
     {
         public virtual DateTime CreationTime { get; set; }
@@ -86,4 +88,14 @@ namespace EkiHire.Core.Domain.Entities.Auditing
         public virtual DateTime? LastModificationTime { get; set; }
         public virtual long? LastModifierUserId { get; set; }
     }
+    public abstract class EntityDTO<TPrimaryKey> : IEntityDTO<TPrimaryKey>
+    {
+        public virtual TPrimaryKey Id { get; set; }
+    }
+
+    public interface IEntityDTO<TPrimaryKey>
+    {
+        TPrimaryKey Id { get; set; }
+    }
+    #endregion
 }

@@ -8,35 +8,45 @@ using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class AdPropertyDTO
+    public class AdPropertyDTO : EntityDTO<long>
     {
         #region AdProperty
+        [DataType(DataType.Text)]
         public string Name { get; set; }
+        [DataType(DataType.Text)]
         public string PropertyType { get; set; }
-        public long SubcategoryId { get; set; }
+        [DataType(DataType.Text)]
         public string Range { get; set; }
+        //[ForeignKey("SubcategoryId")]
+        public virtual long? SubcategoryId { get; set; }
+        public virtual SubcategoryDTO Subcategory { get; set; }
         #endregion
 
-        //public static implicit operator AdPropertyDTO(AdProperty model)
-        //{
-        //    try
-        //    {
-        //        if (model != null)
-        //        {
-        //            AdPropertyDTO response = new AdPropertyDTO
-        //            {
-        //                Name = model.Name,
-        //                PropertyType = model.PropertyType,
-        //                SubcategoryDTO = model.Subcategory
-        //            };
-        //            return response;
-        //        }
-        //        return null;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return null;
-        //    }
-        //}
+
+
+        public static implicit operator AdPropertyDTO(AdProperty model)
+        {
+            try
+            {
+                if (model != null)
+                {
+                    AdPropertyDTO response = new AdPropertyDTO
+                    {
+                        Name = model.Name,
+                        PropertyType = model.PropertyType,
+                        Range = model.Range,
+                        SubcategoryId = model.SubcategoryId,
+                        Subcategory = model.Subcategory,
+                        Id = model.Id
+                    };
+                    return response;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
     }
 }

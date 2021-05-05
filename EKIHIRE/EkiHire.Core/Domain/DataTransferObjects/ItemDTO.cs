@@ -19,8 +19,14 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         [DataType(DataType.Text)]
         public string GroupName { get; set; }
         public long Order { get; set; }
+        //[ForeignKey("SubcategoryId")]
+        public long? SubcategoryId { get; set; }
         public Subcategory Subcategory { get; set; }
-        #endregion 
+        #endregion
+
+        #region other props
+        public long Id { get; set; }
+        #endregion
 
         public static implicit operator ItemDTO(Item model)
         {
@@ -33,7 +39,9 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Keywords = model.Keywords,
                     Name = model.Name,
                     Order = model.Order,
+                    SubcategoryId = model.SubcategoryId,
                     Subcategory = model.Subcategory,
+                    Id = model.Id
                 };
                 return dto;
             }
