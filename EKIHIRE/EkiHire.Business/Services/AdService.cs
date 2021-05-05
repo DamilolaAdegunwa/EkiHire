@@ -72,7 +72,8 @@ namespace EkiHire.Business.Services
         private readonly IRepository<Keyword> _keywordRepo;
         private readonly IRepository<AdProperty> _adPropertyRepo;
         private readonly IRepository<AdPropertyValue> _adPropertyValueRepo;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo)
+        private readonly IRepository<User> _userRepo;
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -86,6 +87,7 @@ namespace EkiHire.Business.Services
             this._keywordRepo = _keywordRepo;
             this._adPropertyRepo = _adPropertyRepo;
             this._adPropertyValueRepo = _adPropertyValueRepo;
+            this._userRepo = _userRepo;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -130,21 +132,28 @@ namespace EkiHire.Business.Services
                 ad.CreatorUserId = user.Id;
                 ad.DeleterUserId = null;
                 ad.DeletionTime = null;
-                ad.Id = 0;
+                //ad.Id = 0;
                 ad.IsDeleted = false;
                 ad.LastModificationTime = DateTime.Now;
                 ad.LastModifierUserId = user.Id;
 
                 //others
                 ad.IsActive = true;
-                ad.User = user;
-
+                ad.UserId = model.UserId;
+                ad.SubcategoryId = model.SubcategoryId;
+                //ad.User = user;
+                //ad.Subcategory = sub;
+                //test
+                ad.WorkExperiences = null;
+                ad.AdImages = null;
+                ad.AdPropertyValue = null;
+                //test
                 await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
 
-                if(model.AdPropertyValue != null && model.AdPropertyValue.Count > 0)
+                if (model.AdPropertyValue != null && model.AdPropertyValue.Count > 0)
                 {
-                    foreach(var p in model.AdPropertyValue)
+                    foreach (var p in model.AdPropertyValue)
                     {
                         await AddOrUpdateAdPropertyValue(p, username);
                     }
@@ -683,10 +692,10 @@ namespace EkiHire.Business.Services
                 #endregion
                 #region filter based on the search entry
                 var ad = adRepository.GetAll().Where(a =>
-                (a.Subcategory.Id.ToString() == model.SubcategoryId || string.IsNullOrWhiteSpace(model.SubcategoryId))
+                (a.SubcategoryId.ToString() == model.SubcategoryId || string.IsNullOrWhiteSpace(model.SubcategoryId))
                 && ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
                 && (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
-                && (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
+                //&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
                 );
 
                 result = ad.ToDTO().ToList();
@@ -815,7 +824,7 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
-                var result = await adFeedbackRepository.GetAll().Where(a => adRepository.Get(a.AdId).User.UserName == username
+                var result = await adFeedbackRepository.GetAll().Where(a =>   adRepository.Get(a.AdId).UserId == user.Id
                 && (adIds.Contains(a.AdId) || adIds == null)
                 ).ToListAsync();
                 return result;
@@ -1217,7 +1226,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
                 return false;
             }
         }

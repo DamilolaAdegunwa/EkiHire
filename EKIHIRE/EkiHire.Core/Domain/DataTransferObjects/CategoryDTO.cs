@@ -9,11 +9,11 @@ namespace EkiHire.Core.Domain.DataTransferObjects
     {
         #region category
         [DataType(DataType.Text)]
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         [DataType(DataType.Text)]
-        public string ImagePath { get; set; }
-        public string ImageString { get; set; }
-        public ICollection<Subcategory> Subcategories { get; set; }
+        public virtual string ImagePath { get; set; }
+        public virtual string ImageString { get; set; }
+        //public ICollection<Subcategory> Subcategories { get; set; }
         #endregion
 
         #region other props
@@ -28,7 +28,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Name = category.Name,
                     ImagePath = category.ImagePath,
                     ImageString = category.ImageString,
-                    Subcategories = category.Subcategories,
+                    //Subcategories = category.Subcategories,
                     Id = category.Id
                 };
                 return categoryDto;

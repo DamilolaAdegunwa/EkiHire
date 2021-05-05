@@ -104,7 +104,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var result =  _categoryRepo.GetAllIncluding(x => x.Subcategories).ToList();
+                var result =  _categoryRepo.GetAll().ToList();
                 var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
                 return result;
             }
@@ -212,7 +212,7 @@ namespace EkiHire.Business.Services
                     Name = model.Name,
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
-                    Subcategories = model.Subcategories,
+                    //Subcategories = model.Subcategories,
 
                     //basic properties
                     CreationTime = DateTime.Now,
@@ -225,7 +225,7 @@ namespace EkiHire.Business.Services
                     Id = 0
                 };
                 _unitOfWork.BeginTransaction();
-                _categoryRepo.InsertAsync(data);
+                await _categoryRepo.InsertAsync(data);
                 _unitOfWork.Commit();
                 #endregion
 
