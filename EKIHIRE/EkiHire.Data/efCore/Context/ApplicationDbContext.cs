@@ -14,7 +14,8 @@ namespace EkiHire.Data.efCore.Context
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
+            
+            
         }
         public DbSet<Account> Account { get; set; }
         public DbSet<Ad> Ad { get; set; }
@@ -97,6 +98,7 @@ namespace EkiHire.Data.efCore.Context
     {
         public static readonly IConfigurationRoot ConfigBuilder = new ConfigurationBuilder()
                  .SetBasePath(AppContext.BaseDirectory)
+        
                  .AddJsonFile("appsettings.json", false, true).Build();
 
         public ApplicationDbContext CreateDbContext(string[] args)

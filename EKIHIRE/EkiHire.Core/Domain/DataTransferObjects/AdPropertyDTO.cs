@@ -13,29 +13,30 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #region AdProperty
         public string Name { get; set; }
         public string PropertyType { get; set; }
-        public Subcategory Subcategory { get; set; }
+        public long SubcategoryId { get; set; }
+        public string Range { get; set; }
         #endregion
 
-        public static implicit operator AdPropertyDTO(AdProperty model)
-        {
-            try
-            {
-                if (model != null)
-                {
-                    AdPropertyDTO response = new AdPropertyDTO
-                    {
-                        Name = model.Name,
-                        PropertyType = model.PropertyType,
-                        Subcategory = model.Subcategory
-                    };
-                    return response;
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
+        //public static implicit operator AdPropertyDTO(AdProperty model)
+        //{
+        //    try
+        //    {
+        //        if (model != null)
+        //        {
+        //            AdPropertyDTO response = new AdPropertyDTO
+        //            {
+        //                Name = model.Name,
+        //                PropertyType = model.PropertyType,
+        //                SubcategoryDTO = model.Subcategory
+        //            };
+        //            return response;
+        //        }
+        //        return null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
     }
 }

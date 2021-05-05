@@ -1,0 +1,81 @@
+﻿<Properties StartupConfiguration="{F90819E6-4F29-4AEC-AD46-F03468578A4D}|Default">
+  <MonoDevelop.Ide.ItemProperties.EkiHire.WebAPI PreferredExecutionTarget="/Applications/Google Chrome.app" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="EkiHire.WebAPI/Startup.cs">
+    <Files>
+      <File FileName="EkiHire.WebAPI/Controllers/AdController.cs" Line="146" Column="57" />
+      <File FileName="EkiHire.WebAPI/Controllers/AccountController.cs" Line="22" Column="48" />
+      <File FileName="EkiHire.Business/Services/AdService.cs" Line="1061" Column="1" />
+      <File FileName="EkiHire.Core/Domain/Entities/AdProperty.cs" Line="14" Column="61" />
+      <File FileName="EkiHire.Core/Domain/DataTransferObjects/AdPropertyDTO.cs" />
+      <File FileName="EkiHire.Data/efCore/Extensions/DbExtensions.cs" />
+      <File FileName="EkiHire.Data/efCore/Context/BaseDbContext.cs" />
+      <File FileName="EkiHire.Data/efCore/Context/DbContextProvider.cs" />
+      <File FileName="EkiHire.Data/efCore/Context/ApplicationDbContext.cs" />
+      <File FileName="EkiHire.WebAPI/Program.cs" Line="16" Column="1" />
+      <File FileName="EkiHire.Business/Services/CategoryService.cs" Line="112" Column="14" />
+      <File FileName="EkiHire.WebAPI/Startup.cs" Line="76" Column="16" />
+    </Files>
+    <Pads>
+      <Pad Id="ProjectPad">
+        <State name="__root__">
+          <Node name="EkiHire" expanded="True">
+            <Node name="EkiHire.Business" expanded="True">
+              <Node name="Services" expanded="True" />
+            </Node>
+            <Node name="EkiHire.Core" expanded="True">
+              <Node name="Domain" expanded="True">
+                <Node name="DataTransferObjects" expanded="True" />
+                <Node name="Entities" expanded="True" />
+              </Node>
+              <Node name="Model" expanded="True" />
+            </Node>
+            <Node name="EkiHire.Data" expanded="True">
+              <Node name="efCore" expanded="True">
+                <Node name="Context" expanded="True" />
+                <Node name="Extensions" expanded="True" />
+              </Node>
+              <Node name="Migrations" expanded="True" />
+              <Node name="Repository" expanded="True" />
+            </Node>
+            <Node name="EkiHire.WebAPI" expanded="True">
+              <Node name="Controllers" expanded="True" />
+              <Node name="Infrastructure" expanded="True">
+                <Node name="Services" expanded="True" />
+              </Node>
+              <Node name="Properties" expanded="True" />
+              <Node name="Utils" expanded="True" />
+              <Node name="ViewModels" expanded="True" />
+              <Node name="Startup.cs" selected="True" />
+            </Node>
+          </Node>
+        </State>
+      </Pad>
+    </Pads>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore>
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1143" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1151" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/CategoryService.cs" relfile="EkiHire.Business/Services/CategoryService.cs" line="274" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/CategoryService.cs" relfile="EkiHire.Business/Services/CategoryService.cs" line="291" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/CategoryService.cs" relfile="EkiHire.Business/Services/CategoryService.cs" line="292" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/CategoryService.cs" relfile="EkiHire.Business/Services/CategoryService.cs" line="293" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/CategoryService.cs" relfile="EkiHire.Business/Services/CategoryService.cs" line="296" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1142" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="696" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="699" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="703" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="705" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="681" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="677" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="672" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1065" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1066" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1056" column="1" />
+      <Breakpoint file="/Users/otueme/Documents/GitHub/EkiHire/EKIHIRE/EkiHire.Business/Services/AdService.cs" relfile="EkiHire.Business/Services/AdService.cs" line="1051" column="1" />
+    </BreakpointStore>
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>
