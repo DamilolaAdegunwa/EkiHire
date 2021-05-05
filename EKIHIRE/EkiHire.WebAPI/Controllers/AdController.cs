@@ -330,7 +330,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdProperty")]
-        public async Task<IServiceResponse<bool>> AddAdProperty(AdProperty model, string username = null)
+        public async Task<IServiceResponse<bool>> AddAdProperty(AdPropertyDTO model, string username = null)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -352,17 +352,17 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("UpdateAdProperty")]
-        public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model, string username)
-        {
-            return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<bool>();
-                var data = await adService.UpdateAdProperty(model, username ?? serviceHelper.GetCurrentUserEmail());
-                response.Object = data;
-                return response;
-            });
-        }
+        //[HttpPost]
+        //[Route("UpdateAdProperty")]
+        //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model, string username)
+        //{
+        //    return await HandleApiOperationAsync(async () => {
+        //        var response = new ServiceResponse<bool>();
+        //        var data = await adService.UpdateAdProperty(model, username ?? serviceHelper.GetCurrentUserEmail());
+        //        response.Object = data;
+        //        return response;
+        //    });
+        //}
         #region APIs in progress
         //update profile 
         //Basket

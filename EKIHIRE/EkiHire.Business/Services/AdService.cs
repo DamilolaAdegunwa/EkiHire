@@ -53,7 +53,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid = null);
         Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username);
         Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null);
-        Task<bool> AddAdProperty(AdProperty model, string username);
+        Task<bool> AddAdProperty(AdPropertyDTO model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
     }
@@ -698,8 +698,13 @@ namespace EkiHire.Business.Services
                 //&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
                 );
 
-                result = ad.ToDTO().ToList();
+                //result = ad.ToDTO().ToList();
                 #endregion
+                if (model.CategoryId.IsNullOrEmpty() && model.Keywords.IsNullOrEmpty() && model.SubcategoryId.IsNullOrEmpty() && model.SearchText.IsNullOrEmpty()) {
+
+                    result = adRepository.GetAll().ToDTO().ToList();
+                }
+
                 return result;
             }
             catch (Exception ex)
@@ -1061,7 +1066,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 List<AdProperty> result = new List<AdProperty>();
-                result = await _adPropertyRepo.GetAll().Where(a => a.Subcategory.Id == subId).ToListAsync();
+                result = await _adPropertyRepo.GetAllIncluding(x => x.Subcategory).Where(a => a.Subcategory.Id == subId).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1099,7 +1104,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> AddAdProperty(AdProperty model, string username)
+        public async Task<bool> AddAdProperty(AdPropertyDTO model, string username)
         {
             try
             {
@@ -1113,40 +1118,37 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                if(model == null)
+                if (model == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id);
-                if(subcat == null)
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.SubcategoryId);
+                if (subcat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
-                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name);
-                if(adprop != null)
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.SubcategoryId && a.Name == model.Name);
+                if (adprop != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
                 }
                 #endregion
 
                 #region add a new property for ad in the selected subcategory
-                _unitOfWork.BeginTransaction();
                 AdProperty data = new AdProperty
                 {
                     Name = model.Name,
                     PropertyType = model.PropertyType,
                     Range = model.Range,
-                    Subcategory = model.Subcategory,
+                    Subcategory = subcat,
                     //basic properties
                     CreationTime = DateTime.Now,
                     CreatorUserId = user.Id,
-                    IsDeleted = false,
                     LastModificationTime = DateTime.Now,
                     LastModifierUserId = user.Id,
-                    DeleterUserId = null,
-                    DeletionTime = null,
-                    Id = 0
+           
                 };
+                _unitOfWork.BeginTransaction();
                 await _adPropertyRepo.InsertAsync(data);
                 _unitOfWork.Commit();
                 #endregion

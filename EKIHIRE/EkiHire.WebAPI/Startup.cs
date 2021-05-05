@@ -281,11 +281,26 @@ namespace EkiHire.WebAPI
                     Type = SecuritySchemeType.ApiKey,// "apiKey",
                 });
 
-                //c.AddSecurityRequirement(new Dictionary<string, IEnumerable<string>>
-                //      {
-                //        { JwtBearerDefaults.AuthenticationScheme, new string[] { } }
-                //      });
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement());
+
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement()
+                {
+                   {
+          new OpenApiSecurityScheme
+          {
+            Reference = new OpenApiReference
+              {
+                Type = ReferenceType.SecurityScheme,
+                Id = "Bearer"
+              },
+              Scheme = "oauth2",
+              Name = "Bearer",
+              In = ParameterLocation.Header,
+
+            },
+            new List<string>()
+          }
+                });
             });
             services.AddMvc()
                 .SetCompatibilityVersion(CompatibilityVersion.Latest)

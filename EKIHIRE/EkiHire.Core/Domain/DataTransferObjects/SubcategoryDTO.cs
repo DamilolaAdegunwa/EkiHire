@@ -16,12 +16,17 @@ namespace EkiHire.Core.Domain.DataTransferObjects
 
         public Category Category { get; set; }
 
+        #region other props
+        public long Id { get; set; }
+        #endregion
+
         public static implicit operator SubcategoryDTO(Subcategory model)
         {
             if (model != null)
             {
                 var response = new SubcategoryDTO
                 {
+                    Id = model.Id,
                     Name = model.Name,
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
