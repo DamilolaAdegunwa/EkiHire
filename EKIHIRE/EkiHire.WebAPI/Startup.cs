@@ -348,8 +348,8 @@ namespace EkiHire.WebAPI
         {
             loggerFactory.AddLog4Net();
             #region seeding the db
-            categoryService.SeedCategories();
-            categoryService.SeedSubcategories();
+            //categoryService.SeedCategories();
+            //categoryService.SeedSubcategories();
             #endregion end seeding the db
             if (env.IsDevelopment())
             {

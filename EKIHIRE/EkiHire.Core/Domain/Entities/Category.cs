@@ -11,11 +11,11 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region category
         [DataType(DataType.Text)]
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         [DataType(DataType.Text)]
-        public string ImagePath { get; set; }
-        public string ImageString { get; set; }
-        public ICollection<Subcategory> Subcategories { get; set; }
+        public virtual string ImagePath { get; set; }
+        public virtual string ImageString { get; set; }
+        //public ICollection<Subcategory> Subcategories { get; set; }
         #endregion
         public static implicit operator Category(CategoryDTO categoryDto)
         {
@@ -26,7 +26,7 @@ namespace EkiHire.Core.Domain.Entities
                     Name = categoryDto.Name,
                     ImagePath = categoryDto.ImagePath,
                     ImageString = categoryDto.ImageString,
-                    Subcategories = categoryDto.Subcategories,
+                    //Subcategories = categoryDto.Subcategories,
                     Id = categoryDto.Id,
                 };
                 return category;

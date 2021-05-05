@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Domain.DataTransferObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -18,6 +19,8 @@ namespace EkiHire.Core.Domain.Entities
         public AdClass? AdClass { get; set; }
         public AdsStatus? AdsStatus { get; set; }
         public ICollection<AdImage> AdImages { get; set; }
+        [ForeignKey("SubcategoryId")]
+        public long? SubcategoryId { get; set; }
         public Subcategory Subcategory { get; set; }
         public string Keywords { get; set; }
         public string Location { get; set; }//coordinates
@@ -72,6 +75,7 @@ namespace EkiHire.Core.Domain.Entities
         public string FuelType { get; set; }
         public string Mileage { get; set; }
         //
+        public long? UserId { get; set; }
         public User User { get; set; }
 
         #endregion
@@ -127,14 +131,16 @@ namespace EkiHire.Core.Domain.Entities
                     ServiceFeature = model.ServiceFeature,
                     Skills = model.Skills,
                     SquareMeters = model.SquareMeters,
-                    Subcategory = model.Subcategory,
+                    //Subcategory = model.Subcategory,
+                    SubcategoryId = model.SubcategoryId,
                     Title = model.Title,
                     Topic = model.Topic,
                     TypeOfService = model.TypeOfService,
                     VideoPath = model.VideoPath,
                     WorkExperiences = model.WorkExperiences,
                     Year = model.Year,
-                    User = model.User
+                    //User = model.User,
+                    UserId = model.UserId
                 };
                 return output;
             }
