@@ -8,73 +8,75 @@ using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class AdDTO
+    public class AdDTO : EntityDTO<long>
     {
         #region all ad properties
-        [DataType(DataType.Text)]
-        public string Name { get; set; }
-        public string VideoPath { get; set; }
-        public decimal? Amount { get; set; }
-        public AdClass? AdClass { get; set; }
-        public AdsStatus? AdsStatus { get; set; }
-        public ICollection<AdImage> AdImages { get; set; }
-        public long? SubcategoryId { get; set; }
-        //public Subcategory Subcategory { get; set; }
-        public string Keywords { get; set; }
-        public string Location { get; set; }
-        public bool? IsActive { get; set; }
-        //public ICollection<AdItem> AdItems { get; set; }
-        public ICollection<AdPropertyValue> AdPropertyValue { get; set; }
+        [DataType(DataType.Text)] public virtual string Name { get; set; }
+
+        [DataType(DataType.Text)] public virtual string VideoPath { get; set; }
+        public virtual decimal? Amount { get; set; }
+        public virtual AdClass? AdClass { get; set; }
+        public virtual AdsStatus? AdsStatus { get; set; }
+        //public virtual ICollection<AdImage> AdImages { get; set; }
+        //[ForeignKey("SubcategoryId")]
+        public virtual long? SubcategoryId { get; set; }
+        public virtual Subcategory Subcategory { get; set; }
+        [DataType(DataType.Text)] public virtual string Keywords { get; set; }
+        [DataType(DataType.Text)] public virtual string Location { get; set; }//coordinates
+        public virtual bool? IsActive { get; set; }
+        //public virtual ICollection<AdItem> AdItems { get; set; }
+        //public virtual ICollection<AdPropertyValue> AdPropertyValue { get; set; }
         //specifics
-        public long? Room { get; set; }
-        public string Furniture { get; set; }
-        public string Parking { get; set; }
-        public long? Bedroom { get; set; }
-        public long? Bathroom { get; set; }
+        public virtual long? Room { get; set; }
+        [DataType(DataType.Text)] public virtual string Furniture { get; set; }
+        [DataType(DataType.Text)] public virtual string Parking { get; set; }
+        public virtual long? Bedroom { get; set; }
+        public virtual long? Bathroom { get; set; }
         //
-        public string LandType { get; set; }//residentiial land, commercial
-        public decimal? SquareMeters { get; set; }
-        public string ExchangePossible { get; set; }
-        public string BrokerFee { get; set; }
+        [DataType(DataType.Text)] public virtual string LandType { get; set; }//residential land, commercial
+        public virtual decimal? SquareMeters { get; set; }
+        [DataType(DataType.Text)] public virtual string ExchangePossible { get; set; }
+        [DataType(DataType.Text)] public virtual string BrokerFee { get; set; }
         //
-        public string Condition { get; set; }//Brand New
-        public string Quality { get; set; }//Standard
+        [DataType(DataType.Text)] public virtual string Condition { get; set; }//Brand New
+        [DataType(DataType.Text)] public virtual string Quality { get; set; }//Standard
         //LandType, Condition, Quality, BrokerFee
-        public string CompanyName { get; set; }
-        public string ServiceArea { get; set; }
-        public string ServiceFeature { get; set; }
-        public string TypeOfService { get; set; }//inspection, Repair
-        public string Topic { get; set; }
+        [DataType(DataType.Text)] public virtual string CompanyName { get; set; }
+        [DataType(DataType.Text)] public virtual string ServiceArea { get; set; }
+        [DataType(DataType.Text)] public virtual string ServiceFeature { get; set; }
+        [DataType(DataType.Text)] public virtual string TypeOfService { get; set; }//inspection, Repair
+        [DataType(DataType.Text)] public virtual string Topic { get; set; }
         //job
-        public string Requirements { get; set; }
-        public string ResumePath { get; set; }
-        public string Title { get; set; }
-        public string PhoneNumber { get; set; }
-        public string Region { get; set; }
-        public string Place { get; set; }
-        public string Address { get; set; }
-        public string JobType { get; set; }
-        public string EmploymentStatus { get; set; }
-        public string Gender { get; set; }
-        public long? Age { get; set; }
-        public string Skills { get; set; }
-        public string ExpectedSalary { get; set; }
-        public string Education { get; set; }
-        public string HighestLevelOfEducation { get; set; }
-        public string Certification { get; set; }
-        public bool SaveData { get; set; } = true;
-        public ICollection<WorkExperience> WorkExperiences { get; set; }
+        [DataType(DataType.Text)] public virtual string Requirements { get; set; }
+        [DataType(DataType.Text)] public virtual string ResumePath { get; set; }
+        [DataType(DataType.Text)] public virtual string Title { get; set; }
+        [DataType(DataType.Text)] public virtual string PhoneNumber { get; set; }
+        [DataType(DataType.Text)] public virtual string Region { get; set; }
+        [DataType(DataType.Text)] public virtual string Place { get; set; }
+        [DataType(DataType.Text)] public virtual string Address { get; set; }
+        [DataType(DataType.Text)] public virtual string JobType { get; set; }
+        [DataType(DataType.Text)] public virtual string EmploymentStatus { get; set; }
+        [DataType(DataType.Text)] public virtual string Gender { get; set; }
+        public virtual long? Age { get; set; }
+        [DataType(DataType.Text)] public virtual string Skills { get; set; }
+        [DataType(DataType.Text)] public virtual string ExpectedSalary { get; set; }
+        [DataType(DataType.Text)] public virtual string Education { get; set; }
+        [DataType(DataType.Text)] public virtual string HighestLevelOfEducation { get; set; }
+        [DataType(DataType.Text)] public virtual string Certification { get; set; }
+        public virtual bool SaveData { get; set; } = true;
+        //public virtual ICollection<WorkExperience> WorkExperiences { get; set; }
         //cars
-        public string Maker { get; set; }
-        public string Year { get; set; }
-        public string Color { get; set; }
-        public long? Seats { get; set; }
-        public string CarType { get; set; }
-        public string FuelType { get; set; }
-        public string Mileage { get; set; }
+        [DataType(DataType.Text)] public virtual string Maker { get; set; }
+        [DataType(DataType.Text)] public virtual string Year { get; set; }
+        [DataType(DataType.Text)] public virtual string Color { get; set; }
+        public virtual long? Seats { get; set; }
+        [DataType(DataType.Text)] public virtual string CarType { get; set; }
+        [DataType(DataType.Text)] public virtual string FuelType { get; set; }
+        [DataType(DataType.Text)] public virtual string Mileage { get; set; }
         //
-        public long? UserId { get; set; }
-        //public User User { get; set; }
+        //[ForeignKey("UserId")]
+        public virtual long? UserId { get; set; }
+        public virtual User User { get; set; }
 
         #endregion
 
@@ -88,12 +90,14 @@ namespace EkiHire.Core.Domain.DataTransferObjects
             {
                 var dto = new AdDTO
                 {
+                    
+                    Id = model.Id,
                     Name = model.Name,
                     AdClass = model.AdClass,
                     Address = model.Address,
-                    AdImages = model.AdImages,
+                    //AdImages = model.AdImages,
                     //AdItems = model.AdItems,
-                    AdPropertyValue = model.AdPropertyValue,
+                    //AdPropertyValue = model.AdPropertyValue,
                     AdsStatus = model.AdsStatus,
                     Age = model.Age,
                     Amount = model.Amount,
@@ -139,7 +143,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Topic = model.Topic,
                     TypeOfService = model.TypeOfService,
                     VideoPath = model.VideoPath,
-                    WorkExperiences = model.WorkExperiences,
+                    //WorkExperiences = model.WorkExperiences,
                     Year = model.Year,
                     UserId = model.UserId,
                     //User = model.User

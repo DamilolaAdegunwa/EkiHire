@@ -1,21 +1,20 @@
-﻿using EkiHire.Core.Domain.Entities.Auditing;
+﻿using EkiHire.Core.Domain.Entities;
+using EkiHire.Core.Domain.Entities.Auditing;
+using EkiHire.Core.Domain.Entities.Enums;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Enums;
-using System.ComponentModel.DataAnnotations.Schema;
-using EkiHire.Core.Domain.DataTransferObjects;
+using System.Text;
 
-namespace EkiHire.Core.Domain.Entities
+namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class AdFeedback: FullAuditedEntity
+    public class AdFeedbackDTO : EntityDTO<long>
     {
         #region AdFeedback
-        [ForeignKey("UserId")]
+        //[ForeignKey("UserId")]
         public virtual long UserId { get; set; }
         public virtual User User { get; set; }
-        [ForeignKey("AdId")]
+        //[ForeignKey("AdId")]
         public virtual long AdId { get; set; }
         public virtual Ad Ad { get; set; }
         public virtual bool Like { get; set; }
@@ -24,13 +23,13 @@ namespace EkiHire.Core.Domain.Entities
         public virtual Rating Rating { get; set; }
         #endregion
 
-        public static implicit operator AdFeedback(AdFeedbackDTO model)
+        public static implicit operator AdFeedbackDTO(AdFeedback model)
         {
             try
             {
-                if (model != null)
+                if(model != null)
                 {
-                    AdFeedback response = new AdFeedback
+                    AdFeedbackDTO response = new AdFeedbackDTO
                     {
                         Id = model.Id,
                         User = model.User,

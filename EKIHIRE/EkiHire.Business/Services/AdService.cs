@@ -144,16 +144,16 @@ namespace EkiHire.Business.Services
                 //ad.User = user;
                 //ad.Subcategory = sub;
                 //test
-                ad.WorkExperiences = null;
-                ad.AdImages = null;
-                ad.AdPropertyValue = null;
+                //ad.WorkExperiences = null;
+                //ad.AdImages = null;
+                //ad.AdPropertyValue = null;
                 //test
                 await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
-
-                if (model.AdPropertyValue != null && model.AdPropertyValue.Count > 0)
+                var adpv = _adPropertyValueRepo.GetAll().Where(x => x.Id == model.Id).ToList();
+                if (adpv != null && adpv.Count > 0)
                 {
-                    foreach (var p in model.AdPropertyValue)
+                    foreach (var p in adpv)
                     {
                         await AddOrUpdateAdPropertyValue(p, username);
                     }

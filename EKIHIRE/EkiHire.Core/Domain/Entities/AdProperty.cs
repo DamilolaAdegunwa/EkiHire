@@ -16,7 +16,7 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)]
         public string Range { get; set; }
         [ForeignKey("SubcategoryId")]
-        public virtual long SubcategoryId { get; set; }
+        public virtual long? SubcategoryId { get; set; }
         public virtual Subcategory Subcategory { get; set; }
         #endregion
 
@@ -28,10 +28,12 @@ namespace EkiHire.Core.Domain.Entities
                 {
                     AdProperty response = new AdProperty
                     {
+                        Id = model.Id,
                         Name = model.Name,
                         PropertyType = model.PropertyType,
                         Range = model.Range,
-                        //Subcategory = model.SubcategoryDTO
+                        Subcategory = model.Subcategory,
+                        SubcategoryId = model.SubcategoryId,
                     };
                     return response;
                 }
