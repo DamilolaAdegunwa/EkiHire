@@ -10,11 +10,11 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region AdProperty
         [DataType(DataType.Text)]
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         [DataType(DataType.Text)]
-        public string PropertyType { get; set; }
+        public virtual string PropertyType { get; set; }
         [DataType(DataType.Text)]
-        public string Range { get; set; }
+        public virtual string Range { get; set; }
         [ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
         public virtual Subcategory Subcategory { get; set; }

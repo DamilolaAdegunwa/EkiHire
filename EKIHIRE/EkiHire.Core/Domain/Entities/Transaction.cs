@@ -7,7 +7,7 @@ namespace EkiHire.Core.Domain.Entities
 {
     public class Transaction : FullAuditedEntity
     {
-        public decimal Amount { get; set; }
-        public TransactionType TransactionType { get; set; }
+        public virtual decimal Amount { get; set; }
+        public virtual TransactionType TransactionType { get; set; }
     }
 }

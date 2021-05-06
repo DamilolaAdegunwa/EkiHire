@@ -12,17 +12,17 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region all item
         [DataType(DataType.Text)]
-        public string Name { get; set; }
+        public virtual string Name { get; set; }
         [DataType(DataType.Text)]
-        public string Keywords { get; set; }
+        public virtual string Keywords { get; set; }
         [DataType(DataType.Text)]
-        public string ImagePath { get; set; }
+        public virtual string ImagePath { get; set; }
         [DataType(DataType.Text)]
-        public string GroupName { get; set; }
-        public long Order { get; set; }
+        public virtual string GroupName { get; set; }
+        public virtual long Order { get; set; }
         [ForeignKey("SubcategoryId")]
-        public long? SubcategoryId { get; set; }
-        public Subcategory Subcategory { get; set; }
+        public virtual long? SubcategoryId { get; set; }
+        public virtual Subcategory Subcategory { get; set; }
         #endregion 
 
         public static implicit operator Item(ItemDTO model)

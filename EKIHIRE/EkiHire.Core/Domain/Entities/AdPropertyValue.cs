@@ -4,15 +4,21 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.DataTransferObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
     public class AdPropertyValue : FullAuditedEntity
     {
         #region AdPropertyValue
-        public string Value { get; set; }
-        public Ad Ad { get; set; }
-        public AdProperty AdProperty { get; set; }
+        [DataType(DataType.Text)]
+        public virtual string Value { get; set; }
+        [ForeignKey("AdId")]
+        public virtual long? AdId { get; set; }
+        public virtual Ad Ad { get; set; }
+        [ForeignKey("AdPropertyId")]
+        public virtual long? AdPropertyId { get; set; }
+        public virtual AdProperty AdProperty { get; set; }
         #endregion
 
         public static implicit operator AdPropertyValue(AdPropertyValueDTO model)
@@ -22,9 +28,12 @@ namespace EkiHire.Core.Domain.Entities
                 if(model != null)
                 {
                     AdPropertyValue response = new AdPropertyValue { 
+                        Id = model.Id,
                         Value = model.Value,
                         Ad = model.Ad,
-                        AdProperty = model.AdProperty
+                        AdId = model.AdId,
+                        AdProperty = model.AdProperty,
+                        AdPropertyId = model.AdPropertyId,
                     };
                     return response;
                 }

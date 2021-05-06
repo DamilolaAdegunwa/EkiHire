@@ -5,12 +5,29 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Domain\Entities\AdItem.cs" />
+    <Compile Remove="Domain\Entities\Attraction.cs" />
+    <Compile Remove="Domain\Entities\Business.cs" />
+    <Compile Remove="Domain\Entities\BusinessPage.cs" />
+    <Compile Remove="Domain\Entities\City.cs" />
+    <Compile Remove="Domain\Entities\Comment.cs" />
+    <Compile Remove="Domain\Entities\Consumer.cs" />
+    <Compile Remove="Domain\Entities\CustomerSupport.cs" />
     <Compile Remove="Domain\Entities\Entities.cs" />
+    <Compile Remove="Domain\Entities\Job.cs" />
+    <Compile Remove="Domain\Entities\Marketplace.cs" />
+    <Compile Remove="Domain\Entities\Module.cs" />
+    <Compile Remove="Domain\Entities\Onboarding.cs" />
+    <Compile Remove="Domain\Entities\Post.cs" />
+    <Compile Remove="Domain\Entities\Profile.cs" />
     <Compile Remove="Domain\Entities\RealEstate.cs" />
     <Compile Remove="Domain\Entities\RealEstateCategory.cs" />
     <Compile Remove="Domain\Entities\RealEstateImage.cs" />
     <Compile Remove="Domain\Entities\RealEstateStatus.cs" />
     <Compile Remove="Domain\Entities\Retail.cs" />
+    <Compile Remove="Domain\Entities\State.cs" />
+    <Compile Remove="Domain\Entities\Subscription.cs" />
+    <Compile Remove="Domain\Entities\TransactionHistory.cs" />
   </ItemGroup>
 
   <ItemGroup>

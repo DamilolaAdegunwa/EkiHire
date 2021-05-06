@@ -8,10 +8,10 @@ namespace EkiHire.Core.Domain.Entities
 {
     public class WorkExperience : FullAuditedEntity
     {
-        public string CompanyName { get; set; }
-        public string Position { get; set; }
-        public DateTime? StartDate { get; set; }
-        public DateTime? EndDate { get; set; }
-        public bool? TillNow { get; set; }
+        [DataType(DataType.Text)] public virtual string CompanyName { get; set; }
+        [DataType(DataType.Text)] public virtual string Position { get; set; }
+        public virtual DateTime? StartDate { get; set; }
+        public virtual DateTime? EndDate { get; set; }
+        public virtual bool? TillNow { get; set; }
     }
 }

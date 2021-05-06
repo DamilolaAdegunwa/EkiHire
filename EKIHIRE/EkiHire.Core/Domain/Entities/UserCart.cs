@@ -6,13 +6,18 @@ using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.DataTransferObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
     public class UserCart: FullAuditedEntity
     {
-        public Ad Ad { get; set; }
-        public User User { get; set; }
+        [ForeignKey("AdId")]
+        public virtual long? AdId { get; set; }
+        public virtual Ad Ad { get; set; }
+        [ForeignKey("UserId")]
+        public virtual long? UserId { get; set; }
+        public virtual User User { get; set; }
         public static implicit operator UserCart(UserCartDTO model)
         {
             if(model != null)

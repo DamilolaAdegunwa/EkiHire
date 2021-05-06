@@ -11,8 +11,8 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region keywords
         [DataType(DataType.Text)]
-        public string Name { get; set; }
-        public Subcategory Subcategory { get; set; }
+        public virtual string Name { get; set; }
+        public virtual Subcategory Subcategory { get; set; }
         #endregion
 
         public static implicit operator Keyword(KeywordDTO model)

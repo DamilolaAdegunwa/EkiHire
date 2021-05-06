@@ -1,32 +1,28 @@
-﻿using EkiHire.Core.Domain.Entities.Auditing;
+﻿using EkiHire.Core.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Domain.DataTransferObjects;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace EkiHire.Core.Domain.Entities
+using EkiHire.Core.Domain.Entities.Auditing;
+namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class Follow : FullAuditedEntity
+    public class FollowDTO : EntityDTO<long>
     {
         #region follow
-        [ForeignKey("FollowerId")]
+        //[ForeignKey("FollowerId")]
         public virtual long? FollowerId { get; set; }
         public virtual User Follower { get; set; }
-        [ForeignKey("FollowingId")]
+        //[ForeignKey("FollowingId")]
         public virtual long? FollowingId { get; set; }
         public virtual User Following { get; set; }
         #endregion
 
-        public static implicit operator Follow(FollowDTO model)
+        public static implicit operator FollowDTO(Follow model)
         {
             try
             {
-                if(model != null)
+                if (model != null)
                 {
-                    Follow response = new Follow
+                    FollowDTO response = new FollowDTO
                     {
                         FollowerId = model.FollowerId,
                         Follower = model.Follower,

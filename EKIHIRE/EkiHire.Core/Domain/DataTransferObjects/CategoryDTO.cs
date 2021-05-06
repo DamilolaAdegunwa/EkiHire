@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
+using EkiHire.Core.Domain.Entities.Auditing;
+
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class CategoryDTO
+    public class CategoryDTO : EntityDTO<long>
     {
         #region category
         [DataType(DataType.Text)]
@@ -17,7 +19,6 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region other props
-        public long Id { get; set; }
         #endregion
         public static implicit operator CategoryDTO(Category category)
         {
