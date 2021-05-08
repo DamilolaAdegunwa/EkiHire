@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.DataTransferObjects;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -12,6 +13,8 @@ namespace EkiHire.Core.Domain.Entities
         #region keywords
         [DataType(DataType.Text)]
         public virtual string Name { get; set; }
+        [ForeignKey("SubcategoryId")]
+        public virtual long? SubcategoryId { get; set; }
         public virtual Subcategory Subcategory { get; set; }
         #endregion
 
@@ -24,6 +27,7 @@ namespace EkiHire.Core.Domain.Entities
                     Keyword response = new Keyword
                     {
                         Name = model.Name,
+                        SubcategoryId = model.SubcategoryId,
                         Subcategory = model.Subcategory
                     };
                     return response;

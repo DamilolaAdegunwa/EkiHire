@@ -39,12 +39,12 @@ namespace EkiHire.Business.Services
         Task<bool> EditItemKeywords(List<string> keywords, long ItemId, string username);
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
-        Task<bool> RemoveAdFromCart(long Id, string username);
+        Task<bool> RemoveAdFromCart(long Id, long userCartId, string username);
         Task<IEnumerable<AdDTO>> Search(SearchVM model, string username);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long[] adIds = null);
+        Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null);
+        Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
         Task<bool> AddKeywords(List<string> keywords, long subid, string username);
@@ -52,7 +52,7 @@ namespace EkiHire.Business.Services
         Task<bool> DeleteKeywords(long kwId, string username);
         Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid = null);
         Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username);
-        Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null);
+        Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username);
         Task<bool> AddAdProperty(AdPropertyDTO model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
@@ -139,7 +139,7 @@ namespace EkiHire.Business.Services
 
                 //others
                 ad.IsActive = true;
-                ad.UserId = model.UserId;
+                ad.UserId = user.Id;
                 ad.SubcategoryId = model.SubcategoryId;
                 //ad.User = user;
                 //ad.Subcategory = sub;
@@ -193,9 +193,8 @@ namespace EkiHire.Business.Services
                 #endregion
                 _unitOfWork.BeginTransaction();
                 ad.IsActive = false;
-                adRepository.UpdateAsync(ad);
+                await adRepository .UpdateAsync(ad);
                 _unitOfWork.Commit();
-                _unitOfWork.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -444,9 +443,8 @@ namespace EkiHire.Business.Services
                     ad.Mileage = adDto.Mileage;
                 }
                 //ad image, subcategory, ad items, work experience
-                adRepository.UpdateAsync(ad);
+                await adRepository .UpdateAsync(ad);
                 _unitOfWork.Commit();
-                _unitOfWork.SaveChangesAsync();
                 #endregion
                 return true;
             }
@@ -480,9 +478,8 @@ namespace EkiHire.Business.Services
                 #endregion
                 _unitOfWork.BeginTransaction();
                 ad.AdClass = AdClass.Premium;
-                adRepository.UpdateAsync(ad);
+                await adRepository .UpdateAsync(ad);
                 _unitOfWork.Commit();
-                _unitOfWork.SaveChangesAsync();
                 return true;
             }
             catch (Exception ex)
@@ -509,7 +506,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 _unitOfWork.BeginTransaction();
-                itemRepository.InsertAsync(model);
+                await itemRepository .InsertAsync(model);
                 _unitOfWork.Commit();
                 return true;
             }
@@ -549,14 +546,14 @@ namespace EkiHire.Business.Services
                 var k = string.Join(",", u);
 
                 item.Keywords = k;
-                itemRepository.UpdateAsync(item);
+                await itemRepository.UpdateAsync(item);
                 _unitOfWork.Commit();
                 return true;
             }
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return false;
             }
         }
@@ -577,15 +574,15 @@ namespace EkiHire.Business.Services
                 }
 
                 #endregion
-                _unitOfWork.BeginTransaction();
+                //_unitOfWork.BeginTransaction();
                 itemRepository.GetAll().Where(x => ItemIds.Contains(x.Id)).AsTracking().ToList().ForEach(y => y.GroupName = groupname);
-                _unitOfWork.Commit();
+                //_unitOfWork.Commit();
                 return true;
             }
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return false;
             }
         }
@@ -611,13 +608,36 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region add ad to cart
+                //check if already exist
+                var userCart = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id);
+                if(userCart != null)
+                {
+                    if(userCart.IsDeleted)
+                    {
+                        userCart.IsDeleted = false;
+                        userCart.LastModificationTime = DateTime.Now;
+                        userCart.LastModifierUserId = user.Id;
+                        await userCartRepository.UpdateAsync(userCart);
+                    }
+                    return true;
+                }
                 var data = new UserCart
                 {
-                    Ad = ad,
-                    User = user
+                    AdId = ad.Id,
+                    UserId = user.Id,
+
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0
                 };
                 _unitOfWork.BeginTransaction();
-                userCartRepository.InsertAsync(data);
+                await userCartRepository.InsertAsync(data);
                 _unitOfWork.Commit();
                 #endregion
                 return true;
@@ -625,12 +645,12 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return false;
             }
         }
 
-        public async Task<bool> RemoveAdFromCart(long adId, string username)
+        public async Task<bool> RemoveAdFromCart(long adId,long userCartId, string username)
         {
             try
             {
@@ -651,13 +671,14 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region add ad to cart
-                var data = new UserCart
+                var data = userCartRepository.FirstOrDefault(x => x.Id == userCartId && x.UserId == user.Id);
+                if(data == null)
                 {
-                    Ad = ad,
-                    User = user
-                };
+                    return true;
+                }
+
                 _unitOfWork.BeginTransaction();
-                userCartRepository.DeleteAsync(data);
+                await userCartRepository.DeleteAsync(data);
                 _unitOfWork.Commit();
                 #endregion
                 return true;
@@ -665,7 +686,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return false;
             }
         }
@@ -710,7 +731,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                //logger
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return null;
             }
         }
@@ -756,7 +777,7 @@ namespace EkiHire.Business.Services
         //        return null;
         //    }
         //}
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long[] adIds = null)
+        public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -773,7 +794,7 @@ namespace EkiHire.Business.Services
                 #endregion
                 var result = new List<AdFeedback>();
                 result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
-                && (adIds.Contains(a.AdId) || adIds == null)
+                //&& (adIds.Contains(a.AdId) || adIds == null)
                 ).ToListAsync();
                 return result;
             }
@@ -814,7 +835,12 @@ namespace EkiHire.Business.Services
         //        return null;
         //    }
         //}
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long[] adIds = null)
+        private long? getUserFromAd(long? adid)
+        {
+            var resp = adRepository.FirstOrDefault(x => x.Id == adid).UserId;
+            return resp;
+        }
+        public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -829,9 +855,13 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
-                var result = await adFeedbackRepository.GetAll().Where(a =>   adRepository.Get(a.AdId).UserId == user.Id
-                && (adIds.Contains(a.AdId) || adIds == null)
-                ).ToListAsync();
+                var result = (from af in adFeedbackRepository.GetAll()
+                        join ad in adRepository.GetAll() on af.AdId equals ad.Id
+                        where ad.UserId == user.Id
+                        select af).ToList();
+                //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
+                ////&& (adIds.Contains(a.AdId) || adIds == null)
+                //).ToList();
                 return result;
             }
             catch (Exception ex)
@@ -924,7 +954,7 @@ namespace EkiHire.Business.Services
                     Keyword keyword = new Keyword
                     {
                         Name = k,
-                        Subcategory = subcategory,
+                        SubcategoryId = subcategory.Id,
 
                         //basic properties
                         CreationTime = DateTime.Now,
@@ -975,7 +1005,7 @@ namespace EkiHire.Business.Services
 
                 _unitOfWork.BeginTransaction();
                 keyword.Name = correctedWord;
-                await _keywordRepo.InsertAsync(keyword);
+                await _keywordRepo.UpdateAsync(keyword);
                 _unitOfWork.Commit();
 
                 return true;
@@ -1066,7 +1096,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 List<AdProperty> result = new List<AdProperty>();
-                result = await _adPropertyRepo.GetAllIncluding(x => x.Subcategory).Where(a => a.Subcategory.Id == subId).ToListAsync();
+                result = await _adPropertyRepo.GetAllIncluding(x => x.Subcategory).Where(a => a.SubcategoryId == subId).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1076,7 +1106,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username, List<long> adPropertyIds = null)
+        public async Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username)
         {
             try
             {
@@ -1093,7 +1123,7 @@ namespace EkiHire.Business.Services
                 #endregion
                 List<AdPropertyValue> result = new List<AdPropertyValue>();
                 result = await _adPropertyValueRepo.GetAllIncluding(x => x.AdProperty).Where(a => a.Ad.Id == adid 
-                && (adPropertyIds.Contains(a.AdProperty.Id) || adPropertyIds == null)
+                //&& (adPropertyIds.Contains(a.AdProperty.Id) || adPropertyIds == null)
                 ).ToListAsync();
                 return result;
             }
@@ -1146,7 +1176,7 @@ namespace EkiHire.Business.Services
                     CreatorUserId = user.Id,
                     LastModificationTime = DateTime.Now,
                     LastModifierUserId = user.Id,
-           
+                    
                 };
                 _unitOfWork.BeginTransaction();
                 await _adPropertyRepo.InsertAsync(data);
@@ -1181,28 +1211,28 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var ad = adRepository.FirstOrDefault(s => s.Id == model.Ad.Id);
+                var ad = adRepository.FirstOrDefault(s => s.Id == model.AdId);
                 if (ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid Ad!");
                 }
-                var adProperty = _adPropertyRepo.FirstOrDefault(a => a.Id == model.AdProperty.Id);
+                var adProperty = _adPropertyRepo.FirstOrDefault(a => a.Id == model.AdPropertyId);
                 if (adProperty == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid adProperty!");
                 }
-                var adPropertyValue = _adPropertyValueRepo.FirstOrDefault(a => a.Ad.Id == model.Ad.Id && a.AdProperty.Id == model.AdProperty.Id);
+                var adPropertyValue = _adPropertyValueRepo.FirstOrDefault(a => a.AdId == model.AdId && a.AdPropertyId == model.AdPropertyId);
 
                 #endregion
 
                 #region Add Ad Property Value
                 _unitOfWork.BeginTransaction();
-                if (adPropertyValue != null)
+                if (adPropertyValue == null)
                 {
                     AdPropertyValue data = new AdPropertyValue
                     {
-                        Ad = model.Ad,
-                        AdProperty = model.AdProperty,
+                        Ad = ad,
+                        AdProperty = adProperty,
                         Value = model.Value,
                         //basic properties
                         CreationTime = DateTime.Now,
@@ -1212,7 +1242,8 @@ namespace EkiHire.Business.Services
                         LastModifierUserId = user.Id,
                         DeleterUserId = null,
                         DeletionTime = null,
-                        Id = 0
+                        Id = 0,
+                        
                     };
                     await _adPropertyValueRepo.InsertAsync(data);
                 }

@@ -31,7 +31,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("AddAd")]
         public async Task<IServiceResponse<bool>> AddAd(AdDTO model)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.AddAd(model, serviceHelper.GetCurrentUserEmail());
@@ -42,7 +42,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("CloseAd")]
         public async Task<IServiceResponse<bool>> CloseAd(long adId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.CloseAd(adId, serviceHelper.GetCurrentUserEmail());
@@ -53,7 +53,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("EditAd")]
         public async Task<IServiceResponse<bool>> EditAd(AdDTO dto, long adId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.EditAd(dto, adId, serviceHelper.GetCurrentUserEmail());
@@ -64,7 +64,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("PromoteAd")]
         public async Task<IServiceResponse<bool>> PromoteAd(long adId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.PromoteAd(adId, serviceHelper.GetCurrentUserEmail());
@@ -86,7 +86,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("EditItemKeywords")]
         public async Task<IServiceResponse<bool>> EditItemKeywords(List<string> keywords, long ItemId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.EditItemKeywords(keywords, ItemId, serviceHelper.GetCurrentUserEmail());
@@ -97,7 +97,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("GroupAdItem")]
         public async Task<IServiceResponse<bool>> GroupAdItem(long[] ItemIds, string groupname)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.GroupAdItems(ItemIds, groupname, serviceHelper.GetCurrentUserEmail());
@@ -108,7 +108,7 @@ namespace EkiHire.WebAPI.Controllers
         //cart
         [HttpPost, Route("AddToCart")]
         public async Task<IServiceResponse<bool>> AddToCart(long adId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () =>
             {
                 bool result = await adService.AddAdToCart(adId, serviceHelper.GetCurrentUserEmail());
@@ -117,11 +117,11 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost, Route("RemoveFromCart")]
-        public async Task<IServiceResponse<bool>> RemoveFromCart(long adId)
-        {
+        public async Task<IServiceResponse<bool>> RemoveFromCart(long adId, long userCartId)
+        {//woring
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.RemoveAdFromCart(adId, serviceHelper.GetCurrentUserEmail());
+                bool result = await adService.RemoveAdFromCart(adId,userCartId, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
@@ -129,7 +129,7 @@ namespace EkiHire.WebAPI.Controllers
         //filter, search and scan ads
         [HttpPost, Route("Search")]
         public async Task<IServiceResponse<IEnumerable<AdDTO>>> Search(SearchVM model)
-        {
+        {//working
             return await HandleApiOperationAsync(async () => {
                 IEnumerable<AdDTO> result = await adService.Search(model, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<IEnumerable<AdDTO>>(result);
@@ -164,7 +164,7 @@ namespace EkiHire.WebAPI.Controllers
         [HttpGet]
         [Route("GetSubcategoriesByCategoryId/{categoryId}")]
         public async Task<IServiceResponse<IEnumerable<Subcategory>>> GetSubcategoriesByCategoryId(long categoryId)
-        {
+        {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Subcategory>>();
                 var data = await categoryService.GetSubcategoriesByCategoryId(categoryId);
@@ -175,22 +175,22 @@ namespace EkiHire.WebAPI.Controllers
         //review
         [HttpPost]
         [Route("AdFeedbackByUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackByUser(long[] adIds = null)
-        {
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackByUser(/*long[] adIds = null*/)
+        {//working - no data
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdFeedback>>();
-                var data = await adService.AdFeedbackByUser(serviceHelper.GetCurrentUserEmail(), adIds);
+                var data = await adService.AdFeedbackByUser(serviceHelper.GetCurrentUserEmail()/*, adIds*/);
                 response.Object = data;
                 return response;
             });
         }
         [HttpPost]
         [Route("AdFeedbackForUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackForUser(long[] adIds = null)
-        {
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackForUser(/*long[] adIds = null*/)
+        {//working - no data
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdFeedback>>();
-                var data = await adService.AdFeedbackForUser(serviceHelper.GetCurrentUserEmail(), adIds);
+                var data = await adService.AdFeedbackForUser(serviceHelper.GetCurrentUserEmail()/*, adIds*/);
                 response.Object = data;
                 return response;
             });
@@ -198,7 +198,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetFollowers")]
-        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowers(string username = null)
+        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowers()
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Follow>>();
@@ -210,11 +210,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetFollowing")]
-        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowing(string username = null)
+        public async Task<IServiceResponse<IEnumerable<Follow>>> GetFollowing()
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Follow>>();
-                var data = await adService.GetFollowing(username??serviceHelper.GetCurrentUserEmail());
+                var data = await adService.GetFollowing(serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -246,10 +246,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAllItemGroupsForSubcategory")]
-        public async Task<IServiceResponse<List<IGrouping<string, Item>>>> GetAllItemGroupsForSubcategory(long subId)
-        {
+        public async Task<IServiceResponse<List<List<Item>>>> GetAllItemGroupsForSubcategory(long subId)
+        {//working - no data returned
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<List<IGrouping<string, Item>>>();
+                var response = new ServiceResponse<List<List<Item>>>();
                 var data = await categoryService.GetAllItemGroupsForSubcategory(subId, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
@@ -258,11 +258,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddKeywords")]
-        public async Task<IServiceResponse<bool>> AddKeywords(List<string> keywords, long subid, string username = null)
-        {
+        public async Task<IServiceResponse<bool>> AddKeywords(List<string> keywords, long subid)
+        {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.AddKeywords(keywords, subid, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.AddKeywords(keywords, subid, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -270,11 +270,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("EditKeywords")]
-        public async Task<IServiceResponse<bool>> EditKeywords(long kwId, string correctedWord, string username = null)
-        {
+        public async Task<IServiceResponse<bool>> EditKeywords(long kwId, string correctedWord)
+        {//worked
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.EditKeywords(kwId, correctedWord, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.EditKeywords(kwId, correctedWord,  serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -282,11 +282,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("DeleteKeywords")]
-        public async Task<IServiceResponse<bool>> DeleteKeywords(long kwId, string username = null)
+        public async Task<IServiceResponse<bool>> DeleteKeywords(long kwId)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.DeleteKeywords(kwId, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.DeleteKeywords(kwId,serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -294,11 +294,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetKeywords")]
-        public async Task<IServiceResponse<IEnumerable<Keyword>>> GetKeywords(string username, long[] kwIds = null, long? subid = null)
-        {
+        public async Task<IServiceResponse<IEnumerable<Keyword>>> GetKeywords( long[] kwIds = null, long? subid = null)
+        {//worked
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Keyword>>();
-                var data = await adService.GetKeywords( username ?? serviceHelper.GetCurrentUserEmail(), kwIds, subid);
+                var data = await adService.GetKeywords(serviceHelper.GetCurrentUserEmail(), kwIds, subid);
                 response.Object = data;
                 return response;
             });
@@ -306,11 +306,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAdPropertiesBySubcategory")]
-        public async Task<IServiceResponse<IEnumerable<AdProperty>>> GetAdPropertiesBySubcategory(long subId, string username)
-        {
+        public async Task<IServiceResponse<IEnumerable<AdProperty>>> GetAdPropertiesBySubcategory(long subId)
+        {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdProperty>>();
-                var data = await adService.GetAdPropertiesBySubcategory(subId, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.GetAdPropertiesBySubcategory(subId, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -318,11 +318,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAdPropertiesWithValue")]
-        public async Task<IServiceResponse<IEnumerable<AdPropertyValue>>> GetAdPropertiesWithValue(long adid, string username = null, List<long> adPropertyIds = null)
-        {
+        public async Task<IServiceResponse<IEnumerable<AdPropertyValue>>> GetAdPropertiesWithValue(long adid)
+        {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdPropertyValue>>();
-                var data = await adService.GetAdPropertiesWithValue(adid, username ?? serviceHelper.GetCurrentUserEmail(), adPropertyIds);
+                var data = await adService.GetAdPropertiesWithValue(adid, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -330,11 +330,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdProperty")]
-        public async Task<IServiceResponse<bool>> AddAdProperty(AdPropertyDTO model, string username = null)
-        {
+        public async Task<IServiceResponse<bool>> AddAdProperty(AdPropertyDTO model)
+        {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.AddAdProperty(model, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.AddAdProperty(model,serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -342,11 +342,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddOrUpdateAdPropertyValue")]
-        public async Task<IServiceResponse<bool>> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username = null)
+        public async Task<IServiceResponse<bool>> AddOrUpdateAdPropertyValue(AdPropertyValueDTO model)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.AddOrUpdateAdPropertyValue(model, username ?? serviceHelper.GetCurrentUserEmail());
+                var data = await adService.AddOrUpdateAdPropertyValue(model, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
@@ -354,11 +354,11 @@ namespace EkiHire.WebAPI.Controllers
 
         //[HttpPost]
         //[Route("UpdateAdProperty")]
-        //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model, string username)
+        //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model)
         //{
         //    return await HandleApiOperationAsync(async () => {
         //        var response = new ServiceResponse<bool>();
-        //        var data = await adService.UpdateAdProperty(model, username ?? serviceHelper.GetCurrentUserEmail());
+        //        var data = await adService.UpdateAdProperty(model, serviceHelper.GetCurrentUserEmail());
         //        response.Object = data;
         //        return response;
         //    });

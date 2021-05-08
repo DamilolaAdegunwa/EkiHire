@@ -103,21 +103,21 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Activate")]/*verify and activate/deny account - checked*/
-        public async Task<ServiceResponse<UserDTO>> Activate(string usernameOrEmail, string activationCode)
+        public async Task<ServiceResponse<UserDTO>> Activate(string username, string activationCode)
         {
             return await HandleApiOperationAsync(async () => {
-                var result = await _userSvc.ActivateAccount(usernameOrEmail, activationCode);
+                var result = await _userSvc.ActivateAccount(username, activationCode);
                 return new ServiceResponse<UserDTO>(result);
             });
         }
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("ForgotPassword/{usernameOrEmail}")] /*Indicate Password Forget and get OTP for new - checked*/
-        public async Task<ServiceResponse<bool>> ForgotPassword(string usernameOrEmail)
+        [Route("ForgotPassword/{username}")] /*Indicate Password Forget and get OTP for new - checked*/
+        public async Task<ServiceResponse<bool>> ForgotPassword(string username)
         {
             return await HandleApiOperationAsync(async () => {
-                var result = await _userSvc.ForgotPassword(usernameOrEmail);
+                var result = await _userSvc.ForgotPassword(username);
                 return new ServiceResponse<bool>(result);
             });
         }
@@ -276,11 +276,11 @@ namespace EkiHire.WebAPI.Controllers
         #region profile endpoints
         //[AllowAnonymous]/*TO-BE-REMOVED*/
         [HttpGet]
-        [Route("GetProfile/{usernameOrEmail}")]
-        public async Task<IServiceResponse<UserDTO>> GetProfile(string usernameOrEmail)
+        [Route("GetProfile/{username}")]
+        public async Task<IServiceResponse<UserDTO>> GetProfile(string username)
         {
             return await HandleApiOperationAsync(async () => {
-                var result = await _userSvc.GetProfile(usernameOrEmail);
+                var result = await _userSvc.GetProfile(username);
                 var response = new ServiceResponse<UserDTO>(result);
                 return response;
             });

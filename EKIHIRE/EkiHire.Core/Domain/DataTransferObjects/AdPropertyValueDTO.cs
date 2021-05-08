@@ -14,10 +14,10 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public virtual string Value { get; set; }
         //[ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
-        public virtual Ad Ad { get; set; }
+        public virtual AdDTO Ad { get; set; }
         //[ForeignKey("AdPropertyId")]
         public virtual long? AdPropertyId { get; set; }
-        public virtual AdProperty AdProperty { get; set; }
+        public virtual AdPropertyDTO AdProperty { get; set; }
         #endregion
 
         public static implicit operator AdPropertyValueDTO(AdPropertyValue model)

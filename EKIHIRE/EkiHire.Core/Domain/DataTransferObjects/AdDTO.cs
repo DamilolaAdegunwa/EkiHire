@@ -20,7 +20,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         //public virtual ICollection<AdImage> AdImages { get; set; }
         //[ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
-        public virtual Subcategory Subcategory { get; set; }
+        public virtual SubcategoryDTO Subcategory { get; set; }
         [DataType(DataType.Text)] public virtual string Keywords { get; set; }
         [DataType(DataType.Text)] public virtual string Location { get; set; }//coordinates
         public virtual bool? IsActive { get; set; }

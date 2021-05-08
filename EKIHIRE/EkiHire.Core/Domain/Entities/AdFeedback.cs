@@ -13,10 +13,10 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region AdFeedback
         [ForeignKey("UserId")]
-        public virtual long UserId { get; set; }
+        public virtual long? UserId { get; set; }
         public virtual User User { get; set; }
         [ForeignKey("AdId")]
-        public virtual long AdId { get; set; }
+        public virtual long? AdId { get; set; }
         public virtual Ad Ad { get; set; }
         public virtual bool Like { get; set; }
         [DataType(DataType.Text)]

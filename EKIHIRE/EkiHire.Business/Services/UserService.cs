@@ -42,9 +42,9 @@ namespace EkiHire.Business.Services
         string HashPassword(User user, string password);
         Task<IList<User>> GetUsersInRoleAsync(string role);
         Task<string> GenerateEmailConfirmationTokenAsync(User user);
-        Task<UserDTO> ActivateAccount(string usernameOrEmail, string activationCode);
+        Task<UserDTO> ActivateAccount(string username, string activationCode);
         Task<UserDTO> GetProfile(string username);
-        Task<bool> ForgotPassword(string usernameOrEmail);
+        Task<bool> ForgotPassword(string username);
         Task<bool> ResetPassword(PassordResetDTO model);
         Task<bool> ChangePassword(string userName, ChangePassordDTO model);
         Task<IList<string>> GetUserRolesAsync(string username);
@@ -240,17 +240,50 @@ namespace EkiHire.Business.Services
         /// <returns></returns> /*checked*/
         public async Task<UserDTO> ActivateAccount(string username, string activationCode)
         {
-            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(activationCode))
+            try
             {
-                throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
-            }
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(activationCode))
+                {
+                    throw await _svcHelper.GetExceptionAsync("Please input a valid username and activation code");
+                }
 
-            var user = await FindByNameAsync(username);
+                var user = await FindByNameAsync(username);
 
-            await ValidateUser(user);
-            UserDTO userDto = new UserDTO();
-            if (user.IsConfirmed())
-            {
+                await ValidateUser(user);
+                UserDTO userDto = new UserDTO();
+                if (user.IsConfirmed())
+                {
+                    userDto = user;
+                    return userDto;
+                    //return user == null ? null : new UserDTO
+                    //{
+                    //    PhoneNumber = user.PhoneNumber,
+                    //    Email = user.Email,
+                    //    FirstName = user.FirstName,
+                    //    LastName = user.LastName,
+                    //    Id = user.Id,
+                    //    Gender = user.Gender,
+                    //    IsActive = user.IsConfirmed(),
+                    //    AccountIsDeleted = user.IsDeleted,
+                    //};
+                    //throw new EkiHireGenericException("Your account was activated earlier.");
+                }
+
+
+                if (activationCode == user.AccountConfirmationCode)
+                {
+
+                    user.EmailConfirmed = true;
+                    user.PhoneNumberConfirmed = true;
+
+                    await UpdateAsync(user);
+
+                }
+                else if (activationCode != user.AccountConfirmationCode)
+                {
+                    throw new EkiHireGenericException("Invalid OTP");
+                    //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
+                }
                 userDto = user;
                 return userDto;
                 //return user == null ? null : new UserDTO
@@ -264,37 +297,12 @@ namespace EkiHire.Business.Services
                 //    IsActive = user.IsConfirmed(),
                 //    AccountIsDeleted = user.IsDeleted,
                 //};
-                //throw new EkiHireGenericException("Your account was activated earlier.");
             }
-
-
-            if (activationCode == user.AccountConfirmationCode)
+            catch (Exception ex)
             {
-
-                user.EmailConfirmed = true;
-                user.PhoneNumberConfirmed = true;
-
-                await UpdateAsync(user);
-
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
             }
-            else if (activationCode != user.AccountConfirmationCode)
-            {
-                throw new EkiHireGenericException("Invalid OTP");
-                //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
-            }
-            userDto = user;
-            return userDto;
-            //return user == null ? null : new UserDTO
-            //{
-            //    PhoneNumber = user.PhoneNumber,
-            //    Email = user.Email,
-            //    FirstName = user.FirstName,
-            //    LastName = user.LastName,
-            //    Id = user.Id,
-            //    Gender = user.Gender,
-            //    IsActive = user.IsConfirmed(),
-            //    AccountIsDeleted = user.IsDeleted,
-            //};
         }
 
         public async Task<UserDTO> GetProfile(string username)
@@ -326,14 +334,14 @@ namespace EkiHire.Business.Services
             };
         }
 
-        public async Task<bool> ForgotPassword(string usernameOrEmail)
+        public async Task<bool> ForgotPassword(string username)
         {
-            if (string.IsNullOrEmpty(usernameOrEmail))
+            if (string.IsNullOrEmpty(username))
             {
                 throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
             }
 
-            var user = await FindByNameAsync(usernameOrEmail);
+            var user = await FindByNameAsync(username);
 
             ValidateUser(user);
 

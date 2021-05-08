@@ -38,7 +38,7 @@ namespace EkiHire.Business.Services
         Task<Category> GetCategory(long Id);
         Task<bool> AddCategory(CategoryDTO model, string username);
         Task<bool> AddSubcategory(SubcategoryDTO model, string username);
-        Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
+        Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
         
     }
     public class CategoryService : ICategoryService
@@ -302,7 +302,7 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<List<IGrouping<string, Item>>> GetAllItemGroupsForSubcategory(long subId, string username)
+        public async Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username)
         {
             try
             {
@@ -323,9 +323,16 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 /*go to the item table, search out all the ones with subcategoryId = subId, grouped by the groupname*/
-                List<IGrouping<string, Item>> result = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).GroupBy(g => g.GroupName).ToList();
-
-                return result;
+                //List<IGrouping<string, Item>> result = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).ToList().GroupBy(g => g.GroupName).ToList();
+                var list = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).ToList();
+                List<List<Item>> itemsbygroup = new List<List<Item>>();
+                var uniqueGroups = list.Select(x => x.GroupName).Distinct();
+                foreach (var g in uniqueGroups)
+                {
+                    var itemsInEachGroup = list.Where(x => x.GroupName == g).ToList();
+                    itemsbygroup.Add(itemsInEachGroup);
+                }
+                return itemsbygroup;
             }
             catch (Exception ex)
             {

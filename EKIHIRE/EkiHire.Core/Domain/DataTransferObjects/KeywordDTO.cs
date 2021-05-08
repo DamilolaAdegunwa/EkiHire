@@ -12,8 +12,10 @@ namespace EkiHire.Core.Domain.DataTransferObjects
     {
         #region keywords
         [DataType(DataType.Text)]
-        public string Name { get; set; }
-        public Subcategory Subcategory { get; set; }
+        public virtual string Name { get; set; }
+        //[ForeignKey("SubcategoryId")]
+        public virtual long? SubcategoryId { get; set; }
+        public virtual Subcategory Subcategory { get; set; }
         #endregion
 
         public static implicit operator KeywordDTO(Keyword model)
@@ -25,7 +27,9 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     KeywordDTO response = new KeywordDTO
                     {
                         Name = model.Name,
-                        Subcategory = model.Subcategory
+                        SubcategoryId = model.SubcategoryId,
+                        Subcategory = model.Subcategory,
+
                     };
                     return response;
                 }
