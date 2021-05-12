@@ -133,6 +133,7 @@ namespace EkiHire.WebAPI
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<IRepository<Category>, EfCoreRepository<DbContext, Category>>();
             services.AddScoped<IRepository<Subcategory>, EfCoreRepository<DbContext, Subcategory>>();
+            services.AddScoped<IRepository<AdImage>, EfCoreRepository<DbContext, AdImage>>();
 
             services.AddScoped<IAdService, AdService>();
             services.AddScoped<IRepository<Ad>, EfCoreRepository<DbContext, Ad>>();
@@ -351,37 +352,42 @@ namespace EkiHire.WebAPI
             //categoryService.SeedCategories();
             //categoryService.SeedSubcategories();
             #endregion end seeding the db
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-                app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EkiHire.WebAPI v1"));
-            }
-            else
-            {
-                app.UseExceptionHandler("/Error");
-            }
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //    app.UseSwagger();
+            //    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EkiHire.WebAPI v1"));
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/Error");
+            //}
+            app.UseDeveloperExceptionPage();
+            // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+            app.UseHsts();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "EkiHire.WebAPI v1"));
 
             app.UseCors(x => {
-                x.WithOrigins(Configuration["App:CorsOrigins"]
-                  .Split(",", StringSplitOptions.RemoveEmptyEntries)
-                  .Select(o => o.RemovePostFix("/"))
-                  .ToArray())
-             .AllowAnyMethod()
-             .AllowAnyHeader();
+                //x.WithOrigins(Configuration["App:CorsOrigins"]
+                //  .Split(",", StringSplitOptions.RemoveEmptyEntries)
+                //  .Select(o => o.RemovePostFix("/"))
+                //  .ToArray());
+                x.AllowAnyOrigin() .AllowAnyMethod() .AllowAnyHeader();
             });
 
             app.UseAuthentication();
             //app.UseStatusCodePages();
             //app.UseMvc();
 
-            app.UseSwagger();
-            app.UseSwaggerUI(options => {
-                options.SwaggerEndpoint(Configuration["App:ServerRootAddress"].EnsureEndsWith('/') + "swagger/v1/swagger.json", "EkiHire.Web API V1");
-            });
+            //app.UseSwagger();
+            //app.UseSwaggerUI(options => {
+            //    options.SwaggerEndpoint(Configuration["App:ServerRootAddress"].EnsureEndsWith('/') + "swagger/v1/swagger.json", "EkiHire.Web API version 1");
+            //});
 
             app.UseHttpsRedirection();
-
+            app.UseStaticFiles();
             app.UseRouting();
 
             app.UseAuthorization();

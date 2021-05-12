@@ -73,7 +73,9 @@ namespace EkiHire.Business.Services
         private readonly IRepository<AdProperty> _adPropertyRepo;
         private readonly IRepository<AdPropertyValue> _adPropertyValueRepo;
         private readonly IRepository<User> _userRepo;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo)
+        private readonly IRepository<AdImage> _AdImageRepo;
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
+            IRepository<AdImage> _AdImageRepo)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -88,6 +90,7 @@ namespace EkiHire.Business.Services
             this._adPropertyRepo = _adPropertyRepo;
             this._adPropertyValueRepo = _adPropertyValueRepo;
             this._userRepo = _userRepo;
+            this._AdImageRepo = _AdImageRepo;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -712,20 +715,29 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region filter based on the search entry
-                var ad = adRepository.GetAll().Where(a =>
-                (a.SubcategoryId.ToString() == model.SubcategoryId || string.IsNullOrWhiteSpace(model.SubcategoryId))
-                && ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
-                && (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
-                //&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
-                );
+                //var ad = adRepository.GetAll().Where(a =>
+                //(a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
+                //&& ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
+                //&& (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
+                ////&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
+                //);
 
-                //result = ad.ToDTO().ToList();
-                #endregion
-                if (model.CategoryId.IsNullOrEmpty() && model.Keywords.IsNullOrEmpty() && model.SubcategoryId.IsNullOrEmpty() && model.SearchText.IsNullOrEmpty()) {
-
-                    result = adRepository.GetAll().ToDTO().ToList();
+                var ad = adRepository.GetAll().Where(a => (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText)));
+                var r = ad.ToDTO().ToArray();
+                
+                for(var i=0; i < r.Length; i++)
+                {
+                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id).ToList();
+                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id).ToList();
+                    r[i].AdImages = images;
+                    r[i].AdPropertyValue = adPropValues;
                 }
+                result = r.ToList();
+                //if (model.CategoryId != null && model.Keywords.IsNullOrEmpty() && model.SubcategoryId.IsNullOrEmpty() && model.SearchText.IsNullOrEmpty()) {
 
+                //    result = adRepository.GetAll().ToDTO().ToList();
+                //}
+                #endregion
                 return result;
             }
             catch (Exception ex)

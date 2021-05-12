@@ -72,34 +72,5 @@ namespace EkiHire.Core.Domain.Extensions
             return null;
         }
         #endregion
-
-        #region real estate
-        //public static IEnumerable<RealEstateDTO> ToDTO(this IEnumerable<RealEstate> entities)
-        //{
-        //    try
-        //    {
-        //        if(entities != null)
-        //        {
-        //            var result = new List<RealEstateDTO>();
-        //            foreach(var entity in entities)
-        //            {
-        //                RealEstateDTO dto = entity;
-        //                result.Add(dto);
-
-        //            }
-        //            return result;
-        //        }
-        //        return null;
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        return null;
-        //    }
-        //}
-        #endregion
-
-        #region User
-        //public static 
-        #endregion
     }
 }

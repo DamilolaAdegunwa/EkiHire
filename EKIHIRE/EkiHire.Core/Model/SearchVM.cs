@@ -9,7 +9,7 @@ namespace EkiHire.Core.Model
     {
         public string SearchText { get; set; }
         public List<string> Keywords { get; set; }
-        public string SubcategoryId { get; set; }
-        public string CategoryId { get; set; }
+        public long? SubcategoryId { get; set; }
+        public long? CategoryId { get; set; }
     }
 }

@@ -1,14 +1,14 @@
-﻿using EkiHire.Core.Domain.Entities.Auditing;
+﻿using EkiHire.Core.Domain.Entities;
+using EkiHire.Core.Domain.Entities.Auditing;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using EkiHire.Core.Domain.DataTransferObjects;
+using System.Text;
 
-namespace EkiHire.Core.Domain.Entities
+namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class AdImage: FullAuditedEntity
+    public class AdImageDTO: EntityDTO<long>
     {
         #region ad image properties
         [DataType(DataType.Text)] public virtual string ImagePath { get; set; }
@@ -18,13 +18,17 @@ namespace EkiHire.Core.Domain.Entities
         public virtual Ad Ad { get; set; }
         #endregion
 
-        public static implicit operator AdImage(AdImageDTO model)
+        #region other property 
+
+        #endregion
+
+        public static implicit operator AdImageDTO(AdImage model)
         {
             try
             {
-                if (model != null)
+                if(model != null)
                 {
-                    AdImage response = new AdImage
+                    AdImageDTO response = new AdImageDTO
                     {
                         ImagePath = model.ImagePath,
                         ImageString = model.ImageString,
