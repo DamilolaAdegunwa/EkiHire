@@ -7,7 +7,7 @@ using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class ItemDTO
+    public class ItemDTO : EntityDTO<long>
     {
         #region all item
         [DataType(DataType.Text)]
@@ -21,11 +21,10 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public long Order { get; set; }
         //[ForeignKey("SubcategoryId")]
         public long? SubcategoryId { get; set; }
-        public Subcategory Subcategory { get; set; }
+        public SubcategoryDTO Subcategory { get; set; }
         #endregion
 
         #region other props
-        public long Id { get; set; }
         #endregion
 
         public static implicit operator ItemDTO(Item model)

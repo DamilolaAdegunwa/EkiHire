@@ -27,7 +27,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]/*Sign In - checked*/
         public async Task<IServiceResponse<TokenDTO>> Index([FromBody] LoginModel model)
-        {
+        {//worked locally and online
             return await HandleApiOperationAsync(async () => {
 
                 var response = new ServiceResponse<TokenDTO>();

@@ -15,7 +15,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         [DataType(DataType.Text)] public virtual string ImageString { get; set; }
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
-        public virtual Ad Ad { get; set; }
+        public virtual AdDTO Ad { get; set; }
         #endregion
 
         #region other property 

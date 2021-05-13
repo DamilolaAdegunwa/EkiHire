@@ -13,8 +13,8 @@ namespace EkiHire.Core.Domain.Entities.Enums
     public enum AdClass
     {
         Normal = 0,
-        Pro = 1,
-        Premium = 2
+        //Pro = 1,
+        Premium = 1
     }
     public enum Rating
     {
@@ -23,5 +23,9 @@ namespace EkiHire.Core.Domain.Entities.Enums
         FAIR = 3,
         GOOD = 4,
         EXCELLENT = 5
+    }
+    public enum PropertyType
+    {
+        text,number,boolean
     }
 }

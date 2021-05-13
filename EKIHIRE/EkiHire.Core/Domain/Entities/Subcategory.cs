@@ -19,6 +19,7 @@ namespace EkiHire.Core.Domain.Entities
         [ForeignKey("CategoryId")]
         public virtual long? CategoryId { get; set; }
         public virtual Category Category { get; set; }
+        //public virtual ICollection<AdProperty> AdProperties { get; set; }
 
         #endregion
 

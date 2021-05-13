@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
+using EkiHire.Core.Domain.Entities.Auditing;
+
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class SubcategoryDTO
+    public class SubcategoryDTO : EntityDTO<long>
     {
         #region Subcategory
         //[DataType(DataType.Text)]
@@ -19,11 +21,12 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         //[ForeignKey("CategoryId")]
         public virtual long? CategoryId { get; set; }
         public virtual CategoryDTO Category { get; set; }
+        //public virtual ICollection<AdPropertyDTO> AdProperties { get; set; }
 
         #endregion
 
         #region other props
-        public long Id { get; set; }
+        public virtual ICollection<AdPropertyDTO> AdProperties { get; set; }
         #endregion
 
         public static implicit operator SubcategoryDTO(Subcategory model)

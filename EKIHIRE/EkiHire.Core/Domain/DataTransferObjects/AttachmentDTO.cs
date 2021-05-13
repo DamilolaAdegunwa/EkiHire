@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class AttachmentDTO : FullAuditedEntity
+    public class AttachmentDTO : EntityDTO<long>
     {
         public string FilePath { get; set; }
     }

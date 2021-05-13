@@ -16,7 +16,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public virtual User User { get; set; }
         //[ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
-        public virtual Ad Ad { get; set; }
+        public virtual AdDTO Ad { get; set; }
         public virtual bool Like { get; set; }
         [DataType(DataType.Text)]
         public virtual string Review { get; set; }

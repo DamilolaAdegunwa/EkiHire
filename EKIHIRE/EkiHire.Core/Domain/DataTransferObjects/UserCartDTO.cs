@@ -11,7 +11,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #region user cart
         //[ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
-        public virtual Ad Ad { get; set; }
+        public virtual AdDTO Ad { get; set; }
         //[ForeignKey("UserId")]
         public virtual long? UserId { get; set; }
         public virtual User User { get; set; }

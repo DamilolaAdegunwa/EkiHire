@@ -81,8 +81,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region ad dto
-        public virtual ICollection<AdImage> AdImages { get; set; }
-        public virtual ICollection<AdPropertyValue> AdPropertyValue { get; set; }
+        public virtual ICollection<AdImageDTO> AdImages { get; set; }
+        public virtual ICollection<AdPropertyValueDTO> AdPropertyValue { get; set; }
         #endregion
 
         public static implicit operator AdDTO(Ad model)

@@ -8,14 +8,14 @@ using EkiHire.Core.Domain.Entities;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class KeywordDTO : FullAuditedEntity
+    public class KeywordDTO : EntityDTO<long>
     {
         #region keywords
         [DataType(DataType.Text)]
         public virtual string Name { get; set; }
         //[ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
-        public virtual Subcategory Subcategory { get; set; }
+        public virtual SubcategoryDTO Subcategory { get; set; }
         #endregion
 
         public static implicit operator KeywordDTO(Keyword model)

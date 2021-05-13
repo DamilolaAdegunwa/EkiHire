@@ -722,13 +722,19 @@ namespace EkiHire.Business.Services
                 ////&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
                 //);
 
-                var ad = adRepository.GetAll().Where(a => (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText)));
+                var ad = adRepository.GetAll().Where(a => 
+                (a.Name.Contains(model.SearchText) 
+                /* experimental */
+                //|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
+                || string.IsNullOrWhiteSpace(model.SearchText))
+                
+                ).ToList();
                 var r = ad.ToDTO().ToArray();
                 
                 for(var i=0; i < r.Length; i++)
                 {
-                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id).ToList();
-                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id).ToList();
+                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
+                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
                     r[i].AdImages = images;
                     r[i].AdPropertyValue = adPropValues;
                 }

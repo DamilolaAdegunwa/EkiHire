@@ -19,6 +19,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region other props
+        public ICollection<SubcategoryDTO> Subcategories { get; set; }
         #endregion
         public static implicit operator CategoryDTO(Category category)
         {
