@@ -727,7 +727,8 @@ namespace EkiHire.Business.Services
                 /* experimental */
                 //|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
                 || string.IsNullOrWhiteSpace(model.SearchText))
-                
+                && (a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
+                && (a.Subcategory.CategoryId == model.CategoryId || (model.CategoryId == null || model.CategoryId == 0))
                 ).ToList();
                 var r = ad.ToDTO().ToArray();
                 
