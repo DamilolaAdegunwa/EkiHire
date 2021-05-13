@@ -35,7 +35,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
         Task<bool> SeedSubcategories();
-        Task<Category> GetCategory(long Id);
+        Task<CategoryDTO> GetCategory(long Id, bool withOtherData = false);
         Task<bool> AddCategory(CategoryDTO model, string username);
         Task<bool> AddSubcategory(SubcategoryDTO model, string username);
         Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
@@ -61,6 +61,7 @@ namespace EkiHire.Business.Services
         private readonly IRepository<Subcategory> _subcategoryRepo;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         private readonly IRepository<Item> _itemRepository;
+        private readonly IRepository<AdProperty> _adPropertyRepo;
         public CategoryService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             //IRepository<Terminal> terminalRepo,
@@ -77,7 +78,8 @@ namespace EkiHire.Business.Services
             IOptions<AppConfig> _appConfig,
             IRepository<Category> categoryRepo,
             IRepository<Subcategory> subcategoryRepo,
-            IRepository<Item> _itemRepository
+            IRepository<Item> _itemRepository,
+            IRepository<AdProperty> _adPropertyRepo
 
             )
         {
@@ -98,6 +100,7 @@ namespace EkiHire.Business.Services
             _categoryRepo = categoryRepo;
             _subcategoryRepo = subcategoryRepo;
             this._itemRepository = _itemRepository;
+            this._adPropertyRepo = _adPropertyRepo;
         }
 
         public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null)//Task<IEnumerable<Category>>
@@ -113,11 +116,20 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }
-        public async Task<Category> GetCategory(long Id)
+        public async Task<CategoryDTO> GetCategory(long Id, bool withOtherData = false)
         {
             try
             {
-                Category result = _categoryRepo.Get(Id);
+                CategoryDTO result = _categoryRepo.Get(Id);
+                if(withOtherData)
+                {
+                    List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == result.Id).ToDTO().ToList();
+                    subcategories.ForEach(x => {
+                        var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id).ToDTO().ToList();
+                        x.AdProperties = _adProperties;
+                    });
+                    result.Subcategories = subcategories;
+                }
                 return result;
             }
             catch (Exception ex)

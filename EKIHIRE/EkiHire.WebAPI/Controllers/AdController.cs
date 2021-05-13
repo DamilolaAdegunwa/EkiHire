@@ -151,11 +151,12 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetCategory/{id}")]
-        public async Task<IServiceResponse<Category>> GetCategory(long id)
+        [Route("GetCategory/{id}/{withOtherData:bool}")]
+        public async Task<IServiceResponse<CategoryDTO>> GetCategory(long id, bool withOtherData = false)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<Category>();
-                var data = await categoryService.GetCategory(id);
+                var response = new ServiceResponse<CategoryDTO>();
+                var data = await categoryService.GetCategory(id, withOtherData);
                 response.Object = data;
                 return response;
             });
