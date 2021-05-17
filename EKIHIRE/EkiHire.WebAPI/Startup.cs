@@ -12,22 +12,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-//
-using EkiHire.Business.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-//using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EkiHire.Business.Services;
 using EkiHire.Core.Caching;
 using EkiHire.Core.Configuration;
 using EkiHire.Core.Domain.Entities;
@@ -44,25 +28,15 @@ using EkiHire.WebAPI.Utils;
 using EkiHire.WebAPI.Utils.Extentions;
 using EkiHire.Core.Collections.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Swashbuckle.AspNetCore.Swagger;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using EkiHire.Data.Repository;
 using log4net;
-using Newtonsoft.Json;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Newtonsoft.Json.Linq;
 
@@ -144,6 +118,7 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<Keyword>, EfCoreRepository<DbContext, Keyword>>();
             services.AddScoped<IRepository<AdProperty>, EfCoreRepository<DbContext, AdProperty>>();
             services.AddScoped<IRepository<AdPropertyValue>, EfCoreRepository<DbContext, AdPropertyValue>>();
+            services.AddScoped<IRepository<Search>, EfCoreRepository<DbContext, Search>>();
 
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
@@ -345,7 +320,7 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IRepository<Category> _categoryRepo)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory /*,IRepository<Category> _categoryRepo, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
             loggerFactory.AddLog4Net();
             #region seeding the db

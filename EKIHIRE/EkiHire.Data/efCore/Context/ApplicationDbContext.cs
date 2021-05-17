@@ -33,6 +33,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<Transaction> Transaction { get; set; }
         public DbSet<UserCart> UserCart { get; set; }
         public DbSet<Wallet> Wallet { get; set; }
+        public DbSet<Search> Search { get; set; }
 
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }

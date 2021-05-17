@@ -353,6 +353,18 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("Trending")]
+        [Route("Trending/{count}")]
+        public async Task<IServiceResponse<IEnumerable<AdDTO>>> Trending(long count = 10)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdDTO>>();
+                var data = await adService.Trending(count/*, serviceHelper.GetCurrentUserEmail()*/);
+                response.Object = data;
+                return response;
+            });
+        }
         //[HttpPost]
         //[Route("UpdateAdProperty")]
         //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model)

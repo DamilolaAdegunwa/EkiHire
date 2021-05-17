@@ -365,10 +365,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangeProfileImage")]
-        public async Task<IServiceResponse<bool>> ChangeProfileImage(string profileImageString, string username = null)
+        public async Task<IServiceResponse<bool>> ChangeProfileImage(ProfileImageDTO model)
         {
             return await HandleApiOperationAsync(async () => {
-                bool result = await _userSvc.ChangeProfileImage(profileImageString, username?? User.FindFirst(JwtClaimTypes.Name)?.Value);
+                bool result = await _userSvc.ChangeProfileImage(model.profileImageString,User.FindFirst(JwtClaimTypes.Name)?.Value);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });

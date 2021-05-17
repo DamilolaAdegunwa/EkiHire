@@ -7,9 +7,10 @@ namespace EkiHire.Core.Configuration
     public class AppConfig : ISettings
     {
         public string AppEmail { get; set; }
-        public string HiredBookingEmail { get; set; }
-        public string OTPMaxperday { get; set; }
-        public string MtuSms { get; set; }
+        public double ReviewsWeight { get; set; }
+        public double LikesWeight { get; set; }
+        public double SearchWeight { get; set; }
+        public double DaysSincePostWeight { get; set; }
     }
 
     public class BookingConfig : ISettings

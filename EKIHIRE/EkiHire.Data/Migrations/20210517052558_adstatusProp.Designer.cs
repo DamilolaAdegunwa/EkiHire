@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210517052558_adstatusProp")]
+    partial class adstatusProp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -608,44 +610,6 @@ namespace EkiHire.Data.Migrations
                     b.ToTable("AspNetRoles");
                 });
 
-            modelBuilder.Entity("EkiHire.Core.Domain.Entities.Search", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityColumn();
-
-                    b.Property<long?>("AdId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AdId");
-
-                    b.ToTable("Search");
-                });
-
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Subcategory", b =>
                 {
                     b.Property<long>("Id")
@@ -1209,15 +1173,6 @@ namespace EkiHire.Data.Migrations
                         .HasForeignKey("SubcategoryId");
 
                     b.Navigation("Subcategory");
-                });
-
-            modelBuilder.Entity("EkiHire.Core.Domain.Entities.Search", b =>
-                {
-                    b.HasOne("EkiHire.Core.Domain.Entities.Ad", "Ad")
-                        .WithMany()
-                        .HasForeignKey("AdId");
-
-                    b.Navigation("Ad");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Subcategory", b =>

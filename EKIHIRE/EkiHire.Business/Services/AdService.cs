@@ -26,6 +26,7 @@ using EkiHire.Core.Collections.Extensions;
 using EkiHire.Core.Domain.Extensions;
 using log4net;
 using System.Reflection;
+using Microsoft.Extensions.Configuration;
 
 namespace EkiHire.Business.Services
 {
@@ -56,6 +57,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdProperty(AdPropertyDTO model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
+        Task<IEnumerable<AdDTO>> Trending(long count = 0);
     }
     public class AdService: IAdService
     {
@@ -74,8 +76,10 @@ namespace EkiHire.Business.Services
         private readonly IRepository<AdPropertyValue> _adPropertyValueRepo;
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<AdImage> _AdImageRepo;
+        private readonly AppConfig appConfig;
+        private readonly IRepository<Search> SearchRepository;
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
-            IRepository<AdImage> _AdImageRepo)
+            IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -91,10 +95,12 @@ namespace EkiHire.Business.Services
             this._adPropertyValueRepo = _adPropertyValueRepo;
             this._userRepo = _userRepo;
             this._AdImageRepo = _AdImageRepo;
+            appConfig = _appConfig.Value;
+            this.SearchRepository = SearchRepository;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
-            Ad ad = new Ad();
+            
             try
             {
                 #region validate credential
@@ -129,21 +135,34 @@ namespace EkiHire.Business.Services
 
                 #region add ad to the db
                 _unitOfWork.BeginTransaction();
+                Ad ad = new Ad();
                 ad = model;
-                //audit props
+                //basic properties
                 ad.CreationTime = DateTime.Now;
                 ad.CreatorUserId = user.Id;
-                ad.DeleterUserId = null;
-                ad.DeletionTime = null;
-                //ad.Id = 0;
                 ad.IsDeleted = false;
                 ad.LastModificationTime = DateTime.Now;
                 ad.LastModifierUserId = user.Id;
+                ad.DeleterUserId = null;
+                ad.DeletionTime = null;
+                ad.Id = 0;
 
                 //others
-                ad.IsActive = true;
-                ad.UserId = user.Id;
-                ad.SubcategoryId = model.SubcategoryId;
+                ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}";
+                //audit props
+                //ad.CreationTime = DateTime.Now;
+                //ad.CreatorUserId = user.Id;
+                //ad.DeleterUserId = null;
+                //ad.DeletionTime = null;
+                ////ad.Id = 0;
+                //ad.IsDeleted = false;
+                //ad.LastModificationTime = DateTime.Now;
+                //ad.LastModifierUserId = user.Id;
+
+                ////others
+                //ad.IsActive = true;
+                //ad.UserId = user.Id;
+                //ad.SubcategoryId = model.SubcategoryId;
                 //ad.User = user;
                 //ad.Subcategory = sub;
                 //test
@@ -252,11 +271,6 @@ namespace EkiHire.Business.Services
                 {
                     ad.AdClass = adDto.AdClass;
                 }
-                //ad status
-                if (adDto.AdsStatus != null && !string.Equals(ad.AdsStatus.ToString(), adDto.AdsStatus.ToString()))
-                {
-                    ad.AdsStatus = adDto.AdsStatus;
-                }
                 //skipped ad image, subcategory
                 //key words
                 if (!string.IsNullOrWhiteSpace(adDto.Keywords) &&  !string.Equals(ad.Keywords, adDto.Keywords))
@@ -273,178 +287,16 @@ namespace EkiHire.Business.Services
                 {
                     ad.IsActive = adDto.IsActive;
                 }
-                //skip ad items
-                if(adDto.Room != null && !string.Equals(ad.Room, adDto.Room))
-                {
-                    ad.Room = adDto.Room;
-                }
-                //furniture
-                if(adDto.Furniture != null && !string.Equals(ad.Furniture, adDto.Furniture))
-                {
-                    ad.Furniture = adDto.Furniture;
-                }
-                //Parking
-                if(adDto.Parking != null && !string.Equals(ad.Parking, adDto.Parking))
-                {
-                    ad.Parking = adDto.Parking;
-                }
-                //bedroom
-                if(adDto.Bedroom != null && !string.Equals(ad.Bedroom, adDto.Bedroom))
-                {
-                    ad.Bedroom = adDto.Bedroom;
-                }
-                //Bath room
-                if(adDto.Bathroom != null && !string.Equals(ad.Bathroom, adDto.Bathroom))
-                {
-                    ad.Bathroom = adDto.Bathroom;
-                }
-                //land type
-                if(adDto.LandType != null && !string.Equals(ad.LandType,adDto.LandType))
-                {
-                    ad.LandType = adDto.LandType;
-                }
-                //SquareMeters
-                if (adDto.SquareMeters != null && !string.Equals(ad.SquareMeters.ToString(), adDto.SquareMeters.ToString()))
-                {
-                    ad.SquareMeters = adDto.SquareMeters;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.ExchangePossible) && !string.Equals(ad.ExchangePossible, adDto.ExchangePossible))
-                {
-                    ad.ExchangePossible = adDto.ExchangePossible;
-                }
-
-                if (!string.IsNullOrWhiteSpace(adDto.BrokerFee) && !string.Equals(ad.BrokerFee, adDto.BrokerFee))
-                {
-                    ad.BrokerFee = adDto.BrokerFee;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Condition) && !string.Equals(ad.Condition, adDto.Condition))
-                {
-                    ad.Condition = adDto.Condition;
-                }
-
-                if (!string.IsNullOrWhiteSpace(adDto.Quality) && !string.Equals(ad.Quality, adDto.Quality))
-                {
-                    ad.Quality = adDto.Quality;
-                }
-                ////
-                if (!string.IsNullOrWhiteSpace(adDto.CompanyName) && !string.Equals(ad.CompanyName, adDto.CompanyName))
-                {
-                    ad.CompanyName = adDto.CompanyName;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.ServiceArea) && !string.Equals(ad.ServiceArea, adDto.ServiceArea))
-                {
-                    ad.ServiceArea = adDto.ServiceArea;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.ServiceFeature) && !string.Equals(ad.ServiceFeature, adDto.ServiceFeature))
-                {
-                    ad.ServiceFeature = adDto.ServiceFeature;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.TypeOfService) && !string.Equals(ad.TypeOfService, adDto.TypeOfService))
-                {
-                    ad.TypeOfService = adDto.TypeOfService;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Topic) && !string.Equals(ad.Topic, adDto.Topic))
-                {
-                    ad.Topic = adDto.Topic;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Requirements) && !string.Equals(ad.Requirements, adDto.Requirements))
-                {
-                    ad.Requirements = adDto.Requirements;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.ResumePath) && !string.Equals(ad.ResumePath, adDto.ResumePath))
-                {
-                    ad.ResumePath = adDto.ResumePath;
-                }
-                ///
-                if (!string.IsNullOrWhiteSpace(adDto.Title) && !string.Equals(ad.Title, adDto.Title))
-                {
-                    ad.Title = adDto.Title;
-                }
                 if (!string.IsNullOrWhiteSpace(adDto.PhoneNumber) && !string.Equals(ad.PhoneNumber, adDto.PhoneNumber))
                 {
                     ad.PhoneNumber = adDto.PhoneNumber;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Region) && !string.Equals(ad.Region, adDto.Region))
-                {
-                    ad.Region = adDto.Region;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Place) && !string.Equals(ad.Place, adDto.Place))
-                {
-                    ad.Place = adDto.Place;
                 }
                 if (!string.IsNullOrWhiteSpace(adDto.Address) && !string.Equals(ad.Address, adDto.Address))
                 {
                     ad.Address = adDto.Address;
                 }
-                if (!string.IsNullOrWhiteSpace(adDto.JobType) && !string.Equals(ad.JobType, adDto.JobType))
-                {
-                    ad.JobType = adDto.JobType;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.EmploymentStatus) && !string.Equals(ad.EmploymentStatus, adDto.EmploymentStatus))
-                {
-                    ad.EmploymentStatus = adDto.EmploymentStatus;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Gender) && !string.Equals(ad.Gender, adDto.Gender))
-                {
-                    ad.Gender = adDto.Gender;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Age.ToString()) && !string.Equals(ad.Age.ToString(), adDto.Age.ToString()))
-                {
-                    ad.Age = adDto.Age;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Skills) && !string.Equals(ad.Skills, adDto.Skills))
-                {
-                    ad.Skills = adDto.Skills;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.ExpectedSalary) && !string.Equals(ad.ExpectedSalary, adDto.ExpectedSalary))
-                {
-                    ad.ExpectedSalary = adDto.ExpectedSalary;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Education) && !string.Equals(ad.Education, adDto.Education))
-                {
-                    ad.Education = adDto.Education;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.HighestLevelOfEducation) && !string.Equals(ad.HighestLevelOfEducation, adDto.HighestLevelOfEducation))
-                {
-                    ad.HighestLevelOfEducation = adDto.HighestLevelOfEducation;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Certification) && !string.Equals(ad.Certification, adDto.Certification))
-                {
-                    ad.Certification = adDto.Certification;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.SaveData.ToString()) && !string.Equals(ad.SaveData.ToString(), adDto.SaveData.ToString()))
-                {
-                    ad.SaveData = adDto.SaveData;
-                }
-                //skip work experience
-                if (!string.IsNullOrWhiteSpace(adDto.Maker) && !string.Equals(ad.Maker, adDto.Maker))
-                {
-                    ad.Maker = adDto.Maker;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Year) && !string.Equals(ad.Year, adDto.Year))
-                {
-                    ad.Year = adDto.Year;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Color) && !string.Equals(ad.Color, adDto.Color))
-                {
-                    ad.Color = adDto.Color;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Seats.ToString()) && !string.Equals(ad.Seats.ToString(), adDto.Seats.ToString()))
-                {
-                    ad.Seats = adDto.Seats;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.CarType) && !string.Equals(ad.CarType, adDto.CarType))
-                {
-                    ad.CarType = adDto.CarType;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.FuelType) && !string.Equals(ad.FuelType, adDto.FuelType))
-                {
-                    ad.FuelType = adDto.FuelType;
-                }
-                if (!string.IsNullOrWhiteSpace(adDto.Mileage) && !string.Equals(ad.Mileage, adDto.Mileage))
-                {
-                    ad.Mileage = adDto.Mileage;
-                }
+                
+                
                 //ad image, subcategory, ad items, work experience
                 await adRepository .UpdateAsync(ad);
                 _unitOfWork.Commit();
@@ -715,14 +567,8 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region filter based on the search entry
-                //var ad = adRepository.GetAll().Where(a =>
-                //(a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
-                //&& ((model.Keywords.Any(sk => Split(a.Keywords,",").ToList().Contains(sk))) || model.Keywords == null)
-                //&& (model.SearchText == a.Name || string.IsNullOrWhiteSpace(model.SearchText))
-                ////&& (a.Subcategory.Category.Id.ToString() == model.CategoryId || string.IsNullOrWhiteSpace(model.CategoryId))
-                //);
 
-                var ad = adRepository.GetAll().Where(a => 
+                var ad = adRepository.GetAllIncluding(a => a.Subcategory).Where(a => 
                 (a.Name.Contains(model.SearchText) 
                 /* experimental */
                 //|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
@@ -730,21 +576,44 @@ namespace EkiHire.Business.Services
                 && (a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
                 && (a.Subcategory.CategoryId == model.CategoryId || (model.CategoryId == null || model.CategoryId == 0))
                 ).ToList();
-                var r = ad.ToDTO().ToArray();
+
+                //var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
+
+                var adk = ad.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
+                var r = adk.ToDTO().ToArray();
                 
                 for(var i=0; i < r.Length; i++)
                 {
                     var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
                     var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
+                    var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
                     r[i].AdImages = images;
                     r[i].AdPropertyValue = adPropValues;
+                    r[i].AdFeedback = adfeedback;
                 }
                 result = r.ToList();
-                //if (model.CategoryId != null && model.Keywords.IsNullOrEmpty() && model.SubcategoryId.IsNullOrEmpty() && model.SearchText.IsNullOrEmpty()) {
-
-                //    result = adRepository.GetAll().ToDTO().ToList();
-                //}
                 #endregion
+                //save searches
+                //_ = Task.Run<IRepository<Search>>((IRepository<Search> ssy) =>
+                {
+                    _unitOfWork.BeginTransaction();
+                    foreach (var s in result)
+                    {
+                        try
+                        {
+                            var sdata = new Search
+                            {
+                                AdId = s.Id
+                            };
+                            await SearchRepository.InsertAsync(sdata);
+                        }
+                        catch (Exception ex)
+                        {
+                        }
+                    }
+                    _unitOfWork.Commit();
+                }
+                //);
                 return result;
             }
             catch (Exception ex)
@@ -1350,7 +1219,90 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
+        public async Task<IEnumerable<AdDTO>> Trending(long count = 0)
+        {
+            try
+            {
+                List<AdDTO> result = new List<AdDTO>();
+                //result = adRepository.GetAll().Where(a => TrendingRank(a, out a) > 0).OrderByDescending(ax => ax.Rank).Take((int)count).ToDTO().ToList();
 
+                //_ = "inter-commission";
+
+                //result = adRepository.GetAll().Select(model => TrendingRank(model)).AsEnumerable().OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
+
+                //result = (from a in adRepository.GetAll() select TrendingRank(a)).OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
+                List<Ad> ar = new List<Ad>();
+                var aList = adRepository.GetAll().ToList();
+                foreach (var a in aList)
+                {
+                    var data = TrendingRank(a);
+                    ar.Add(data);
+                }
+                result = ar.OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
+        //private double TrendingRank(Ad model, out Ad ad)
+        //{
+        //    try
+        //    {
+        //        var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
+        //        reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
+        //        likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
+        //        searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
+        //        daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days;
+
+        //        double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
+
+        //        //test
+        //        rank = 5;
+
+        //        model.Rank = rank;
+        //        ad = model;
+        //        return rank;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        ad = model;
+        //        return 0;
+        //    }
+        //}
+
+        private Ad TrendingRank(Ad model)
+        {
+            try
+            {
+                var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
+                reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
+                likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
+                searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
+                daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days;
+
+                double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
+
+                //model.Rank = rank;
+                //ad = model;
+                //return rank;
+
+                ////test
+                //rank = 5;
+                model.Rank = rank;
+                return model;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //ad = model;
+                //return 0;
+                return model;
+            }
+        }
         //public async Task<bool> PostAds()
         //{
         //    try

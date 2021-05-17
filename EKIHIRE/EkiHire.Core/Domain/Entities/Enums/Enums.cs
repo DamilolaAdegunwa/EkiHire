@@ -26,6 +26,11 @@ namespace EkiHire.Core.Domain.Entities.Enums
     }
     public enum PropertyType
     {
-        text,number,boolean
+        text = 0,
+        option = 1,
+        color = 2,
+        money = 3,
+        number = 4,
+        description = 5
     }
 }

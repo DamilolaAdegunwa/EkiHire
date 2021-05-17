@@ -17,4 +17,9 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string CurrentPassword { get; set; }
         public string NewPassword { get; set; }
     }
+
+    public class ProfileImageDTO
+    {
+        public string profileImageString { get; set; }
+    }
 }
