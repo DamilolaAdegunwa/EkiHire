@@ -4,7 +4,7 @@ using System.Text;
 
 namespace EkiHire.Core.Domain.Entities.Enums
 {
-    public enum SubscriptionPlanType
+    public enum SubscriptionPlan
     {
         Basic = 0,
         Pro = 1

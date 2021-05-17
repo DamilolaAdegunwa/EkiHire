@@ -28,6 +28,7 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)] public virtual string Keywords { get; set; }
         public virtual bool? IsActive { get; set; }
         public virtual AdsStatus? AdsStatus { get; set; }
+        public virtual bool? Promotion { get; set; }
         [ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
         public virtual Subcategory Subcategory { get; set; }
@@ -75,6 +76,7 @@ namespace EkiHire.Core.Domain.Entities
                     AdFeedback = model.AdFeedback.ToEntity(),
                     Rank = model.Rank,
                     AdsStatus = model.AdsStatus,
+                    Promotion = model.Promotion
                 };
                 return output;
             }

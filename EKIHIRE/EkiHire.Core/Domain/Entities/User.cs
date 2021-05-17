@@ -45,7 +45,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
-        public SubscriptionPlanType SubscriptionPlanType { get; set; }
+        public SubscriptionPlan SubscriptionPlan { get; set; }
         public ICollection<UserCart> CartItems { get; set; } 
         
         #endregion

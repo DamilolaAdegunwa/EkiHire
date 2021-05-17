@@ -27,6 +27,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         [DataType(DataType.Text)] public virtual string Keywords { get; set; }
         public virtual bool? IsActive { get; set; }
         public virtual AdsStatus? AdsStatus { get; set; }
+        public virtual bool? Promotion { get; set; }
         //[ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
         public virtual SubcategoryDTO Subcategory { get; set; }
@@ -71,6 +72,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     AdFeedback = model.AdFeedback.ToDTO(),
                     Rank = model.Rank,
                     AdsStatus = model.AdsStatus,
+                    Promotion = model.Promotion
                 };
                 return dto;
             }

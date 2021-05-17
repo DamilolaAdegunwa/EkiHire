@@ -330,7 +330,7 @@ namespace EkiHire.Business.Services
                 MiddleName = user.MiddleName,
                 CreationTime = user.CreationTime,
                 DateOfBirth = user.DateOfBirth,
-                SubscriptionPlanType = user.SubscriptionPlanType
+                SubscriptionPlan = user.SubscriptionPlan
             };
         }
 

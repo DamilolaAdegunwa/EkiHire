@@ -48,7 +48,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
-        public SubscriptionPlanType SubscriptionPlanType { get; set; }
+        public SubscriptionPlan SubscriptionPlan { get; set; }
         public ICollection<UserCart> CartItems { get; set; }
 
         #endregion
@@ -168,6 +168,6 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string DateJoined { get; set; }
         public string DateOfBirth { get; set; }
         public string Title { get; set; }
-        public SubscriptionPlanType SubscriptionPlanType { get; set; }
+        public SubscriptionPlan SubscriptionPlan { get; set; }
     }
 }
