@@ -110,7 +110,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     UserType = user.UserType,
                     Wallet = user.Wallet,
                     //WalletId = user.WalletId,
-                    
+                    CartItems = user.CartItems,
+                    SubscriptionPlan = user.SubscriptionPlan,
                 };
                 return userDto;
             }

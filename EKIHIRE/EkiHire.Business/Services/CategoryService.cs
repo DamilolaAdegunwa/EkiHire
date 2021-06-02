@@ -31,8 +31,8 @@ namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<IEnumerable<Category>> GetCategories(long[] catIds = null);//IEnumerable<Category>
-        Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
+        Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null, bool withOtherData = false);//IEnumerable<Category>
+        Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
         Task<bool> SeedSubcategories();
         Task<CategoryDTO> GetCategory(long Id, bool withOtherData = false);
@@ -103,12 +103,24 @@ namespace EkiHire.Business.Services
             this._adPropertyRepo = _adPropertyRepo;
         }
 
-        public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null)//Task<IEnumerable<Category>>
+        public async Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null, bool withOtherData = false)//Task<IEnumerable<Category>>
         {
             try
             {
-                var result =  _categoryRepo.GetAll().ToList();
-                var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+                var result =  _categoryRepo.GetAll().ToDTO().ToList();
+                //var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+                if(withOtherData)
+                {
+                    foreach (var r in result)
+                    {
+                        List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == r.Id).ToDTO().ToList();
+                        subcategories.ForEach(x => {
+                            var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id).ToDTO().ToList();
+                            x.AdProperties = _adProperties;
+                        });
+                        r.Subcategories = subcategories;
+                    }
+                }
                 return result;
             }
             catch (Exception ex)
@@ -138,11 +150,11 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get category :: {ex}");
             }
         }
-        public async Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null)
+        public async Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null)
         {
             try
             {
-                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToList();
+                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToDTO().ToList();
                 return result;
             }
             catch (Exception ex)

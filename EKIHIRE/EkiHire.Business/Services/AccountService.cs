@@ -128,7 +128,8 @@ namespace EkiHire.Business.Services
                         AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
                         EmailConfirmed = false,
                         PhoneNumberConfirmed = false,
-                        UserType = model.UserType
+                        UserType = model.UserType,
+                        IsActive = true,
                     };
                     var creationStatus = await _userSvc.CreateAsync(user, model.Password);
 

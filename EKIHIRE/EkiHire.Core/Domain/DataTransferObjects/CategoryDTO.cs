@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Auditing;
-
+using System.Linq;
+using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class CategoryDTO : EntityDTO<long>
@@ -19,7 +20,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region other props
-        public ICollection<SubcategoryDTO> Subcategories { get; set; }
+        public IEnumerable<SubcategoryDTO> Subcategories { get; set; }
         #endregion
         public static implicit operator CategoryDTO(Category category)
         {
@@ -30,7 +31,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Name = category.Name,
                     ImagePath = category.ImagePath,
                     ImageString = category.ImageString,
-                    //Subcategories = category.Subcategories,
+                    Subcategories = category.Subcategories.ToDTO(),
                     Id = category.Id
                 };
                 return categoryDto;

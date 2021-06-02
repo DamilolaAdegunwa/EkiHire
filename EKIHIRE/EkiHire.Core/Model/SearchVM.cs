@@ -11,5 +11,6 @@ namespace EkiHire.Core.Model
         public List<string>? Keywords { get; set; }
         public long? SubcategoryId { get; set; }
         public long? CategoryId { get; set; }
+        public long? AdId { get; set; }
     }
 }

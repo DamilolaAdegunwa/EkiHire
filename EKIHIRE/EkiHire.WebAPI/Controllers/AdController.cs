@@ -11,6 +11,7 @@ using EkiHire.Core.Model;
 using Microsoft.AspNetCore.Authorization;
 using EkiHire.Core.Domain.Entities;
 using Microsoft.AspNetCore.Cors;
+using EkiHire.Core.Domain.Entities.Enums;
 
 namespace EkiHire.WebAPI.Controllers
 {
@@ -139,11 +140,12 @@ namespace EkiHire.WebAPI.Controllers
         //[AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
-        public async Task<IServiceResponse<IEnumerable<Category>>> GetCategories()
+        [Route("GetCategories/{withOtherData:bool}")]
+        public async Task<IServiceResponse<IEnumerable<CategoryDTO>>> GetCategories(bool withOtherData = false)
         {//IEnumerable<Category>
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<Category>>();//
-                var data = await categoryService.GetCategories();
+                var response = new ServiceResponse<IEnumerable<CategoryDTO>>();//
+                var data = await categoryService.GetCategories(null,withOtherData);
                 response.Object = data;
                 return response;
             });
@@ -164,10 +166,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetSubcategoriesByCategoryId/{categoryId}")]
-        public async Task<IServiceResponse<IEnumerable<Subcategory>>> GetSubcategoriesByCategoryId(long categoryId)
+        public async Task<IServiceResponse<IEnumerable<SubcategoryDTO>>> GetSubcategoriesByCategoryId(long categoryId)
         {//working
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<Subcategory>>();
+                var response = new ServiceResponse<IEnumerable<SubcategoryDTO>>();
                 var data = await categoryService.GetSubcategoriesByCategoryId(categoryId);
                 response.Object = data;
                 return response;
@@ -365,6 +367,33 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpPost]
+        [Route("GetAd/{Id}")]
+        public async Task<IServiceResponse<AdDTO>> GetAd(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<AdDTO>();
+                //var data = await adService.GetAd(Id);
+                var data = (await adService.Search(new SearchVM { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("UpdateAdStatus")]
+        public async Task<IServiceResponse<bool>> UpdateAdStatus(long AdId, AdsStatus adsStatus)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.UpdateAdStatus(AdId, adsStatus);
+                response.Object = data;
+                return response;
+            });
+        }
+
+
         //[HttpPost]
         //[Route("UpdateAdProperty")]
         //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model)

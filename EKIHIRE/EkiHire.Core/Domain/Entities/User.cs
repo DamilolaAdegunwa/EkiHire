@@ -123,7 +123,9 @@ namespace EkiHire.Core.Domain.Entities
                     UserType = user.UserType,
                     Wallet = user.Wallet,
                     //WalletId = user.WalletId,
-
+                    CartItems = user.CartItems,
+                    SubscriptionPlan = user.SubscriptionPlan,
+                    
                 };
                 return userDto;
             }

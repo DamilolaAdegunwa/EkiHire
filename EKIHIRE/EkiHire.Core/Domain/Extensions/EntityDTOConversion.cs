@@ -54,6 +54,20 @@ namespace EkiHire.Core.Domain.Extensions
             }
             return null;
         }
+        public static IEnumerable<Subcategory> ToEntity(this IEnumerable<SubcategoryDTO> input)
+        {
+            if (input != null)
+            {
+                List<Subcategory> output = new List<Subcategory>();
+                foreach (var row in input)
+                {
+                    Subcategory data = row;
+                    output.Add(data);
+                }
+                return output;
+            }
+            return null;
+        }
         #endregion
 
         #region ad

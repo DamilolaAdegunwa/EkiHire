@@ -58,6 +58,9 @@ namespace EkiHire.Business.Services
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
         Task<IEnumerable<AdDTO>> Trending(long count = 0);
+        Task<AdDTO> GetAd(long Id);
+        Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
+        Task<bool> AddAdImage(AdImageDTO model);
     }
     public class AdService: IAdService
     {
@@ -148,40 +151,35 @@ namespace EkiHire.Business.Services
                 ad.Id = 0;
 
                 //others
-                ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}";
-                //audit props
-                //ad.CreationTime = DateTime.Now;
-                //ad.CreatorUserId = user.Id;
-                //ad.DeleterUserId = null;
-                //ad.DeletionTime = null;
-                ////ad.Id = 0;
-                //ad.IsDeleted = false;
-                //ad.LastModificationTime = DateTime.Now;
-                //ad.LastModifierUserId = user.Id;
+                ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}{new Random().Next(1_000_000_000, int.MaxValue)}";
+                ad.AdsStatus = AdsStatus.INREVIEW;
+                ad.IsActive = true;
 
-                ////others
-                //ad.IsActive = true;
-                //ad.UserId = user.Id;
-                //ad.SubcategoryId = model.SubcategoryId;
-                //ad.User = user;
-                //ad.Subcategory = sub;
-                //test
-                //ad.WorkExperiences = null;
-                //ad.AdImages = null;
-                //ad.AdPropertyValue = null;
-                //test
                 await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
-                var adpv = _adPropertyValueRepo.GetAll().Where(x => x.Id == model.Id).ToList();
+                await _unitOfWork.SaveChangesAsync();
+
+                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference).LastOrDefaultAsync();
+                var adpv = model.AdPropertyValue?.ToList();
                 if (adpv != null && adpv.Count > 0)
                 {
                     foreach (var p in adpv)
                     {
+                        p.Ad = savedAd; p.AdId = savedAd?.Id;
                         await AddOrUpdateAdPropertyValue(p, username);
                     }
                 }
 
-                await _unitOfWork.SaveChangesAsync();
+                var images = model.AdImages?.ToList();
+                if(images != null && images.Count > 0)
+                {
+                    foreach(var i in images)
+                    {
+                        i.Ad = savedAd; i.AdId = savedAd?.Id;
+                        await AddAdImage(i);
+                    }
+                }
+                
                 #endregion
                 return true;
             }
@@ -569,7 +567,8 @@ namespace EkiHire.Business.Services
                 #region filter based on the search entry
 
                 var ad = adRepository.GetAllIncluding(a => a.Subcategory).Where(a => 
-                (a.Name.Contains(model.SearchText) 
+                (a.Id == model.AdId || model.AdId == null)
+                && (a.Name.Contains(model.SearchText) 
                 /* experimental */
                 //|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
                 || string.IsNullOrWhiteSpace(model.SearchText))
@@ -590,6 +589,14 @@ namespace EkiHire.Business.Services
                     r[i].AdImages = images;
                     r[i].AdPropertyValue = adPropValues;
                     r[i].AdFeedback = adfeedback;
+                    r[i].Likes = adfeedback.Where(l => l.Like).Count();
+
+                    var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
+                    double ratingSum = rating.Sum(x => ((int)x.Rating));
+                    double ratingCount = rating.Count();
+                    r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
+                    r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
+                    r[i].InUserCart = userCartRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
                 }
                 result = r.ToList();
                 #endregion
@@ -1119,8 +1126,10 @@ namespace EkiHire.Business.Services
                 {
                     AdPropertyValue data = new AdPropertyValue
                     {
-                        Ad = ad,
-                        AdProperty = adProperty,
+                        //Ad = ad,
+                        AdId = model.AdId,
+                        //AdProperty = adProperty,
+                        AdPropertyId = model.AdPropertyId,
                         Value = model.Value,
                         //basic properties
                         CreationTime = DateTime.Now,
@@ -1282,7 +1291,7 @@ namespace EkiHire.Business.Services
                 reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
                 likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
                 searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
-                daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days;
+                daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days; daysSincePosts = daysSincePosts < 1 ? 1 : daysSincePosts;
 
                 double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
 
@@ -1314,6 +1323,59 @@ namespace EkiHire.Business.Services
 
         //    }
         //}
+        public async Task<AdDTO> GetAd(long Id)
+        {
+            try
+            {
+                //var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == Id);
+                //return ad;
+                return default;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
+
+        public async Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus)
+        {
+            try
+            {
+                var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == AdId);
+                if(ad == null)
+                {
+                    throw new Exception("Ad not found!");
+                }
+                _unitOfWork.BeginTransaction();
+                ad.AdsStatus = adsStatus;
+                adRepository.Update(ad);
+                _unitOfWork.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        public async Task<bool> AddAdImage(AdImageDTO model)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                await _AdImageRepo.InsertAsync(model);
+                _unitOfWork.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
     }
 }
 //show premium ads first

@@ -3,6 +3,8 @@ using System;
 using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
+using EkiHire.Core.Domain.Extensions;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -23,6 +25,11 @@ namespace EkiHire.Core.Domain.Entities
 
         #endregion
 
+        #region other props
+        [NotMapped]
+        public virtual IEnumerable<AdProperty> AdProperties { get; set; }
+        #endregion
+
         public static implicit operator Subcategory(SubcategoryDTO model)
         {
             if (model != null)
@@ -34,7 +41,8 @@ namespace EkiHire.Core.Domain.Entities
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
                     CategoryId = model.CategoryId,
-                    Category = model.Category
+                    Category = model.Category,
+                    AdProperties = model.AdProperties.ToEntity()
                 };
                 return response;
             }

@@ -373,6 +373,17 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpPost]
+        [Route("ChangeIsActive")]
+        public async Task<IServiceResponse<bool>> ChangeIsActive(bool isActive)
+        {
+            return await HandleApiOperationAsync(async () => {
+                bool result = await _userSvc.ChangeIsActive(isActive, User.FindFirst(JwtClaimTypes.Name)?.Value);
+                var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
         #endregion
         //Authentication, Roles and Permissions....
         #region default from boilerplate

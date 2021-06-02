@@ -5,6 +5,7 @@ using System.Text;
 using System.ComponentModel.DataAnnotations;
 using Newtonsoft.Json;
 using EkiHire.Core.Domain.Entities.Auditing;
+using EkiHire.Core.Domain.Extensions;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
@@ -26,7 +27,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region other props
-        public virtual ICollection<AdPropertyDTO> AdProperties { get; set; }
+        public virtual IEnumerable<AdPropertyDTO> AdProperties { get; set; }
         #endregion
 
         public static implicit operator SubcategoryDTO(Subcategory model)
@@ -40,7 +41,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     ImagePath = model.ImagePath,
                     ImageString = model.ImageString,
                     CategoryId = model.CategoryId,
-                    Category = model.Category
+                    Category = model.Category,
+                    AdProperties = model.AdProperties.ToDTO()
                 };
                 return response;
             }

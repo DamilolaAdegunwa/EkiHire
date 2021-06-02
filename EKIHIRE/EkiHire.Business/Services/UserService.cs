@@ -61,6 +61,7 @@ namespace EkiHire.Business.Services
         Task<bool> ChangePhoneNumber(string userPhoneNumber, string username);
         //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
         Task<bool> ChangeProfileImage(string profileImageString, string username);
+        Task<bool> ChangeIsActive(bool isActive, string username);
     }
 
     public class UserService : IUserService
@@ -316,22 +317,23 @@ namespace EkiHire.Business.Services
 
             await ValidateUser(user);
 
-            return user is null ? null : new UserDTO
-            {
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                Gender = user.Gender,
-                NextOfKinName = user.NextOfKinName,
-                NextOfKinPhone = user.NextOfKinPhone,
-                PhoneNumber = user.PhoneNumber,
-                ReferralCode = user.ReferralCode,
-                Address = user.Address, 
-                MiddleName = user.MiddleName,
-                CreationTime = user.CreationTime,
-                DateOfBirth = user.DateOfBirth,
-                SubscriptionPlan = user.SubscriptionPlan
-            };
+            return user;
+            //return user is null ? null : new UserDTO
+            //{
+            //    Email = user.Email,
+            //    FirstName = user.FirstName,
+            //    LastName = user.LastName,
+            //    Gender = user.Gender,
+            //    NextOfKinName = user.NextOfKinName,
+            //    NextOfKinPhone = user.NextOfKinPhone,
+            //    PhoneNumber = user.PhoneNumber,
+            //    ReferralCode = user.ReferralCode,
+            //    Address = user.Address, 
+            //    MiddleName = user.MiddleName,
+            //    CreationTime = user.CreationTime,
+            //    DateOfBirth = user.DateOfBirth,
+            //    SubscriptionPlan = user.SubscriptionPlan
+            //};
         }
 
         public async Task<bool> ForgotPassword(string username)
@@ -747,6 +749,33 @@ namespace EkiHire.Business.Services
                 return false;
             }
             
+        }
+        public async Task<bool> ChangeIsActive(bool isActive, string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    //throw await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_NOT_EXIST);
+                    throw new EkiHireGenericException("Could not identify user");
+                }
+                var user = await FindByNameAsync(username);
+                await ValidateUser(user);
+                if (!user.IsConfirmed())
+                {
+                    throw new EkiHireGenericException("Your account has not been activated!");
+                }
+                user.IsActive = isActive;
+                await UpdateAsync(user);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+
         }
     }
 }
