@@ -58,9 +58,10 @@ namespace EkiHire.Business.Services
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
         Task<IEnumerable<AdDTO>> Trending(long count = 0);
-        Task<AdDTO> GetAd(long Id);
+        //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model);
+        Task<IEnumerable<UserCartDTO>> GetUserCart(long userId);
     }
     public class AdService: IAdService
     {
@@ -1323,20 +1324,20 @@ namespace EkiHire.Business.Services
 
         //    }
         //}
-        public async Task<AdDTO> GetAd(long Id)
-        {
-            try
-            {
-                //var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == Id);
-                //return ad;
-                return default;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return null;
-            }
-        }
+        //public async Task<AdDTO> GetAd(long Id)
+        //{
+        //    try
+        //    {
+        //        //var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == Id);
+        //        //return ad;
+        //        return default;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        return null;
+        //    }
+        //}
 
         public async Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus)
         {
@@ -1376,6 +1377,26 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
+        public async Task<IEnumerable<UserCartDTO>> GetUserCart(long userId)
+        {
+            try
+            {
+                var user = _userRepo.FirstOrDefault(u => u.Id == userId);
+                if(user == null)
+                {
+                    throw new Exception("user does not exist");
+                }
+                var userCart = userCartRepository.GetAll().Where(uc => uc.UserId == userId && uc.IsDeleted == false).ToDTO();
+                return userCart;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return null;
+            }
+        }
+        //advanced search
+
     }
 }
 //show premium ads first

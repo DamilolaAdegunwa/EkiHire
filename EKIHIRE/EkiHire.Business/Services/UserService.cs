@@ -90,6 +90,7 @@ namespace EkiHire.Business.Services
             appConfig = _appConfig.Value;
             _hostingEnvironment = hostingEnvironment;
             _userRepository = userRepository;
+            _unitOfWork = unitOfWork;
         }
 
         protected virtual Task<IdentityResult> CreateAsync(User user)

@@ -393,6 +393,17 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("GetUserCart/{userId}")]
+        public async Task<ServiceResponse<IEnumerable<UserCartDTO>>> GetUserCart(long userId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<UserCartDTO>>();
+                var data = await adService.GetUserCart(userId);
+                response.Object = data;
+                return response;
+            });
+        }
 
         //[HttpPost]
         //[Route("UpdateAdProperty")]
