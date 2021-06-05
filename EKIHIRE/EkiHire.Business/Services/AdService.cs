@@ -582,7 +582,7 @@ namespace EkiHire.Business.Services
                 if (model.AdId != null && model.AdId != 0)
                 {
                     result = ads.Where(a => a.Id == model.AdId).ToDTO().ToList();
-                    return result;
+                    //return result;
                 }
                 if (!string.IsNullOrWhiteSpace(model.SearchText))
                 {
@@ -656,7 +656,7 @@ namespace EkiHire.Business.Services
                     }
                 }
                 var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
-                var r2 = adk.ToDTO();
+                var r2 = adk.Where(a => a.IsDeleted == false).ToDTO();
                 var r = r2.ToArray();
                 
                 for(var i=0; i < r.Length; i++)
