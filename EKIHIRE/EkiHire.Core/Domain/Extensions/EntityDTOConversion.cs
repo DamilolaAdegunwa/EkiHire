@@ -73,7 +73,7 @@ namespace EkiHire.Core.Domain.Extensions
         #region ad
         public static IEnumerable<AdDTO> ToDTO(this IEnumerable<Ad> entities)
         {
-            if (entities != null)
+            if (entities != null )
             {
                 List<AdDTO> result = new List<AdDTO>();
                 foreach (var entity in entities)

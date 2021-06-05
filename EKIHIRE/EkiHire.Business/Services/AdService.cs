@@ -567,20 +567,97 @@ namespace EkiHire.Business.Services
                 #endregion
                 #region filter based on the search entry
 
-                var ad = adRepository.GetAllIncluding(a => a.Subcategory).Where(a => 
-                (a.Id == model.AdId || model.AdId == null)
-                && (a.Name.Contains(model.SearchText) 
-                /* experimental */
-                //|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
-                || string.IsNullOrWhiteSpace(model.SearchText))
-                && (a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
-                && (a.Subcategory.CategoryId == model.CategoryId || (model.CategoryId == null || model.CategoryId == 0))
-                ).ToList();
-
-                //var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
-
-                var adk = ad.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
-                var r = adk.ToDTO().ToArray();
+                //var ad = adRepository.GetAllIncluding(a => a.Subcategory).Where(a => 
+                //(a.Id == model.AdId || model.AdId == null)
+                //&& (a.Name.Contains(model.SearchText) 
+                ///* experimental */
+                ////|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
+                //|| string.IsNullOrWhiteSpace(model.SearchText))
+                //&& (a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
+                //&& (a.Subcategory.CategoryId == model.CategoryId || (model.CategoryId == null || model.CategoryId == 0))
+                //).ToList();
+                ////var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
+                
+                var ads = adRepository.GetAllIncluding(x => x.Subcategory);
+                if (model.AdId != null && model.AdId != 0)
+                {
+                    result = ads.Where(a => a.Id == model.AdId).ToDTO().ToList();
+                    return result;
+                }
+                if (!string.IsNullOrWhiteSpace(model.SearchText))
+                {
+                    ads = ads.Where(a => a.Name.Contains(model.SearchText));
+                }
+                if (model.SubcategoryId != null && model.SubcategoryId != 0)
+                {
+                    ads = ads.Where(a => a.SubcategoryId == model.SubcategoryId);
+                }
+                if (model.CategoryId != null && model.CategoryId != 0)
+                {
+                    ads = ads.Where(a => a.Subcategory.CategoryId == model.CategoryId);
+                }
+                if (model.min_amount != null)
+                {
+                    ads = ads.Where(a => a.Amount >= model.min_amount);
+                }
+                if (model.max_amount != null)
+                {
+                    ads = ads.Where(a => a.Amount <= model.max_amount);
+                }
+                //if(model.StateId != null && model.StateId != 0)
+                //{
+                //    ads = ads.Where(a => a.StateId == model.StateId);
+                //}
+                //if (model.LGAId != null && model.LGAId != 0)
+                //{
+                //    ads = ads.Where(a => a.LGAId == model.LGAId);
+                //}
+                if (!string.IsNullOrWhiteSpace(model.Address))
+                {
+                    ads = ads.Where(a => a.Address.Contains(model.Address));
+                }
+                if (model.AdClass != null)
+                {
+                    ads = ads.Where(a => a.AdClass == model.AdClass);
+                }
+                if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
+                {
+                    ads = ads.Where(a => a.PhoneNumber.Contains(model.PhoneNumber));
+                }
+                //if (!string.IsNullOrWhiteSpace(model.Location))
+                //{
+                //    ads = ads.Where(a => a.Location.Contains(model.Location));
+                //}
+                if (!string.IsNullOrWhiteSpace(model.AdReference))
+                {
+                    ads = ads.Where(a => a.AdReference.Contains(model.AdReference));
+                }
+                if (!string.IsNullOrWhiteSpace(model.Description))
+                {
+                    ads = ads.Where(a => a.Description.Contains(model.Description));
+                }
+                if (model.AdsStatus != null)
+                {
+                    ads = ads.Where(a => a.AdsStatus == model.AdsStatus);
+                }
+                if (model.UserId != null && model.UserId != 0)
+                {
+                    ads = ads.Where(a => a.UserId == model.UserId);
+                }
+                if (model.PropertyValuePairs != null && model.PropertyValuePairs.Count > 0)
+                {
+                    foreach (var pv in model.PropertyValuePairs)
+                    {
+                        if(pv.PropertyId != 0)
+                        {
+                            var PropertyValues = _adPropertyValueRepo.GetAll().Where(v => v.Value.Contains(pv.Value) && v.AdPropertyId == pv.PropertyId);
+                            ads = ads.Where(a => PropertyValues.Any(x => x.AdId == a.Id));
+                        }
+                    }
+                }
+                var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
+                var r2 = adk.ToDTO();
+                var r = r2.ToArray();
                 
                 for(var i=0; i < r.Length; i++)
                 {
@@ -1395,7 +1472,6 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        //advanced search
 
     }
 }
