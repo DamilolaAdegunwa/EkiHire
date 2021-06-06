@@ -581,8 +581,7 @@ namespace EkiHire.Business.Services
                 var ads = adRepository.GetAllIncluding(x => x.Subcategory);
                 if (model.AdId != null && model.AdId != 0)
                 {
-                    result = ads.Where(a => a.Id == model.AdId).ToDTO().ToList();
-                    //return result;
+                    ads = ads.Where(a => a.Id == model.AdId);
                 }
                 if (!string.IsNullOrWhiteSpace(model.SearchText))
                 {
