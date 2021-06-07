@@ -320,12 +320,12 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory /*,IRepository<Category> _categoryRepo, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
             loggerFactory.AddLog4Net();
             #region seeding the db
             //categoryService.SeedCategories();
-            //categoryService.SeedSubcategories();
+            //categoryService.SeedSubcategories();//108
             #endregion end seeding the db
             //if (env.IsDevelopment())
             //{
