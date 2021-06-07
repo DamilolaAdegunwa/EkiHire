@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using EkiHire.Core.Domain.Entities.Auditing;
 using EkiHire.Core.Domain.Entities.Common;
 using EkiHire.Core.Domain.DataTransferObjects;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace EkiHire.Core.Domain.Entities
 {
     public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
@@ -39,6 +41,7 @@ namespace EkiHire.Core.Domain.Entities
         public string AccountConfirmationCode { get; set; }
         public string Photo { get; set; }
         public string OTP { get; set; }
+        [NotMapped]
         public ICollection<UserRole> UserRoles { get; set; }
         //public ICollection<Post> Posts { get; set; }
         //added
@@ -46,6 +49,7 @@ namespace EkiHire.Core.Domain.Entities
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
+        [NotMapped]
         public ICollection<UserCart> CartItems { get; set; } 
         
         #endregion

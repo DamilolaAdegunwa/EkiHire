@@ -158,9 +158,9 @@ namespace EkiHire.Business.Services
 
                 await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
-                await _unitOfWork.SaveChangesAsync();
+                //await _unitOfWork.SaveChangesAsync();
 
-                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference).LastOrDefaultAsync();
+                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference).FirstOrDefaultAsync();
                 var adpv = model.AdPropertyValue?.ToList();
                 if (adpv != null && adpv.Count > 0)
                 {

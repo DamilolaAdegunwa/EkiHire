@@ -31,9 +31,11 @@ namespace EkiHire.Core.Domain.Entities
         //public virtual bool? Promotion { get; set; }
         [ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
+        [NotMapped]
         public virtual Subcategory Subcategory { get; set; }
         [ForeignKey("UserId")]
         public virtual long? UserId { get; set; }
+        [NotMapped]
         public virtual User User { get; set; }
 
         #endregion
