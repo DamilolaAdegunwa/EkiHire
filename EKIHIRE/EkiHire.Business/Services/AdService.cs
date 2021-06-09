@@ -160,7 +160,7 @@ namespace EkiHire.Business.Services
                 _unitOfWork.Commit();
                 //await _unitOfWork.SaveChangesAsync();
 
-                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference).FirstOrDefaultAsync();
+                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference && a.IsDeleted == false).FirstOrDefaultAsync();
                 var adpv = model.AdPropertyValue?.ToList();
                 if (adpv != null && adpv.Count > 0)
                 {
@@ -200,12 +200,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var ad = adRepository.FirstOrDefault(x => x.Id == adid);
+                var ad = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false);
                 if(ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
@@ -235,12 +235,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var ad = adRepository.FirstOrDefault(x => x.Id == adid);
+                var ad = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false);
                 if (ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
@@ -314,7 +314,7 @@ namespace EkiHire.Business.Services
                 //images
                 if(adDto.AdImages != null && adDto.AdImages.Count() > 0)
                 {
-                    var imgs = _AdImageRepo.GetAll().Where(i => i.AdId == ad.Id).ToList() ?? new List<AdImage>();
+                    var imgs = _AdImageRepo.GetAll().Where(i => i.AdId == ad.Id && i.IsDeleted == false).ToList() ?? new List<AdImage>();
                     foreach (var img in adDto.AdImages)
                     {
                         if(imgs.Any(i => i.Id == img.Id))
@@ -366,12 +366,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var ad = adRepository.FirstOrDefault(x => x.Id == adid);
+                var ad = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false);
                 if (ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
@@ -401,7 +401,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -429,12 +429,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var item = itemRepository.FirstOrDefault(x => x.Id == ItemId);
+                var item = itemRepository.FirstOrDefault(x => x.Id == ItemId && x.IsDeleted == false);
                 if (item == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Item not found!");
@@ -469,7 +469,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -477,7 +477,7 @@ namespace EkiHire.Business.Services
 
                 #endregion
                 //_unitOfWork.BeginTransaction();
-                itemRepository.GetAll().Where(x => ItemIds.Contains(x.Id)).AsTracking().ToList().ForEach(y => y.GroupName = groupname);
+                itemRepository.GetAll().Where(x => ItemIds.Contains(x.Id) && x.IsDeleted == false).AsTracking().ToList().ForEach(y => y.GroupName = groupname);
                 //_unitOfWork.Commit();
                 return true;
             }
@@ -503,7 +503,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var ad = adRepository.Get(adId);
+                var ad = adRepository.FirstOrDefault(x => x.Id == adId && x.IsDeleted == false);
                 if(ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
@@ -511,7 +511,7 @@ namespace EkiHire.Business.Services
                 #endregion
                 #region add ad to cart
                 //check if already exist
-                var userCart = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id);
+                var userCart = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
                 if(userCart != null)
                 {
                     if(userCart.IsDeleted)
@@ -561,19 +561,19 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var ad = adRepository.Get(adId);
+                var ad = adRepository.FirstOrDefault(x => x.Id == adId && x.IsDeleted == false);
                 if (ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
                 }
                 #endregion
                 #region add ad to cart
-                var data = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id);
+                var data = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
                 if(data == null)
                 {
                     return true;
@@ -603,7 +603,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -626,7 +626,7 @@ namespace EkiHire.Business.Services
                 //).ToList();
                 ////var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
                 
-                var ads = adRepository.GetAllIncluding(x => x.Subcategory);
+                var ads = adRepository.GetAllIncluding(x => x.Subcategory).Where(x => x.IsDeleted == false);
                 if (model.AdId != null && model.AdId != 0)
                 {
                     ads = ads.Where(a => a.Id == model.AdId);
@@ -697,7 +697,7 @@ namespace EkiHire.Business.Services
                     {
                         if(pv.PropertyId != 0)
                         {
-                            var PropertyValues = _adPropertyValueRepo.GetAll().Where(v => v.Value.Contains(pv.Value) && v.AdPropertyId == pv.PropertyId);
+                            var PropertyValues = _adPropertyValueRepo.GetAll().Where(v => v.Value.Contains(pv.Value) && v.AdPropertyId == pv.PropertyId && v.IsDeleted == false);
                             ads = ads.Where(a => PropertyValues.Any(x => x.AdId == a.Id));
                         }
                     }
@@ -708,9 +708,9 @@ namespace EkiHire.Business.Services
                 
                 for(var i=0; i < r.Length; i++)
                 {
-                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
-                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
-                    var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id).ToDTO().ToList();
+                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
+                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
+                    var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
                     r[i].AdImages = images;
                     r[i].AdPropertyValue = adPropValues;
                     r[i].AdFeedback = adfeedback;
@@ -806,14 +806,14 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
                 var result = new List<AdFeedback>();
-                result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
+                result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id && a.IsDeleted == false
                 //&& (adIds.Contains(a.AdId) || adIds == null)
                 ).ToListAsync();
                 return result;
@@ -857,7 +857,7 @@ namespace EkiHire.Business.Services
         //}
         private long? getUserFromAd(long? adid)
         {
-            var resp = adRepository.FirstOrDefault(x => x.Id == adid).UserId;
+            var resp = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false).UserId;
             return resp;
         }
         public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username/*, long[] adIds = null*/)
@@ -869,7 +869,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -877,7 +877,7 @@ namespace EkiHire.Business.Services
                 #endregion
                 var result = (from af in adFeedbackRepository.GetAll()
                         join ad in adRepository.GetAll() on af.AdId equals ad.Id
-                        where ad.UserId == user.Id
+                        where ad.UserId == user.Id && af.IsDeleted == false
                         select af).ToList();
                 //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
                 ////&& (adIds.Contains(a.AdId) || adIds == null)
@@ -901,14 +901,14 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
                 var result = new List<Follow>();
-                result = await followRepository.GetAll().Where(f => f.Following.UserName == username).ToListAsync();
+                result = await followRepository.GetAll().Where(f => f.Following.UserName == username && f.IsDeleted == false).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -926,14 +926,14 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
                 var result = new List<Follow>();
-                result = await followRepository.GetAll().Where(f => f.Follower.UserName == username).ToListAsync();
+                result = await followRepository.GetAll().Where(f => f.Follower.UserName == username && f.IsDeleted == false).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -953,12 +953,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == subid); 
+                var subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == subid && s.IsDeleted == false); 
                 if(subcategory == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("The subcategory does not exist");
@@ -1007,7 +1007,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -1016,7 +1016,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!!");
                 }
-                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId);
+                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId && k.IsDeleted == false);
                 if (keyword == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("can't find keyword!");
@@ -1045,12 +1045,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId);
+                var keyword = _keywordRepo.FirstOrDefault(k => k.Id == kwId && k.IsDeleted == false);
                 if (keyword == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("can't find keyword!");
@@ -1078,7 +1078,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -1087,7 +1087,7 @@ namespace EkiHire.Business.Services
                 List<Keyword> result = new List<Keyword>();
                 result = await _keywordRepo.GetAll().Where(k => (kwIds.Contains(k.Id) || kwIds == null)
                 && (k.Subcategory.Id == subid || subid == null)
-                ).ToListAsync();
+                && k.IsDeleted == false).ToListAsync();
 
                 return result;
             }
@@ -1109,14 +1109,14 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
                 List<AdProperty> result = new List<AdProperty>();
-                result = await _adPropertyRepo.GetAllIncluding(x => x.Subcategory).Where(a => a.SubcategoryId == subId).ToListAsync();
+                result = await _adPropertyRepo.GetAllIncluding(x => x.Subcategory).Where(a => a.SubcategoryId == subId && a.IsDeleted == false).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1135,14 +1135,14 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
                 List<AdPropertyValue> result = new List<AdPropertyValue>();
-                result = await _adPropertyValueRepo.GetAllIncluding(x => x.AdProperty).Where(a => a.Ad.Id == adid 
+                result = await _adPropertyValueRepo.GetAllIncluding(x => x.AdProperty).Where(a => a.Ad.Id == adid && a.IsDeleted == false
                 //&& (adPropertyIds.Contains(a.AdProperty.Id) || adPropertyIds == null)
                 ).ToListAsync();
                 return result;
@@ -1224,7 +1224,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -1233,17 +1233,17 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var ad = adRepository.FirstOrDefault(s => s.Id == model.AdId);
+                var ad = adRepository.FirstOrDefault(s => s.Id == model.AdId && s.IsDeleted == false);
                 if (ad == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid Ad!");
                 }
-                var adProperty = _adPropertyRepo.FirstOrDefault(a => a.Id == model.AdPropertyId);
+                var adProperty = _adPropertyRepo.FirstOrDefault(a => a.Id == model.AdPropertyId && a.IsDeleted == false);
                 if (adProperty == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid adProperty!");
                 }
-                var adPropertyValue = _adPropertyValueRepo.FirstOrDefault(a => a.AdId == model.AdId && a.AdPropertyId == model.AdPropertyId);
+                var adPropertyValue = _adPropertyValueRepo.FirstOrDefault(a => a.AdId == model.AdId && a.AdPropertyId == model.AdPropertyId && a.IsDeleted == false);
 
                 #endregion
 
@@ -1298,7 +1298,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -1307,17 +1307,17 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id);
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id && s.IsDeleted == false);
                 if (subcat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
-                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name);
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name && a.IsDeleted == false);
                 if (adprop != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
                 }
-                var data = _adPropertyRepo.FirstOrDefault(a => a.Id == model.Id);
+                var data = _adPropertyRepo.FirstOrDefault(a => a.Id == model.Id && a.IsDeleted == false);
                 if(data == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("The property does not exist!");
@@ -1347,7 +1347,7 @@ namespace EkiHire.Business.Services
             try
             {
                 List<Ad> result = new List<Ad>();
-                result = await adRepository.GetAll().Where(a => a.IsActive == true).ToListAsync();
+                result = await adRepository.GetAll().Where(a => a.IsActive == true && a.IsDeleted == false).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1369,7 +1369,7 @@ namespace EkiHire.Business.Services
 
                 //result = (from a in adRepository.GetAll() select TrendingRank(a)).OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 List<Ad> ar = new List<Ad>();
-                var aList = adRepository.GetAll().ToList();
+                var aList = adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
                 foreach (var a in aList)
                 {
                     var data = TrendingRank(a);
@@ -1416,9 +1416,9 @@ namespace EkiHire.Business.Services
             try
             {
                 var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
-                reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
-                likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
-                searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
+                reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review) && a.IsDeleted == false).Count();
+                likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like && a.IsDeleted == false).Count();
+                searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id && s.IsDeleted == false).Count();
                 daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days; daysSincePosts = daysSincePosts < 1 ? 1 : daysSincePosts;
 
                 double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
@@ -1470,7 +1470,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == AdId);
+                var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == AdId && a.IsDeleted == false);
                 if(ad == null)
                 {
                     throw new Exception("Ad not found!");
@@ -1508,7 +1508,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var user = _userRepo.FirstOrDefault(u => u.Id == userId);
+                var user = _userRepo.FirstOrDefault(u => u.Id == userId && u.IsDeleted == false);
                 if(user == null)
                 {
                     throw new Exception("user does not exist");
