@@ -52,7 +52,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost, Route("EditAd")]
+        [HttpPost, Route("EditAd/{adId}")]
         public async Task<IServiceResponse<bool>> EditAd(AdDTO dto, long adId)
         {//working
             return await HandleApiOperationAsync(async () =>
@@ -118,11 +118,11 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost, Route("RemoveFromCart")]
-        public async Task<IServiceResponse<bool>> RemoveFromCart(long adId, long userCartId)
+        public async Task<IServiceResponse<bool>> RemoveFromCart(long adId)
         {//woring
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.RemoveAdFromCart(adId,userCartId, serviceHelper.GetCurrentUserEmail());
+                bool result = await adService.RemoveAdFromCart(adId, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });

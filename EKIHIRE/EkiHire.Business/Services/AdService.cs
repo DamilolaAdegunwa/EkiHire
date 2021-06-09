@@ -40,7 +40,7 @@ namespace EkiHire.Business.Services
         Task<bool> EditItemKeywords(List<string> keywords, long ItemId, string username);
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
-        Task<bool> RemoveAdFromCart(long Id, long userCartId, string username);
+        Task<bool> RemoveAdFromCart(long Id, string username);
         Task<IEnumerable<AdDTO>> Search(SearchVM model, string username);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/);
@@ -245,23 +245,27 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
                 }
-
+                //check that it is the owner of the ad that is editing it
+                if(user.Id != adDto.UserId)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("you are not authorized to edit this ad!");
+                }
                 #endregion
 
                 #region make the necessary edit on a property by property basis
-                _unitOfWork.BeginTransaction();
+                
                 //name
                 if(!string.IsNullOrWhiteSpace(adDto.Name) && !string.Equals(ad.Name, adDto.Name))
                 {
                     ad.Name = adDto.Name;
                 }
-                //video path
-                if (!string.IsNullOrWhiteSpace(adDto.VideoPath) && !string.Equals(ad.VideoPath, adDto.VideoPath))
+                //address
+                if (!string.IsNullOrWhiteSpace(adDto.Address) && !string.Equals(ad.Address, adDto.Address))
                 {
-                    ad.VideoPath = adDto.VideoPath;
+                    ad.Address = adDto.Address;
                 }
                 //amount
-                if (!string.IsNullOrWhiteSpace(adDto.Amount.ToString()) && !string.Equals(ad.Amount.ToString(), adDto.Amount.ToString()))
+                if (!string.IsNullOrWhiteSpace(adDto.Amount.ToString()) && !string.Equals(ad.Amount.ToString(), adDto.Amount.ToString()) && adDto.Amount >= 0)
                 {
                     ad.Amount = adDto.Amount;
                 }
@@ -270,34 +274,78 @@ namespace EkiHire.Business.Services
                 {
                     ad.AdClass = adDto.AdClass;
                 }
-                //skipped ad image, subcategory
-                //key words
-                if (!string.IsNullOrWhiteSpace(adDto.Keywords) &&  !string.Equals(ad.Keywords, adDto.Keywords))
-                {
-                    ad.Keywords = adDto.Keywords;
-                }
-                //location
-                if(!string.IsNullOrWhiteSpace(adDto.Location) && !string.Equals(ad.Location, adDto.Location))
-                {
-                    ad.Location = adDto.Location;
-                }
-                //is active
-                if(adDto.IsActive != null && !string.Equals(ad.IsActive.ToString(), adDto.IsActive.ToString()))
-                {
-                    ad.IsActive = adDto.IsActive;
-                }
+                //phone-number
                 if (!string.IsNullOrWhiteSpace(adDto.PhoneNumber) && !string.Equals(ad.PhoneNumber, adDto.PhoneNumber))
                 {
                     ad.PhoneNumber = adDto.PhoneNumber;
                 }
-                if (!string.IsNullOrWhiteSpace(adDto.Address) && !string.Equals(ad.Address, adDto.Address))
+                //location
+                if (!string.IsNullOrWhiteSpace(adDto.Location) && !string.Equals(ad.Location, adDto.Location))
                 {
-                    ad.Address = adDto.Address;
+                    ad.Location = adDto.Location;
                 }
-                
-                
-                //ad image, subcategory, ad items, work experience
-                await adRepository .UpdateAsync(ad);
+                // remove AdReference
+                //Description
+                if (!string.IsNullOrWhiteSpace(adDto.Description) && !string.Equals(ad.Description, adDto.Description))
+                {
+                    ad.Description = adDto.Description;
+                }
+                //video path
+                if (!string.IsNullOrWhiteSpace(adDto.VideoPath) && !string.Equals(ad.VideoPath, adDto.VideoPath))
+                {
+                    ad.VideoPath = adDto.VideoPath;
+                }
+                //key words
+                if (!string.IsNullOrWhiteSpace(adDto.Keywords) && !string.Equals(ad.Keywords, adDto.Keywords))
+                {
+                    ad.Keywords = adDto.Keywords;
+                }
+                //is active
+                if (adDto.IsActive != null && !string.Equals(ad.IsActive.ToString(), adDto.IsActive.ToString()))
+                {
+                    ad.IsActive = adDto.IsActive;
+                }
+                //ad status
+                if (adDto.AdsStatus != null && !string.Equals(ad.AdsStatus.ToString(), adDto.AdsStatus.ToString()))
+                {
+                    ad.AdsStatus = adDto.AdsStatus;
+                }
+                //remove sub, cat
+                //images
+                if(adDto.AdImages != null && adDto.AdImages.Count() > 0)
+                {
+                    var imgs = _AdImageRepo.GetAll().Where(i => i.AdId == ad.Id).ToList() ?? new List<AdImage>();
+                    foreach (var img in adDto.AdImages)
+                    {
+                        if(imgs.Any(i => i.Id == img.Id))
+                        {
+                            //update an imaage
+                            var imgData = imgs.Where(i => i.Id == img.Id).FirstOrDefault();
+                            imgData.ImagePath = string.IsNullOrWhiteSpace(img.ImagePath)? imgData.ImagePath: img.ImagePath;
+                            imgData.ImageString = img.ImageString;
+                            _AdImageRepo.Update(imgData);
+                        }
+                        else
+                        {
+                            //insert
+                            img.AdId = ad.Id;
+                            _AdImageRepo.Insert(img);
+                        }
+                    }
+                }
+                //property value
+                if(adDto.AdPropertyValue != null && adDto.AdPropertyValue.Count() > 0)
+                {
+                    //check for all the property-value available to the ad
+                    //var pvs = _adPropertyValueRepo.GetAll().Where(p => p.AdId == ad.Id).ToList();
+                    foreach(var p in adDto.AdPropertyValue)
+                    {
+                        p.AdId = ad.Id;
+                        await AddOrUpdateAdPropertyValue(p, username);
+                    }
+                }
+                _unitOfWork.BeginTransaction();
+                await adRepository.UpdateAsync(ad);
                 _unitOfWork.Commit();
                 #endregion
                 return true;
@@ -504,7 +552,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> RemoveAdFromCart(long adId,long userCartId, string username)
+        public async Task<bool> RemoveAdFromCart(long adId, string username)
         {
             try
             {
@@ -525,7 +573,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region add ad to cart
-                var data = userCartRepository.FirstOrDefault(x => x.Id == userCartId && x.UserId == user.Id);
+                var data = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id);
                 if(data == null)
                 {
                     return true;
@@ -1120,7 +1168,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                if (model == null)
+                if (model == null || string.IsNullOrWhiteSpace(model.Name))
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
@@ -1129,10 +1177,11 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
-                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.SubcategoryId && a.Name == model.Name);
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.SubcategoryId && a.Name.ToLower() == model.Name.ToLower());
                 if (adprop != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
+                    //throw new Exception("This property has already been created for this subcategory!");
                 }
                 #endregion
 
@@ -1162,6 +1211,7 @@ namespace EkiHire.Business.Services
                 _unitOfWork.Rollback();
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return false;
+                //throw ex;
             }
         }
 
@@ -1199,11 +1249,12 @@ namespace EkiHire.Business.Services
 
                 #region Add Ad Property Value
                 _unitOfWork.BeginTransaction();
+          
                 if (adPropertyValue == null)
                 {
                     AdPropertyValue data = new AdPropertyValue
                     {
-                        //Ad = ad,
+                        Ad = ad,
                         AdId = model.AdId,
                         //AdProperty = adProperty,
                         AdPropertyId = model.AdPropertyId,
@@ -1252,7 +1303,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                if (model == null || string.IsNullOrWhiteSpace(model.Name) || string.IsNullOrWhiteSpace(model.PropertyType))
+                if (model == null || string.IsNullOrWhiteSpace(model.Name) || model.PropertyType == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }

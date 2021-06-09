@@ -7,7 +7,7 @@ using EkiHire.Core.Domain.Entities.Auditing;
 using EkiHire.Core.Domain.Entities.Common;
 using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
-
+using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Core.Domain.Entities
 {
     public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
@@ -42,7 +42,7 @@ namespace EkiHire.Core.Domain.Entities
         public string Photo { get; set; }
         public string OTP { get; set; }
         [NotMapped]
-        public ICollection<UserRole> UserRoles { get; set; }
+        public IEnumerable<UserRole> UserRoles { get; set; }
         //public ICollection<Post> Posts { get; set; }
         //added
         public bool IsActive { get; set; }
@@ -50,7 +50,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
         [NotMapped]
-        public ICollection<UserCart> CartItems { get; set; } 
+        public IEnumerable<UserCart> CartItems { get; set; } 
         
         #endregion
         public bool IsTransient()
@@ -127,7 +127,7 @@ namespace EkiHire.Core.Domain.Entities
                     UserType = user.UserType,
                     Wallet = user.Wallet,
                     //WalletId = user.WalletId,
-                    CartItems = user.CartItems,
+                    CartItems = user.CartItems.ToEntity(),
                     SubscriptionPlan = user.SubscriptionPlan,
                     
                 };

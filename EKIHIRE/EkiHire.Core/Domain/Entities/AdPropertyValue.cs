@@ -15,6 +15,7 @@ namespace EkiHire.Core.Domain.Entities
         public virtual string Value { get; set; }
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
+        //[NotMapped]
         public virtual Ad Ad { get; set; }
         [ForeignKey("AdPropertyId")]
         public virtual long? AdPropertyId { get; set; }

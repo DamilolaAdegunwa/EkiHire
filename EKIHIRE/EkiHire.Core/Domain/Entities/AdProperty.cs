@@ -3,6 +3,7 @@ using System;
 using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using EkiHire.Core.Domain.Entities.Enums;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -11,8 +12,7 @@ namespace EkiHire.Core.Domain.Entities
         #region AdProperty
         [DataType(DataType.Text)]
         public virtual string Name { get; set; }
-        [DataType(DataType.Text)]
-        public virtual string PropertyType { get; set; }
+        public virtual PropertyType? PropertyType { get; set; }
         [DataType(DataType.Text)]
         public virtual string Range { get; set; }
         [ForeignKey("SubcategoryId")]

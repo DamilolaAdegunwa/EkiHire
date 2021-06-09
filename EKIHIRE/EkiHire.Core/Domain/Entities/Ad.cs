@@ -28,7 +28,6 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)] public virtual string Keywords { get; set; }
         public virtual bool? IsActive { get; set; }
         public virtual AdsStatus? AdsStatus { get; set; }
-        //public virtual bool? Promotion { get; set; }
         [ForeignKey("SubcategoryId")]
         public virtual long? SubcategoryId { get; set; }
         [NotMapped]

@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210608120947_notmapped_init4")]
+    partial class notmapped_init4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -319,8 +321,6 @@ namespace EkiHire.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdId");
 
                     b.HasIndex("AdPropertyId");
 
@@ -1120,15 +1120,9 @@ namespace EkiHire.Data.Migrations
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.AdPropertyValue", b =>
                 {
-                    b.HasOne("EkiHire.Core.Domain.Entities.Ad", "Ad")
-                        .WithMany()
-                        .HasForeignKey("AdId");
-
                     b.HasOne("EkiHire.Core.Domain.Entities.AdProperty", "AdProperty")
                         .WithMany()
                         .HasForeignKey("AdPropertyId");
-
-                    b.Navigation("Ad");
 
                     b.Navigation("AdProperty");
                 });

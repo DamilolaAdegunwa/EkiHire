@@ -8,7 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using EkiHire.Core.Domain.Entities.Auditing;
 using EkiHire.Core.Domain.Entities.Common;
 using EkiHire.Core.Domain.Entities;
-
+using EkiHire.Core.Domain.Extensions;
+using System.Linq;
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
     public class UserDTO : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime
@@ -42,19 +43,19 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public string AccountConfirmationCode { get; set; }
         public string Photo { get; set; }
         public string OTP { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; }
+        public IEnumerable<UserRole> UserRoles { get; set; }
         //public ICollection<Post> Posts { get; set; }
         //added
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
-        public ICollection<UserCart> CartItems { get; set; }
+
 
         #endregion
 
         #region user dto props
-
+        public IEnumerable<UserCartDTO> CartItems { get; set; }
         #endregion
 
         //implicit conversion
@@ -110,7 +111,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     UserType = user.UserType,
                     Wallet = user.Wallet,
                     //WalletId = user.WalletId,
-                    CartItems = user.CartItems,
+                    CartItems = user.CartItems.ToDTO(),
                     SubscriptionPlan = user.SubscriptionPlan,
                 };
                 return userDto;
