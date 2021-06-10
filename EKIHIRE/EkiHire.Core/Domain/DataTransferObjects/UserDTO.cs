@@ -55,7 +55,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         #endregion
 
         #region user dto props
-        public IEnumerable<UserCartDTO> CartItems { get; set; }
+        public IEnumerable<CartItemDTO> CartItems { get; set; }
         #endregion
 
         //implicit conversion

@@ -61,7 +61,7 @@ namespace EkiHire.Business.Services
         //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model);
-        Task<IEnumerable<UserCartDTO>> GetUserCart(long userId);
+        Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
     }
     public class AdService: IAdService
     {
@@ -71,7 +71,7 @@ namespace EkiHire.Business.Services
         private readonly IUserService _userSvc;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Item> itemRepository;
-        private readonly IRepository<UserCart> userCartRepository;
+        private readonly IRepository<CartItem> CartItemRepository;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         private readonly IRepository<Follow> followRepository;
         private readonly IRepository<Subcategory> _subcategoryRepo;
@@ -82,7 +82,7 @@ namespace EkiHire.Business.Services
         private readonly IRepository<AdImage> _AdImageRepo;
         private readonly AppConfig appConfig;
         private readonly IRepository<Search> SearchRepository;
-        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<UserCart> userCartRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
+        public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository)
         {
             this.adRepository = adRepository;
@@ -90,7 +90,7 @@ namespace EkiHire.Business.Services
             this._userSvc = _userSvc;
             this._unitOfWork = unitOfWork;
             this.itemRepository = itemRepository;
-            this.userCartRepository = userCartRepository;
+            this.CartItemRepository = CartItemRepository;
             this.adFeedbackRepository = adFeedbackRepository;
             this.followRepository = followRepository;
             this._subcategoryRepo = _subcategoryRepo;
@@ -511,19 +511,21 @@ namespace EkiHire.Business.Services
                 #endregion
                 #region add ad to cart
                 //check if already exist
-                var userCart = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
-                if(userCart != null)
+                var cartItem = CartItemRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
+                if(cartItem != null)
                 {
-                    if(userCart.IsDeleted)
+                    if(cartItem.IsDeleted)
                     {
-                        userCart.IsDeleted = false;
-                        userCart.LastModificationTime = DateTime.Now;
-                        userCart.LastModifierUserId = user.Id;
-                        await userCartRepository.UpdateAsync(userCart);
+                        cartItem.IsDeleted = false;
+                        cartItem.LastModificationTime = DateTime.Now;
+                        cartItem.LastModifierUserId = user.Id;
+                        _unitOfWork.BeginTransaction();
+                        await CartItemRepository.UpdateAsync(cartItem);
+                        _unitOfWork.Commit();
                     }
                     return true;
                 }
-                var data = new UserCart
+                var data = new CartItem
                 {
                     AdId = ad.Id,
                     UserId = user.Id,
@@ -539,7 +541,7 @@ namespace EkiHire.Business.Services
                     Id = 0
                 };
                 _unitOfWork.BeginTransaction();
-                await userCartRepository.InsertAsync(data);
+                await CartItemRepository.InsertAsync(data);
                 _unitOfWork.Commit();
                 #endregion
                 return true;
@@ -573,14 +575,14 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region add ad to cart
-                var data = userCartRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
+                var data = CartItemRepository.FirstOrDefault(x => x.AdId == adId && x.UserId == user.Id && x.IsDeleted == false);
                 if(data == null)
                 {
                     return true;
                 }
 
                 _unitOfWork.BeginTransaction();
-                await userCartRepository.DeleteAsync(data);
+                await CartItemRepository.DeleteAsync(data);
                 _unitOfWork.Commit();
                 #endregion
                 return true;
@@ -721,7 +723,7 @@ namespace EkiHire.Business.Services
                     double ratingCount = rating.Count();
                     r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
                     r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
-                    r[i].InUserCart = userCartRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+                    r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
                 }
                 result = r.ToList();
                 #endregion
@@ -1504,17 +1506,23 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<IEnumerable<UserCartDTO>> GetUserCart(long userId)
+        public async Task<IEnumerable<CartItemDTO>> GetCartItems(string username)
         {
             try
             {
-                var user = _userRepo.FirstOrDefault(u => u.Id == userId && u.IsDeleted == false);
-                if(user == null)
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
                 {
-                    throw new Exception("user does not exist");
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var userCart = userCartRepository.GetAll().Where(uc => uc.UserId == userId && uc.IsDeleted == false).ToDTO();
-                return userCart;
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+                var cartItems = CartItemRepository.GetAll().Where(uc => uc.UserId == user.Id && uc.IsDeleted == false).ToDTO();
+                return cartItems;
             }
             catch (Exception ex)
             {

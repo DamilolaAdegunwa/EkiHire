@@ -394,12 +394,12 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("GetUserCart/{userId}")]
-        public async Task<ServiceResponse<IEnumerable<UserCartDTO>>> GetUserCart(long userId)
+        [Route("GetUserCart")]
+        public async Task<ServiceResponse<IEnumerable<CartItemDTO>>> GetUserCart()
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<UserCartDTO>>();
-                var data = await adService.GetUserCart(userId);
+                var response = new ServiceResponse<IEnumerable<CartItemDTO>>();
+                var data = await adService.GetCartItems(serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

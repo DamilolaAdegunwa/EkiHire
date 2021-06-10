@@ -319,28 +319,28 @@ namespace EkiHire.Core.Domain.Extensions
         #endregion
 
         #region user cart
-        public static IEnumerable<UserCartDTO> ToDTO(this IEnumerable<UserCart> input)
+        public static IEnumerable<CartItemDTO> ToDTO(this IEnumerable<CartItem> input)
         {
             if (input != null)
             {
-                List<UserCartDTO> output = new List<UserCartDTO>();
+                List<CartItemDTO> output = new List<CartItemDTO>();
                 foreach (var row in input)
                 {
-                    UserCartDTO data = row;
+                    CartItemDTO data = row;
                     output.Add(data);
                 }
                 return output;
             }
             return null;
         }
-        public static IEnumerable<UserCart> ToEntity(this IEnumerable<UserCartDTO> input)
+        public static IEnumerable<CartItem> ToEntity(this IEnumerable<CartItemDTO> input)
         {
             if (input != null)
             {
-                List<UserCart> output = new List<UserCart>();
+                List<CartItem> output = new List<CartItem>();
                 foreach (var row in input)
                 {
-                    UserCart data = row;
+                    CartItem data = row;
                     output.Add(data);
                 }
                 return output;

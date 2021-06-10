@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class UserCart: FullAuditedEntity
+    public class CartItem: FullAuditedEntity
     {
         #region user cart
         [ForeignKey("AdId")]
@@ -20,11 +20,11 @@ namespace EkiHire.Core.Domain.Entities
         public virtual long? UserId { get; set; }
         public virtual User User { get; set; }
         #endregion
-        public static implicit operator UserCart(UserCartDTO model)
+        public static implicit operator CartItem(CartItemDTO model)
         {
             if(model != null)
             {
-                var output = new UserCart
+                var output = new CartItem
                 {
                     AdId = model.AdId,
                     Ad = model.Ad,

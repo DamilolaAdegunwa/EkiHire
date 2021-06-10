@@ -6,7 +6,7 @@ using System.Text;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
-    public class UserCartDTO : EntityDTO<long>
+    public class CartItemDTO : EntityDTO<long>
     {
         #region user cart
         //[ForeignKey("AdId")]
@@ -16,11 +16,11 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public virtual long? UserId { get; set; }
         public virtual User User { get; set; }
         #endregion
-        public static implicit operator UserCartDTO(UserCart model)
+        public static implicit operator CartItemDTO(CartItem model)
         {
             if (model != null)
             {
-                var output = new UserCartDTO
+                var output = new CartItemDTO
                 {
                     AdId = model.AdId,
                     Ad = model.Ad,

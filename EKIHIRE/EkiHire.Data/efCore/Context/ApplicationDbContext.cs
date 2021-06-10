@@ -31,7 +31,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<Keyword> Keyword { get; set; }
         public DbSet<Subcategory> Subcategory { get; set; }
         public DbSet<Transaction> Transaction { get; set; }
-        public DbSet<UserCart> UserCart { get; set; }
+        public DbSet<CartItem> CartItem { get; set; }
         public DbSet<Wallet> Wallet { get; set; }
         public DbSet<Search> Search { get; set; }
 

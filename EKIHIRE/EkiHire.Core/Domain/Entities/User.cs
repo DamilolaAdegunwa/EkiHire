@@ -50,7 +50,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool AccountIsDeleted { get; set; }
         public SubscriptionPlan SubscriptionPlan { get; set; }
         [NotMapped]
-        public IEnumerable<UserCart> CartItems { get; set; } 
+        public IEnumerable<CartItem> CartItems { get; set; } 
         
         #endregion
         public bool IsTransient()
