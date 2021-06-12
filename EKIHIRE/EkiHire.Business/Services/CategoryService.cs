@@ -27,6 +27,13 @@ using Microsoft.Extensions.Logging;
 using log4net;
 using System.Reflection;
 using Newtonsoft.Json;
+using System.Net.Mail;
+using System.Net;
+//using MailKit.Net.Smtp;
+using MimeKit;
+using System.IO;
+using System.Net;
+using System.Net.Mail;
 namespace EkiHire.Business.Services
 {
     public interface ICategoryService
@@ -39,7 +46,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddCategory(CategoryDTO model, string username);
         Task<bool> AddSubcategory(SubcategoryDTO model, string username);
         Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
-        
+        Task testemail();
     }
     public class CategoryService : ICategoryService
     {
@@ -560,6 +567,93 @@ namespace EkiHire.Business.Services
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
                 return false;
             }
+        }
+
+        public async Task testemail()
+        {
+            //var replacement = new StringDictionary
+            //{
+            //    ["FirstName"] = "user.UserName",
+            //    ["Otp"] = "user.OTP"
+            //};
+
+            //var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Password Reset OTP", "damee1993@gmail.com")
+            //{
+            //    BodyIsFile = true,
+            //    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail)
+            //};
+
+            //await _mailSvc.SendMailAsync(mail, replacement);
+
+            //_ = "done";
+
+            //string fromaddr = "damee1993@gmail.com";
+            //string toaddr = "adegunwad@accessbankplc.com";//TO ADDRESS HERE
+            //string password = "Damilola@123";
+
+            //System.Net.Mail.MailMessage msg = new MailMessage();
+            //msg.Subject = "Username &password";
+            //msg.From = new MailAddress(fromaddr);
+            //msg.Body = "Message BODY";
+            //msg.To.Add(new MailAddress(toaddr));
+            //SmtpClient smtp = new SmtpClient();
+            //smtp.Host = "smtp.gmail.com";
+            //smtp.Port = 587;
+            //smtp.UseDefaultCredentials = false;
+            //smtp.EnableSsl = true;
+            //System.Net.NetworkCredential nc = new NetworkCredential(fromaddr, password);
+            //smtp.Credentials = nc;
+            //smtp.Send(msg);
+
+            //MimeKit.MimeMessage message = new MimeKit.MimeMessage();
+
+            //MimeKit.MailboxAddress from = new MimeKit.MailboxAddress("Damilola Adegunwa",
+            //"damee1993@gmailcom");
+            //message.From.Add(from);
+
+            //MimeKit.MailboxAddress to = new MimeKit.MailboxAddress("recipient",
+            //"adegunwad@accessbankplc.com");
+            //message.To.Add(to);
+
+            //message.Subject = "This is email subject";
+
+            //MimeKit.BodyBuilder bodyBuilder = new MimeKit.BodyBuilder();
+            //bodyBuilder.HtmlBody = "<h1>Hello World!</h1>";
+            //bodyBuilder.TextBody = "Hello World!";
+
+            //SmtpClient client = new SmtpClient();
+            //client.Connect("smtp_address_here", 587, true);
+            //client.Authenticate("user_name_here", "pwd_here");
+            //_ = "";
+            
+        }
+        public Task TestMail()
+        {
+            string to = "adegunwad@accessbankplc.com"; //To address    
+            string from = "damee1993@gmail.com"; //From address    
+            MailMessage message = new MailMessage(from, to);
+
+            string mailbody = "In this article you will learn how to send a email using Asp.Net & C#";
+            message.Subject = "Sending Email Using Asp.Net & C#";
+            message.Body = mailbody;
+            message.BodyEncoding = Encoding.UTF8;
+            message.IsBodyHtml = true;
+            SmtpClient client = new SmtpClient("smtp.gmail.com", 587); //Gmail smtp    
+            System.Net.NetworkCredential basicCredential1 = new
+            System.Net.NetworkCredential(from, "Damilola@123");
+            client.EnableSsl = true;
+            client.UseDefaultCredentials = false;
+            client.Credentials = basicCredential1;
+            try
+            {
+                client.Send(message);
+            }
+
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return default;
         }
     }
 }

@@ -60,7 +60,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> Trending(long count = 0);
         //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
-        Task<bool> AddAdImage(AdImageDTO model);
+        Task<bool> AddAdImage(AdImageDTO model, string username);
         Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
     }
     public class AdService: IAdService
@@ -156,7 +156,7 @@ namespace EkiHire.Business.Services
                 ad.AdsStatus = AdsStatus.INREVIEW;
                 ad.IsActive = true;
 
-                await adRepository.InsertAsync(ad);
+                var inserted = await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
                 //await _unitOfWork.SaveChangesAsync();
 
@@ -177,7 +177,7 @@ namespace EkiHire.Business.Services
                     foreach(var i in images)
                     {
                         i.Ad = savedAd; i.AdId = savedAd?.Id;
-                        await AddAdImage(i);
+                        await AddAdImage(i,username);
                     }
                 }
                 
@@ -1490,12 +1490,45 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<bool> AddAdImage(AdImageDTO model)
+        public async Task<bool> AddAdImage(AdImageDTO model, string username)
         {
             try
             {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == model.AdId && a.IsDeleted == false);
+                if (ad == null)
+                {
+                    throw new Exception("Ad not found!");
+                }
+                #endregion
                 _unitOfWork.BeginTransaction();
-                await _AdImageRepo.InsertAsync(model);
+                AdImage data = new AdImage
+                {
+                    Ad = ad,
+                    AdId = model.AdId,
+                    ImagePath = model.ImagePath,
+                    ImageString = model.ImageString,
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = user.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = user.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0,
+
+                };
+                await _AdImageRepo.InsertAsync(data);
                 _unitOfWork.Commit();
                 return true;
             }
