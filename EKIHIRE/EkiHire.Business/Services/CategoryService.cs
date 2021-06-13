@@ -47,6 +47,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddSubcategory(SubcategoryDTO model, string username);
         Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
         Task testemail();
+        Task TestMail();
     }
     public class CategoryService : ICategoryService
     {
@@ -629,8 +630,9 @@ namespace EkiHire.Business.Services
         }
         public Task TestMail()
         {
-            string to = "adegunwad@accessbankplc.com"; //To address    
-            string from = "damee1993@gmail.com"; //From address    
+            string to = "damee1993@gmail.com"; //To address    
+            //string from = "damilola_093425@yahoo.com"; //From address    
+            string from = "damilolar_moyo@outlook.com"; //From address    
             MailMessage message = new MailMessage(from, to);
 
             string mailbody = "In this article you will learn how to send a email using Asp.Net & C#";
@@ -638,11 +640,14 @@ namespace EkiHire.Business.Services
             message.Body = mailbody;
             message.BodyEncoding = Encoding.UTF8;
             message.IsBodyHtml = true;
-            SmtpClient client = new SmtpClient("smtp.gmail.com", 587); //Gmail smtp    
+            SmtpClient client = new SmtpClient("smtp-mail.outlook.com", 25); //Gmail smtp    
             System.Net.NetworkCredential basicCredential1 = new
-            System.Net.NetworkCredential(from, "Damilola@123");
+            System.Net.NetworkCredential(from, "Damilola#123");
             client.EnableSsl = true;
             client.UseDefaultCredentials = false;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.DeliveryFormat = SmtpDeliveryFormat.SevenBit;
+            
             client.Credentials = basicCredential1;
             try
             {

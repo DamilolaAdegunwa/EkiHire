@@ -82,8 +82,10 @@ namespace EkiHire.Business.Services
         private readonly IRepository<AdImage> _AdImageRepo;
         private readonly AppConfig appConfig;
         private readonly IRepository<Search> SearchRepository;
+        private readonly IRepository<Category> CategoryRepository;
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
-            IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository)
+            IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository,
+            IRepository<Category> CategoryRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -101,6 +103,7 @@ namespace EkiHire.Business.Services
             this._AdImageRepo = _AdImageRepo;
             appConfig = _appConfig.Value;
             this.SearchRepository = SearchRepository;
+            this.CategoryRepository = CategoryRepository;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -628,7 +631,7 @@ namespace EkiHire.Business.Services
                 //).ToList();
                 ////var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
                 
-                var ads = adRepository.GetAllIncluding(x => x.Subcategory).Where(x => x.IsDeleted == false);
+                var ads = adRepository.GetAll().Where(x => x.IsDeleted == false);
                 if (model.AdId != null && model.AdId != 0)
                 {
                     ads = ads.Where(a => a.Id == model.AdId);
@@ -643,7 +646,10 @@ namespace EkiHire.Business.Services
                 }
                 if (model.CategoryId != null && model.CategoryId != 0)
                 {
-                    ads = ads.Where(a => a.Subcategory.CategoryId == model.CategoryId);
+                    ads = from a in ads
+                          join s in _subcategoryRepo.GetAll() on a.SubcategoryId equals s.Id
+                          join c  in CategoryRepository.GetAll() on s.CategoryId equals c.Id
+                          where c.Id == model.CategoryId select a;
                 }
                 if (model.min_amount != null)
                 {
