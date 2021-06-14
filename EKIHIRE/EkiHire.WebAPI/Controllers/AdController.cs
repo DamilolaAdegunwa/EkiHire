@@ -360,9 +360,10 @@ namespace EkiHire.WebAPI.Controllers
         [Route("Trending/{count}")]
         public async Task<IServiceResponse<IEnumerable<AdDTO>>> Trending(long count = 10)
         {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdDTO>>();
-                var data = await adService.Trending(count/*, serviceHelper.GetCurrentUserEmail()*/);
+                var data = await adService.Trending(count, serviceHelper.GetCurrentUserEmail(), allowanonymous);
                 response.Object = data;
                 return response;
             });

@@ -48,6 +48,8 @@ namespace EkiHire.Business.Services
         Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
         Task testemail();
         Task TestMail();
+        Task TestMailGmail();
+        Task TestMailYahoo();
     }
     public class CategoryService : ICategoryService
     {
@@ -628,14 +630,14 @@ namespace EkiHire.Business.Services
             //_ = "";
             
         }
-        public Task TestMail()
+        public Task TestMail()//using outlook account
         {
             string to = "damee1993@gmail.com"; //To address    
             //string from = "damilola_093425@yahoo.com"; //From address    
             string from = "damilolar_moyo@outlook.com"; //From address    
             MailMessage message = new MailMessage(from, to);
 
-            string mailbody = "In this article you will learn how to send a email using Asp.Net & C#";
+            string mailbody = "(Just testing EkiHire Project) In this article you will learn how to send a email using Asp.Net & C#";
             message.Subject = "Sending Email Using Asp.Net & C#";
             message.Body = mailbody;
             message.BodyEncoding = Encoding.UTF8;
@@ -647,7 +649,68 @@ namespace EkiHire.Business.Services
             client.UseDefaultCredentials = false;
             client.DeliveryMethod = SmtpDeliveryMethod.Network;
             client.DeliveryFormat = SmtpDeliveryFormat.SevenBit;
-            
+            client.Credentials = basicCredential1;
+            try
+            {
+                client.Send(message);
+            }
+
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return default;
+        }
+
+        public Task TestMailGmail()//using gmail account
+        {
+            string to = "damilolar_moyo@outlook.com";//To address  
+            string from = "damee1993@gmail.com"; //From address    
+            MailMessage message = new MailMessage(from, to);
+
+            string mailbody = "(Just testing EkiHire Project) In this article you will learn how to send a email using Asp.Net & C#";
+            message.Subject = "Sending Email Using Asp.Net & C#";
+            message.Body = mailbody;
+            message.BodyEncoding = Encoding.UTF8;
+            message.IsBodyHtml = true;
+            SmtpClient client = new SmtpClient("smtp.gmail.com", 465); //Gmail smtp    
+            System.Net.NetworkCredential basicCredential1 = new
+            System.Net.NetworkCredential(from, "Damilola@123");
+            client.EnableSsl = true;
+            client.UseDefaultCredentials = false;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.DeliveryFormat = SmtpDeliveryFormat.SevenBit;
+            client.Credentials = basicCredential1;
+            try
+            {
+                client.Send(message);
+            }
+
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+            return default;
+        }
+
+        public Task TestMailYahoo()//using ymail account
+        {
+            string to = "damilolar_moyo@outlook.com";//To address  
+            string from = "damilola_093425@yahoo.com"; //From address    
+            MailMessage message = new MailMessage(from, to);
+
+            string mailbody = "(Just testing EkiHire Project) In this article you will learn how to send a email using Asp.Net & C#";
+            message.Subject = "Sending Email Using Asp.Net & C#";
+            message.Body = mailbody;
+            message.BodyEncoding = Encoding.UTF8;
+            message.IsBodyHtml = true;
+            SmtpClient client = new SmtpClient("smtp.mail.yahoo.com", 587); //ymail smtp 25, 465,587    
+            System.Net.NetworkCredential basicCredential1 = new
+            System.Net.NetworkCredential(from, "Damilola#123");
+            client.EnableSsl =false;
+            client.UseDefaultCredentials = false;
+            client.DeliveryMethod = SmtpDeliveryMethod.Network;
+            client.DeliveryFormat = SmtpDeliveryFormat.SevenBit;
             client.Credentials = basicCredential1;
             try
             {

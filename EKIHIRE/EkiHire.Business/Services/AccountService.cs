@@ -40,6 +40,7 @@ namespace EkiHire.Business.Services
         Task UpdateAccount(int id, AccountDTO model);
         Task SignUp(LoginViewModel model);
         Task SendAccountCredentials(User user, string password);
+        Task TestEHMail();
     }
 
     public class AccountService : IAccountService
@@ -56,6 +57,7 @@ namespace EkiHire.Business.Services
         private readonly IGuidGenerator _guidGenerator;
         private readonly AppConfig appConfig;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
+        readonly SmtpConfig _smtpsettings;
         public AccountService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             IRepository<Wallet> walletRepo,
@@ -66,7 +68,8 @@ namespace EkiHire.Business.Services
             IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
             IGuidGenerator guidGenerator,
-            IOptions<AppConfig> _appConfig)
+            IOptions<AppConfig> _appConfig
+            , IOptions<SmtpConfig> settingSvc)
         {
             _unitOfWork = unitOfWork;
             _repo = employeeRepo;
@@ -79,6 +82,7 @@ namespace EkiHire.Business.Services
             _hostingEnvironment = hostingEnvironment;
             _guidGenerator = guidGenerator;
             _roleSvc = roleSvc;
+            _smtpsettings = settingSvc.Value;
         }
         public async Task<bool> AccountExist(string username)
         {
@@ -144,7 +148,7 @@ namespace EkiHire.Business.Services
                         {
                             var replacement = new StringDictionary
                             {
-                                //["FirstName"] = user.FirstName,
+                                ["FirstName"] = user.FirstName,
                                 ["ActivationCode"] = user.AccountConfirmationCode
                             };
 
@@ -446,5 +450,30 @@ namespace EkiHire.Business.Services
             await _unitOfWork.SaveChangesAsync();
         }
         #endregion
+        public async Task TestEHMail()
+        {
+            try
+            {
+                var replacement = new StringDictionary
+                {
+                    ["FirstName"] = "user.FirstName",
+                    ["ActivationCode"] = "user.AccountConfirmationCode"
+                };
+
+                var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
+                {
+                    BodyIsFile = true,
+                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                    SenderDisplayName = _smtpsettings.SenderDisplayName
+                };
+
+                await _mailSvc.SendMailAsync(mail, replacement);
+                _ = default(string);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
     }
 }

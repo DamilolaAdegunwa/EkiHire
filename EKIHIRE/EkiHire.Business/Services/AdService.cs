@@ -27,7 +27,7 @@ using EkiHire.Core.Domain.Extensions;
 using log4net;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
-
+using PagedList;
 namespace EkiHire.Business.Services
 {
     public interface IAdService
@@ -41,7 +41,7 @@ namespace EkiHire.Business.Services
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
-        Task<IEnumerable<AdDTO>> Search(SearchVM model, string username);
+        Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
@@ -57,7 +57,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdProperty(AdPropertyDTO model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
-        Task<IEnumerable<AdDTO>> Trending(long count = 0);
+        Task<IEnumerable<AdDTO>> Trending(long count = 0, string username = null, bool allowanonymous = false);
         //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model, string username);
@@ -598,18 +598,23 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<AdDTO>> Search(SearchVM model, string username)
+        public async Task<IEnumerable<AdDTO>> SearchAlt(SearchVM model, string username, bool allowanonymous = false)
+        {
+            //use raw sql or linq statement
+            return default;
+        }
+        public async Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false)
         {
             try
             {
                 List<AdDTO> result = new List<AdDTO>();
                 #region validation
-                if (string.IsNullOrWhiteSpace(username))
+                if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
                 var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
-                if (user == null)
+                if (user == null && allowanonymous == false)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
@@ -729,7 +734,10 @@ namespace EkiHire.Business.Services
                     double ratingCount = rating.Count();
                     r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
                     r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
-                    r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+                    if(user!=null)
+                    {
+                        r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+                    }
                 }
                 result = r.ToList();
                 #endregion
@@ -1364,25 +1372,26 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        public async Task<IEnumerable<AdDTO>> Trending(long count = 0)
+        public async Task<IEnumerable<AdDTO>> Trending(long count = 0, string username = null, bool allowanonymous = false)
         {
             try
             {
                 List<AdDTO> result = new List<AdDTO>();
                 //result = adRepository.GetAll().Where(a => TrendingRank(a, out a) > 0).OrderByDescending(ax => ax.Rank).Take((int)count).ToDTO().ToList();
-
                 //_ = "inter-commission";
-
                 //result = adRepository.GetAll().Select(model => TrendingRank(model)).AsEnumerable().OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
-
                 //result = (from a in adRepository.GetAll() select TrendingRank(a)).OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 List<Ad> ar = new List<Ad>();
-                var aList = adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
-                foreach (var a in aList)
-                {
+                var aList = await Search(new SearchVM(), username, allowanonymous);//adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
+                Parallel.ForEach(aList, (a) => {
                     var data = TrendingRank(a);
                     ar.Add(data);
-                }
+                }) ;
+                //foreach (var a in aList)
+                //{
+                //    var data = TrendingRank(a);
+                //    ar.Add(data);
+                //}
                 result = ar.OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 return result;
             }
