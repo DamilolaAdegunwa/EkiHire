@@ -152,10 +152,12 @@ namespace EkiHire.Business.Services
                                 ["ActivationCode"] = user.AccountConfirmationCode
                             };
 
-                            var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                            var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
                             {
                                 BodyIsFile = true,
-                                BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                                BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                                SenderDisplayName = _smtpsettings.SenderDisplayName,
+                                
                             };
 
                             await _mailSvc.SendMailAsync(mail, replacement);

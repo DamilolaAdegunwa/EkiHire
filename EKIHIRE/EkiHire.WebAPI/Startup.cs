@@ -326,8 +326,7 @@ namespace EkiHire.WebAPI
             //categoryService.TestMail();
             //categoryService.TestMailGmail();
             //categoryService.TestMailYahoo();
-            accountService.TestEHMail()
-                ;
+            //accountService.TestEHMail();
             loggerFactory.AddLog4Net();
             #region seeding the db
             //categoryService.SeedCategories();
