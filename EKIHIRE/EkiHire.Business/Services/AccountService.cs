@@ -139,16 +139,11 @@ namespace EkiHire.Business.Services
 
                     if (creationStatus.Succeeded)
                     {
-                        //_repo.Insert(new Account
-                        //{
-                        //    UserId = user.Id,
-                        //});
-
-                        if (user != null)
+                        try
                         {
                             var replacement = new StringDictionary
                             {
-                                ["FirstName"] = user.FirstName,
+                                //["FirstName"] = user.FirstName,
                                 ["ActivationCode"] = user.AccountConfirmationCode
                             };
 
@@ -157,13 +152,40 @@ namespace EkiHire.Business.Services
                                 BodyIsFile = true,
                                 BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
                                 SenderDisplayName = _smtpsettings.SenderDisplayName,
-                                
+
                             };
 
                             await _mailSvc.SendMailAsync(mail, replacement);
-                            //SendAccountCredentials(user, model.Password);
-                            //the email needs to be worked on and be further simplified in it's process flow
                         }
+                        catch (Exception ex)
+                        {
+                            //throw ex;
+                        }
+                        //SendAccountCredentials(user, model.Password);
+                        //the email needs to be worked on and be further simplified in it's process flow
+                        //#region send emnail
+                        //try
+                        //{
+                        //    //first file
+                        //    if (File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
+                        //    {
+                        //        var fileString = File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
+                        //        if (!string.IsNullOrWhiteSpace(fileString))
+                        //        {
+                        //            //fileString = fileString.Replace("{{FirstName}}", user.FirstName);
+                        //            fileString = fileString.Replace("{{ActivationCode}}", user.AccountConfirmationCode);
+
+                        //            _mailSvc.SendMailAsync(user.UserName, "EkiHire.com: Account Verification Code", fileString);
+                        //        }
+                        //    }
+                        //}
+                        //catch (Exception ex)
+                        //{
+
+                        //    //throw;
+                        //}
+                        
+                        //#endregion
                     }
                     else
                     {

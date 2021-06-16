@@ -75,6 +75,7 @@ namespace EkiHire.Business.Services
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         private readonly IUnitOfWork _unitOfWork;
+        readonly SmtpConfig _smtpsettings;
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
@@ -82,7 +83,8 @@ namespace EkiHire.Business.Services
             IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
             IOptions<AppConfig> _appConfig,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork
+            , IOptions<SmtpConfig> settingSvc)
         {
             _userManager = userManager;
             _svcHelper = svcHelper;
@@ -91,6 +93,7 @@ namespace EkiHire.Business.Services
             _hostingEnvironment = hostingEnvironment;
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
+            _smtpsettings = settingSvc.Value;
         }
 
         protected virtual Task<IdentityResult> CreateAsync(User user)
@@ -357,7 +360,7 @@ namespace EkiHire.Business.Services
                 ["Otp"] = user.OTP
             };
 
-            var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Password Reset OTP", user.Email)
+            var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Password Reset OTP", user.Email)
             {
                 BodyIsFile = true,
                 BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail)

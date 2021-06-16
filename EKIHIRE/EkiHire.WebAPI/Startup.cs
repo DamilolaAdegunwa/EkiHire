@@ -39,6 +39,8 @@ using EkiHire.Data.Repository;
 using log4net;
 using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
 using Newtonsoft.Json.Linq;
+using System.IO;
+using System.Collections.Specialized;
 
 namespace EkiHire.WebAPI
 {
@@ -320,8 +322,40 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService, IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
+            //var replacement = new StringDictionary
+            //{
+            //    ["FirstName"] = "user.FirstName",
+            //    ["ActivationCode"] = "user.AccountConfirmationCode"
+            //};
+
+            //var mail = new Mail("damilolar_moyo@outlook.com", "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
+            //{
+            //    BodyIsFile = true,
+            //    BodyPath = Path.Combine(env.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+            //    SenderDisplayName = "I'm Testing Please!",
+
+            //};
+
+            //_mailSvc.SendMailAsync(mail, replacement);
+
+
+
+            //#region send emnail
+            ////first file
+            //if (File.Exists(Path.Combine(env.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
+            //{
+            //    var fileString = File.ReadAllText(Path.Combine(env.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
+            //    if (!string.IsNullOrWhiteSpace(fileString))
+            //    {
+            //        fileString = fileString.Replace("{{FirstName}}", "test name");
+            //        fileString = fileString.Replace("{{ActivationCode}}", "QWERTY_12345");
+
+            //        _mailSvc.SendMailAsync("adegunwad@accessbankplc.com", "EkiHire.com: Account Verification Code", fileString);
+            //    }
+            //}
+            //#endregion
             //var s =  adService.Search(new Core.Model.SearchVM(), "", true).GetAwaiter().GetResult();
             //categoryService.TestMail();
             //categoryService.TestMailGmail();

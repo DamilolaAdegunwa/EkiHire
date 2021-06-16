@@ -6,10 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
+using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-
+using log4net;
 namespace EkiHire.Core.Messaging.Email
 {
     public interface IMailService
@@ -21,18 +22,20 @@ namespace EkiHire.Core.Messaging.Email
         void SendMail(MailBase mail, StringDictionary Replacements);
 
         Task SendMailb(MailBase mail, string subject, string body);
+        Task SendMailAsync(string to, string subject, string body);
     }
 
     public class SmtpEmailService : IMailService
     { 
         readonly SmtpConfig _smtpsettings;
-        private readonly ILogger _logger;
+        //private readonly ILogger _logger;
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         private readonly StringComparison _stringComparison = StringComparison.OrdinalIgnoreCase;
 
 
-        public SmtpEmailService(ILogger<SmtpEmailService> logger, IOptions<SmtpConfig> settingSvc)
+        public SmtpEmailService(/*ILogger<SmtpEmailService> logger, */IOptions<SmtpConfig> settingSvc)
         {
-            _logger = logger;
+            //_logger = logger;
             _smtpsettings = settingSvc.Value;
         }
 
@@ -129,7 +132,7 @@ namespace EkiHire.Core.Messaging.Email
                 }
             }
             catch (Exception e) {
-                _logger.LogError(e.Message, e);
+                log.Error(e.Message, e);
                 throw;
             }
         }
@@ -144,12 +147,41 @@ namespace EkiHire.Core.Messaging.Email
                 }
             }
             catch (Exception e) {
-                _logger.LogError(e.Message, e);
+                log.Error(e.Message, e);
                 //throw new Exception(e.Message);
                 //throw;
             }
         }
+        public async Task SendMailAsync(string to, string subject, string body)
+        {  
+            
+            try
+            {
+                string from = _smtpsettings.UserName;
+                MailMessage message = new MailMessage(from, to);
+                message.Subject = subject;
+                message.Body = body;
+                message.BodyEncoding = Encoding.UTF8;
+                message.IsBodyHtml = true;
+                
+                SmtpClient client = new SmtpClient(_smtpsettings.Host, _smtpsettings.Port);
+                System.Net.NetworkCredential basicCredential = new System.Net.NetworkCredential(from, _smtpsettings.Password);
+                client.EnableSsl = true;
+                client.UseDefaultCredentials = false;
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.DeliveryFormat = SmtpDeliveryFormat.SevenBit;
+                client.Credentials = basicCredential;
+                
+                client.Send(message);
+            }
 
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                throw ex;
+            }
+            
+        }
         void ValidateMail(MailBase mail)
         {
             if (mail.To == null || !mail.To.Any())
@@ -230,6 +262,9 @@ namespace EkiHire.Core.Messaging.Email
 
         private string Replace(string original, string pattern, string replacement)
         {
+            original ??= "";
+            pattern ??= "";
+            replacement ??= "";
             if (_stringComparison == StringComparison.Ordinal) {
                 return original.Replace(pattern, replacement);
             }
