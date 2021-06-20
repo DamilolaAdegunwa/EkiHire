@@ -164,7 +164,8 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToDTO().ToList();
+                //var result = _subcategoryRepo.GetAll().Where(x => x.Category.Id == CategoryId  || CategoryId == null).ToDTO().ToList();
+                var result = (await GetCategory(CategoryId??0, true)).Subcategories;
                 return result;
             }
             catch (Exception ex)
@@ -572,6 +573,7 @@ namespace EkiHire.Business.Services
             }
         }
 
+        #region test methods
         public async Task testemail()
         {
             //var replacement = new StringDictionary
@@ -723,5 +725,6 @@ namespace EkiHire.Business.Services
             }
             return default;
         }
+        #endregion
     }
 }

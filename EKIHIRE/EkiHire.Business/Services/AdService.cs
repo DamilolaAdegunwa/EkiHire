@@ -144,6 +144,7 @@ namespace EkiHire.Business.Services
                 _unitOfWork.BeginTransaction();
                 Ad ad = new Ad();
                 ad = model;
+                ad.AdsStatus = AdsStatus.INREVIEW;
                 //basic properties
                 ad.CreationTime = DateTime.Now;
                 ad.CreatorUserId = user.Id;

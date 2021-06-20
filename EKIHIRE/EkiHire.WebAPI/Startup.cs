@@ -228,6 +228,18 @@ namespace EkiHire.WebAPI
             services.AddCors();
             services.AddDistributedMemoryCache();
 
+            services.AddAuthentication()
+                .AddGoogle(options =>
+                {
+                    options.ClientId = "";
+                    options.ClientSecret = "";
+                });
+            services.AddAuthentication()
+                .AddFacebook(options =>
+                {
+                    options.ClientId = "";
+                    options.ClientSecret = "";
+                });
             #endregion
 
             services.AddHttpContextAccessor();
