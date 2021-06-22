@@ -43,9 +43,9 @@ namespace EkiHire.Business.Services
         Task<bool> RemoveAdFromCart(long Id, string username);
         Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/);
+        Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username/*, long[] adIds = null*/);
+        Task<IEnumerable<AdFeedbackDTO>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
         Task<bool> AddKeywords(List<string> keywords, long subid, string username);
@@ -62,6 +62,8 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model, string username);
         Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
+        Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username);
+        Task<bool> SaveReview(AdFeedbackDTO model, string username);
     }
     public class AdService: IAdService
     {
@@ -83,9 +85,15 @@ namespace EkiHire.Business.Services
         private readonly AppConfig appConfig;
         private readonly IRepository<Search> SearchRepository;
         private readonly IRepository<Category> CategoryRepository;
+        private readonly IRepository<User> UserRepository;
+        private readonly IRepository<RequestQuote> RequestQuoteRepository;
+        private readonly IRepository<JobApplication> JobApplicationRepository;
+        private readonly SmtpConfig _smtpsettings;
+        private readonly IHostingEnvironment _hostingEnvironment;
+        private readonly IMailService _mailSvc;
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository,
-            IRepository<Category> CategoryRepository)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, IMailService mailSvc)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -101,9 +109,15 @@ namespace EkiHire.Business.Services
             this._adPropertyValueRepo = _adPropertyValueRepo;
             this._userRepo = _userRepo;
             this._AdImageRepo = _AdImageRepo;
-            appConfig = _appConfig.Value;
+            this.appConfig = _appConfig.Value;
             this.SearchRepository = SearchRepository;
             this.CategoryRepository = CategoryRepository;
+            this.UserRepository = UserRepository;
+            this.RequestQuoteRepository = RequestQuoteRepository;
+            this.JobApplicationRepository = JobApplicationRepository;
+            this._smtpsettings = settingSvc.Value;
+            this._hostingEnvironment = _hostingEnvironment;
+            this._mailSvc = mailSvc;
         }
         public async Task<bool> AddAd(AdDTO model, string username)
         {
@@ -638,6 +652,7 @@ namespace EkiHire.Business.Services
                 ////var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
                 
                 var ads = adRepository.GetAll().Where(x => x.IsDeleted == false);
+                //var ads = adRepository.GetAllIncluding(a => a.User).Where(x => x.IsDeleted == false);
                 if (model.AdId != null && model.AdId != 0)
                 {
                     ads = ads.Where(a => a.Id == model.AdId);
@@ -722,13 +737,17 @@ namespace EkiHire.Business.Services
                 
                 for(var i=0; i < r.Length; i++)
                 {
+                    if(r[i].User == null)
+                    {
+                        r[i].User = UserRepository.Get(r[i].UserId??0);
+                    }
                     var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
                     var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
                     var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
                     r[i].AdImages = images;
                     r[i].AdPropertyValue = adPropValues;
                     r[i].AdFeedback = adfeedback;
-                    r[i].Likes = adfeedback.Where(l => l.Like).Count();
+                    r[i].Likes = adfeedback.Where(l => l.Like??false).Count();
 
                     var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
                     double ratingSum = rating.Sum(x => ((int)x.Rating));
@@ -769,7 +788,8 @@ namespace EkiHire.Business.Services
             {
                 _unitOfWork.Rollback();
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return null;
+                //return null;
+                throw ex;
             }
         }
         public static List<string> Split(string str, string separator)
@@ -814,7 +834,7 @@ namespace EkiHire.Business.Services
         //        return null;
         //    }
         //}
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username/*, long[] adIds = null*/)
+        public async Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -830,10 +850,10 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 var result = new List<AdFeedback>();
-                result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id && a.IsDeleted == false
+                result = await adFeedbackRepository.GetAll()?.Where(a => a.UserId == user.Id && a.IsDeleted == false
                 //&& (adIds.Contains(a.AdId) || adIds == null)
-                ).ToListAsync();
-                return result;
+                )?.ToListAsync();
+                return result?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -872,12 +892,12 @@ namespace EkiHire.Business.Services
         //        return null;
         //    }
         //}
-        private long? getUserFromAd(long? adid)
-        {
-            var resp = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false).UserId;
-            return resp;
-        }
-        public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username/*, long[] adIds = null*/)
+        //private long? getUserFromAd(long? adid)
+        //{
+        //    var resp = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false).UserId;
+        //    return resp;
+        //}
+        public async Task<IEnumerable<AdFeedbackDTO>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -892,19 +912,91 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
-                var result = (from af in adFeedbackRepository.GetAll()
-                        join ad in adRepository.GetAll() on af.AdId equals ad.Id
-                        where ad.UserId == user.Id && af.IsDeleted == false
-                        select af).ToList();
+                //var result = (from af in adFeedbackRepository.GetAll()
+                //        join ad in adRepository.GetAll() on af.AdId equals ad.Id
+                //        where ad.UserId == user.Id && af.IsDeleted == false
+                //        select af).ToList();
+                var result = adFeedbackRepository.GetAll()?.Where(r => r.AdId == AdId)?.ToList();
                 //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
                 ////&& (adIds.Contains(a.AdId) || adIds == null)
                 //).ToList();
-                return result;
+                return result?.ToDTO();
             }
             catch (Exception ex)
             {
-                log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+                log.Error($"An error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
                 return null;
+            }
+        }
+
+        public async Task<bool> SaveReview(AdFeedbackDTO model, string username)
+        {
+            try
+            {
+                #region validate input
+
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("no input");
+                }
+                //check for non-empty username 
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please login and retry");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+                #endregion
+
+                //first check if the user has a row in the db for feedback (that is not deleted)
+                AdFeedback data = model;
+
+                //basic properties
+                data.CreationTime = DateTime.Now;
+                data.CreatorUserId = user.Id;
+                data.IsDeleted = false;
+                data.LastModificationTime = DateTime.Now;
+                data.LastModifierUserId = user.Id;
+                data.DeleterUserId = null;
+                data.DeletionTime = null;
+                data.Id = 0;
+                var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == user.Id);
+                _unitOfWork.BeginTransaction();
+                if(feedback == null)
+                {
+                    adFeedbackRepository.Insert(data);
+                }
+                else
+                {
+                    if(data.Like != null)
+                    {
+                        feedback.Like = data.Like;
+                    }
+                    if (!string.IsNullOrWhiteSpace(data.Review))
+                    {
+                        feedback.Review = data.Review;
+                    }
+                    if (data.Rating != null)
+                    {
+                        feedback.Rating = data.Rating;
+                    }
+                    adFeedbackRepository.Update(feedback);
+                }
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"an error occured while trying to get {username} followers:: stack-trace - {ex.StackTrace}", ex);
+                throw ex;
             }
         }
         #endregion
@@ -1435,7 +1527,7 @@ namespace EkiHire.Business.Services
             {
                 var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
                 reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review) && a.IsDeleted == false).Count();
-                likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like && a.IsDeleted == false).Count();
+                likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && (a.Like??false) && a.IsDeleted == false).Count();
                 searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id && s.IsDeleted == false).Count();
                 daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days; daysSincePosts = daysSincePosts < 1 ? 1 : daysSincePosts;
 
@@ -1577,6 +1669,193 @@ namespace EkiHire.Business.Services
             {
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                 return null;
+            }
+        }
+        public async Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username)
+        {
+            try
+            {
+                RequestQuote request = new RequestQuote();
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
+
+                #region format and save data
+                request = model;
+
+                //request.Requester = user;
+                request.RequesterId = user.Id;
+                //basic properties
+                request.CreationTime = DateTime.Now;
+                request.CreatorUserId = user.Id;
+                request.IsDeleted = false;
+                request.LastModificationTime = DateTime.Now;
+                request.LastModifierUserId = user.Id;
+                request.DeleterUserId = null;
+                request.DeletionTime = null;
+                request.Id = 0;
+
+                _unitOfWork.BeginTransaction();
+                RequestQuoteRepository.Insert(request);
+                _unitOfWork.Commit();
+                #endregion
+                return default;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+                //throw ex;
+            }
+        }
+        public async Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false)
+        {
+            try
+            {
+                #region validate credential
+
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("no input!");
+                }
+                //check for non-empty username
+                if (string.IsNullOrWhiteSpace(username) && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please login and retry!");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist!");
+                }
+
+                //check that the username is a valid email ( the password would be validate by the Identity builder)
+                if (!Regex.IsMatch(username, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase) && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
+                }
+
+                #region save and send data
+                JobApplication data = new JobApplication();
+                data = model;
+
+                //basic properties
+                data.CreationTime = DateTime.Now;
+                data.CreatorUserId = user.Id;
+                data.IsDeleted = false;
+                data.LastModificationTime = DateTime.Now;
+                data.LastModifierUserId = user.Id;
+                data.DeleterUserId = null;
+                data.DeletionTime = null;
+                data.Id = 0;
+
+                _unitOfWork.BeginTransaction();
+                JobApplicationRepository.Insert(data);
+                _unitOfWork.Commit();
+                //check if it saved the prev-work-experience
+
+                #region  send to the job advertizer/hr
+                try
+                {
+                    var replacement = new StringDictionary
+                    {
+                        ["FullName"] = data.FullName,
+                        ["Position"] = data.JobTitle,
+                        ["ContactPhoneNumber"] = data.ContactPhoneNumber,
+                        ["ContactEmail"] = data.ContactEmail,
+                        ["Address"] = data.Address,
+                        ["Skills"] = data.Skills,
+                        ["ExpectedSalary"] = data.ExpectedSalary,
+                        ["Age"] = data.Age.ToString(),
+                        ["Certification"] = data.Certification,
+                        ["HighestLevelOfEducation"] = data.HighestLevelOfEducation,
+                        ["Gender"] = data.Gender,
+
+                    };
+
+                    var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
+                    {
+                        BodyIsFile = true,
+                        BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                        SenderDisplayName = _smtpsettings.SenderDisplayName,
+
+                    };
+
+                    await _mailSvc.SendMailAsync(mail, replacement);
+                }
+                catch (Exception ex)
+                {
+                    //throw ex;
+                }
+                //SendAccountCredentials(user, model.Password);
+                //the email needs to be worked on and be further simplified in it's process flow
+                //#region send emnail
+                //try
+                //{
+                //    //first file
+                //    if (File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
+                //    {
+                //        var fileString = File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
+                //        if (!string.IsNullOrWhiteSpace(fileString))
+                //        {
+                //            //fileString = fileString.Replace("{{FirstName}}", user.FirstName);
+                //            fileString = fileString.Replace("{{ActivationCode}}", user.AccountConfirmationCode);
+
+                //            _mailSvc.SendMailAsync(user.UserName, "EkiHire.com: Account Verification Code", fileString);
+                //        }
+                //    }
+                //}
+                //catch (Exception ex)
+                //{
+
+                //    //throw;
+                //}
+
+                //#endregion
+                #endregion
+                #endregion
+                #endregion
+                throw new Exception();
+            }
+            catch (Exception ex)
+            {
+
+                throw ex;
+            }
+        }
+        public async Task<bool> TopAvailable()
+        {
+            try
+            {
+                throw new Exception();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+        }
+        public async Task<bool> SimilarAd()
+        {
+            try
+            {
+                throw new Exception();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
             }
         }
 

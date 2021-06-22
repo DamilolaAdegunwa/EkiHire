@@ -33,4 +33,14 @@ namespace EkiHire.Core.Domain.Entities.Enums
         number = 4,
         description = 5
     }
+    public enum JobType
+    {
+        FullTime = 0,
+        PartTime = 1,
+        Contract = 2
+    }
+    public enum EmploymentStatus
+    {
+        Unemployed = 0, Employed = 1, Self_Employed = 2
+    }
 }

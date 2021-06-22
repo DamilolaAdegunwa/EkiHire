@@ -177,23 +177,24 @@ namespace EkiHire.WebAPI.Controllers
         }
         //review
         [HttpPost]
-        [Route("AdFeedbackByUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackByUser(/*long[] adIds = null*/)
+        [Route("ReviewsGivenByUser")]
+        public async Task<IServiceResponse<IEnumerable<AdFeedbackDTO>>> ReviewsGivenByUser(string username = null/*long[] adIds = null*/)
         {//working - no data
+            var urn = username ?? serviceHelper.GetCurrentUserEmail();
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
-                var data = await adService.AdFeedbackByUser(serviceHelper.GetCurrentUserEmail()/*, adIds*/);
+                var response = new ServiceResponse<IEnumerable<AdFeedbackDTO>>();
+                var data = await adService.ReviewsGivenByUser(urn/*, adIds*/);
                 response.Object = data;
                 return response;
             });
         }
         [HttpPost]
-        [Route("AdFeedbackForUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> AdFeedbackForUser(/*long[] adIds = null*/)
+        [Route("ReviewsForAd/{adId}")]
+        public async Task<IServiceResponse<IEnumerable<AdFeedbackDTO>>> ReviewsForAd(long adId/*long[] adIds = null*/)
         {//working - no data
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
-                var data = await adService.AdFeedbackForUser(serviceHelper.GetCurrentUserEmail()/*, adIds*/);
+                var response = new ServiceResponse<IEnumerable<AdFeedbackDTO>>();
+                var data = await adService.ReviewsForAd(adId, serviceHelper.GetCurrentUserEmail()/*, adIds*/);
                 response.Object = data;
                 return response;
             });
@@ -405,7 +406,29 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+        [HttpPost]
+        [Route("SaveRequestQuote")]
+        public async Task<ServiceResponse<bool>> SaveRequestQuote(RequestQuoteDTO model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.SaveRequestQuote(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
 
+        [HttpPost]
+        [Route("SaveReview")]
+        public async Task<ServiceResponse<bool>> SaveReview(AdFeedbackDTO model/*, string username*/)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.SaveReview(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
         //[HttpPost]
         //[Route("UpdateAdProperty")]
         //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model)

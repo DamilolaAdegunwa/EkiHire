@@ -17,10 +17,10 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         //[ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
         public virtual AdDTO Ad { get; set; }
-        public virtual bool Like { get; set; }
+        public virtual bool? Like { get; set; }
         [DataType(DataType.Text)]
         public virtual string Review { get; set; }
-        public virtual Rating Rating { get; set; }
+        public virtual Rating? Rating { get; set; }
         #endregion
 
         public static implicit operator AdFeedbackDTO(AdFeedback model)

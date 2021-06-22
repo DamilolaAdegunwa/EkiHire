@@ -121,6 +121,8 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<AdProperty>, EfCoreRepository<DbContext, AdProperty>>();
             services.AddScoped<IRepository<AdPropertyValue>, EfCoreRepository<DbContext, AdPropertyValue>>();
             services.AddScoped<IRepository<Search>, EfCoreRepository<DbContext, Search>>();
+            services.AddScoped<IRepository<RequestQuote>, EfCoreRepository<DbContext, RequestQuote>>();
+            services.AddScoped<IRepository<JobApplication>, EfCoreRepository<DbContext, JobApplication>>();
 
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
@@ -228,18 +230,18 @@ namespace EkiHire.WebAPI
             services.AddCors();
             services.AddDistributedMemoryCache();
 
-            services.AddAuthentication()
-                .AddGoogle(options =>
-                {
-                    options.ClientId = "";
-                    options.ClientSecret = "";
-                });
-            services.AddAuthentication()
-                .AddFacebook(options =>
-                {
-                    options.ClientId = "";
-                    options.ClientSecret = "";
-                });
+            //services.AddAuthentication()
+            //    .AddGoogle(options =>
+            //    {
+            //        options.ClientId = "";
+            //        options.ClientSecret = "";
+            //    });
+            //services.AddAuthentication()
+            //    .AddFacebook(options =>
+            //    {
+            //        options.ClientId = "";
+            //        options.ClientSecret = "";
+            //    });
             #endregion
 
             services.AddHttpContextAccessor();

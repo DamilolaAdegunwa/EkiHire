@@ -18,10 +18,10 @@ namespace EkiHire.Core.Domain.Entities
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
         public virtual Ad Ad { get; set; }
-        public virtual bool Like { get; set; }
+        public virtual bool? Like { get; set; }
         [DataType(DataType.Text)]
         public virtual string Review { get; set; }
-        public virtual Rating Rating { get; set; }
+        public virtual Rating? Rating { get; set; }
         #endregion
 
         public static implicit operator AdFeedback(AdFeedbackDTO model)

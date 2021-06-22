@@ -348,5 +348,21 @@ namespace EkiHire.Core.Domain.Extensions
             return null;
         }
         #endregion
+
+        #region RequestQuote
+
+        #endregion
+
+        #region JobApplication
+
+        #endregion
+
+        #region Skill
+
+        #endregion
+
+        #region PreviousWorkExperience
+
+        #endregion
     }
 }
