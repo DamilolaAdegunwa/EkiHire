@@ -429,6 +429,54 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpPost]
+        [Route("ApplyForJob")]
+        public async Task<ServiceResponse<bool>> ApplyForJob(JobApplicationDTO model, bool allowAnonymous = false)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.ApplyForJob(model, serviceHelper.GetCurrentUserEmail(), allowAnonymous);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("TopAvailable")]
+        public async Task<ServiceResponse<IEnumerable<AdDTO>>> TopAvailable()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdDTO>>();
+                var data = await adService.TopAvailable(/*model, serviceHelper.GetCurrentUserEmail()*/);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("SimilarAd/{subcategoryId}")]
+        public async Task<ServiceResponse<IEnumerable<AdDTO>>> SimilarAd(long subcategoryId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<AdDTO>>();
+                var data = await adService.SimilarAd(subcategoryId/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        //[HttpPost]
+        //[Route("SendNotification")]
+        //Task<string> SendNotification(string title, string body)
+        //{
+        //    return await HandleApiOperationAsync(async () => {
+        //        var response = new ServiceResponse<IEnumerable<AdDTO>>();
+        //        var data = await adService.SimilarAd(subcategoryId/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+        //        response.Object = data;
+        //        return response;
+        //    });
+        //}
         //[HttpPost]
         //[Route("UpdateAdProperty")]
         //public async Task<IServiceResponse<bool>> UpdateAdProperty(AdProperty model)

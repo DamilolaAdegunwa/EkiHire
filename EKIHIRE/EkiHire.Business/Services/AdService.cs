@@ -28,6 +28,9 @@ using log4net;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using PagedList;
+using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
+
 namespace EkiHire.Business.Services
 {
     public interface IAdService
@@ -64,6 +67,10 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
         Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username);
         Task<bool> SaveReview(AdFeedbackDTO model, string username);
+        Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
+        Task<IEnumerable<AdDTO>> TopAvailable();
+        Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
+        Task<string> SendNotification(List<string> clientToken, string title, string body);
     }
     public class AdService: IAdService
     {
@@ -1745,6 +1752,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
                 }
+                #endregion
 
                 #region save and send data
                 JobApplication data = new JobApplication();
@@ -1765,7 +1773,7 @@ namespace EkiHire.Business.Services
                 _unitOfWork.Commit();
                 //check if it saved the prev-work-experience
 
-                #region  send to the job advertizer/hr
+                //send to the job advertizer/hr
                 try
                 {
                     var replacement = new StringDictionary
@@ -1796,8 +1804,12 @@ namespace EkiHire.Business.Services
                 }
                 catch (Exception ex)
                 {
-                    //throw ex;
+                    
                 }
+
+                #endregion
+
+                #region comment
                 //SendAccountCredentials(user, model.Password);
                 //the email needs to be worked on and be further simplified in it's process flow
                 //#region send emnail
@@ -1824,41 +1836,57 @@ namespace EkiHire.Business.Services
 
                 //#endregion
                 #endregion
-                #endregion
-                #endregion
-                throw new Exception();
+
+                return true;
             }
             catch (Exception ex)
             {
-
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+                //throw ex;
+            }
+        }
+        public async Task<IEnumerable<AdDTO>> TopAvailable()
+        {
+            try
+            {
+                return adRepository?.GetAll()?.Take(8)?.ToList()?.ToDTO();
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
                 throw ex;
             }
         }
-        public async Task<bool> TopAvailable()
+        public async Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId)
         {
             try
             {
-                throw new Exception();
+                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId)?.Take(8)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
-
-                throw;
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
             }
         }
-        public async Task<bool> SimilarAd()
+        public virtual async Task<string> SendNotification(List<string> clientToken, string title, string body)
         {
-            try
+            var registrationTokens = clientToken;
+            var message = new MulticastMessage()
             {
-                throw new Exception();
-            }
-            catch (Exception ex)
-            {
-
-                throw;
-            }
+                Tokens = registrationTokens,
+                Data = new Dictionary<string, string>()
+                 {
+                     {"title", title},
+                     {"body", body},
+                 },
+            };
+            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message).ConfigureAwait(true);
+            return "";
         }
-
     }
 }
 //show premium ads first
