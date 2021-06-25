@@ -14,7 +14,8 @@
           "FirebaseAdmin": "2.2.0",
           "MimeKit": "2.12.0",
           "PagedList.Mvc": "4.5.0",
-          "log4net": "2.0.12"
+          "log4net": "2.0.12",
+          "morelinq": "3.3.2"
         },
         "runtime": {
           "EkiHire.Business.dll": {}
@@ -808,6 +809,14 @@
           "lib/netstandard2.1/MimeKit.dll": {
             "assemblyVersion": "2.12.0.0",
             "fileVersion": "2.12.0.0"
+          }
+        }
+      },
+      "morelinq/3.3.2": {
+        "runtime": {
+          "lib/netstandard2.0/MoreLinq.dll": {
+            "assemblyVersion": "3.3.2.0",
+            "fileVersion": "3.3.2.0"
           }
         }
       },
@@ -2624,6 +2633,13 @@
       "sha512": "sha512-OB0sU/wk/Z0w8JBdtfdSme/trw0J7yWLivz+j/dO8KvfqQICkHL7oZVBRitFTlsTD68U62RNoUzrQ7zEiNtEoA==",
       "path": "mimekit/2.12.0",
       "hashPath": "mimekit.2.12.0.nupkg.sha512"
+    },
+    "morelinq/3.3.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-MQc8GppZJLmjvcpEdf3EkC6ovsp7gRWt2e5mC7dcIOrgwSc+yjFd3JQ0iRqr3XrUT6rb/phv0IkEmBtbfVA7AQ==",
+      "path": "morelinq/3.3.2",
+      "hashPath": "morelinq.3.3.2.nupkg.sha512"
     },
     "NETStandard.Library/1.6.1": {
       "type": "package",

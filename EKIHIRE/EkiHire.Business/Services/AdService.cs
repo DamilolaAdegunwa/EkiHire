@@ -30,9 +30,22 @@ using Microsoft.Extensions.Configuration;
 using PagedList;
 using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
-
+using System.Collections;
+using MoreLinq;
 namespace EkiHire.Business.Services
 {
+    public class EkiHireEqualityComparer : IEqualityComparer<long>
+    {
+        public new bool Equals(long x, long y)
+        {
+            return x == y;
+        }
+
+        public int GetHashCode(long obj)
+        {
+            return 10;
+        }
+    }
     public interface IAdService
     {
         Task<bool> AddAd(AdDTO model, string username);
@@ -631,6 +644,21 @@ namespace EkiHire.Business.Services
         {
             try
             {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null && allowanonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
+                }
+                #endregion
                 List<Ad> result = new List<Ad>();
                 //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
                 // var images = _AdImageRepo.GetAll().
@@ -640,10 +668,74 @@ namespace EkiHire.Business.Services
 
                 //var r = ads.Where(a => !a.IsDeleted);
                 //result = r.ToList();
-                var data = from ad in adRepository.GetAll() 
-                           
-                           select ad; 
-                return result;
+                var data = (from ad in adRepository.GetAll()//.Include("AdImages")
+                            join s in _subcategoryRepo.GetAll() on ad.SubcategoryId equals s.Id
+                            join c in CategoryRepository.GetAll() on s.CategoryId equals c.Id
+                            join adprop in _adPropertyRepo.GetAll() on s.Id equals adprop.SubcategoryId
+                            join adpropVal in _adPropertyValueRepo.GetAll() on adprop.Id equals adpropVal.AdPropertyId
+                            //join images in _AdImageRepo.GetAll().DefaultIfEmpty() on ad.Id equals images.AdId
+
+                            where !ad.IsDeleted
+                            && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
+                            && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
+                            && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
+                            && (c.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
+                            && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
+                            && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
+                            && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
+                            && (ad.AdClass == model.AdClass || model.AdClass == null)
+                            && (ad.PhoneNumber.Contains(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.PhoneNumber))
+                            && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
+                            && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
+                            && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
+                            && (ad.UserId == model.UserId || model.UserId == null && model.UserId < 0)
+                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropVal.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
+
+                            let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
+                            let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
+                            //select ad; 
+                            select new Ad
+                            {
+                                AdClass = ad.AdClass,
+                                Address = ad.Address,
+                                AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                AdImages = null,
+                                AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                AdReference = ad.AdReference,
+                                AdsStatus = ad.AdsStatus,
+                                Amount = ad.Amount,
+                                CreationTime = ad.CreationTime,
+                                CreatorUserId = ad.CreatorUserId,
+                                DeleterUserId = ad.DeleterUserId,
+                                DeletionTime = ad.DeletionTime,
+                                Description = ad.Description,
+                                Id = ad.Id,
+                                InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
+                                IsActive = ad.IsActive,
+                                IsDeleted = ad.IsDeleted,
+                                Keywords = ad.Keywords,
+                                LastModificationTime = ad.LastModificationTime,
+                                LastModifierUserId = ad.LastModifierUserId,
+                                Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count(),
+                                Location = ad.Location,
+                                Name = ad.Name,
+                                PhoneNumber = ad.PhoneNumber,
+                                Rank = default,
+                                Rating = rtn,
+                                Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count(),
+                                UserId = ad.UserId,
+                                SubcategoryId = ad.SubcategoryId,
+                                VideoPath = ad.VideoPath,
+                                User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
+                                Subcategory = s
+
+                            });
+                var returnVal =  data.DistinctBy(x => x.Id);
+                //var returnVal2 =  data.GroupBy(elem => elem.Id).Select(group => group.First()).ToList(); ;
+                //var returnVal3 =  data.ToList();
+                //var returnVal4 =  data.ToList();
+                return returnVal;
+                
             }
             catch (Exception ex)
             {
@@ -756,42 +848,42 @@ namespace EkiHire.Business.Services
                 //var r = r2.ToArray();
 
                 #region really needs optimization
-                //for (var i = 0; i < r.Length; i++)
-                //{
-                //    try
-                //    {
-                //        //if (r[i].User == null)
-                //        //{
-                //        //    if (r[i].UserId == null || r[i].UserId == 0)
-                //        //    {
-                //        //        continue;
-                //        //    }
-                //        //    r[i].User = UserRepository.Get(r[i].UserId ?? 0);
-                //        //}
-                //        var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                //        var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                //        var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                //        r[i].AdImages = images;
-                //        r[i].AdPropertyValue = adPropValues;
-                //        r[i].AdFeedback = adfeedback;
-                //        r[i].Likes = adfeedback.Where(l => l.Like ?? false).Count();
+                for (var i = 0; i < r.Length; i++)
+                {
+                    try
+                    {
+                        if (r[i].User == null)
+                        {
+                            if (r[i].UserId == null || r[i].UserId == 0)
+                            {
+                                continue;
+                            }
+                            r[i].User = UserRepository.Get(r[i].UserId ?? 0);
+                        }
+                        var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                        var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                        var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                        r[i].AdImages = images;
+                        r[i].AdPropertyValue = adPropValues;
+                        r[i].AdFeedback = adfeedback;
+                        r[i].Likes = adfeedback.Where(l => l.Like ?? false).Count();
 
-                //        var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
-                //        double ratingSum = rating.Sum(x => ((int)x.Rating));
-                //        double ratingCount = rating.Count();
-                //        r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
-                //        r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
-                //        if (user != null)
-                //        {
-                //            r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                //    }
-                    
-                //}
+                        var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
+                        double ratingSum = rating.Sum(x => ((int)x.Rating));
+                        double ratingCount = rating.Count();
+                        r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
+                        r[i].Reviews = adfeedback.Where(a => !string.IsNullOrWhiteSpace(a.Review)).Count();
+                        if (user != null)
+                        {
+                            r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                    }
+
+                }
                 #endregion
 
                 result = r.ToList();

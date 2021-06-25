@@ -15,6 +15,7 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)] public virtual string ImageString { get; set; }
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
+        [NotMapped]
         public virtual Ad Ad { get; set; }
         #endregion
 

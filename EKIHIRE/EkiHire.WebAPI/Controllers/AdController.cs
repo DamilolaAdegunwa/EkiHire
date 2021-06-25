@@ -131,12 +131,14 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost, Route("Search")]
         public async Task<IServiceResponse<IEnumerable<Ad>>> Search(SearchVM model)
         {
-            return await HandleApiOperationAsync(async () => {
+            return await HandleApiOperationAsync(async () =>
+            {
                 IEnumerable<Ad> result = await adService.SearchTest(model, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<IEnumerable<Ad>>(result);
                 return response;
             });
         }
+
         //[AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
