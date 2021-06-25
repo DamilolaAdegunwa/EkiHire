@@ -40,7 +40,7 @@ namespace EkiHire.Core.Domain.Entities
         #endregion
 
         #region other ad properties 
-        [NotMapped]
+        //[NotMapped]
         public virtual IEnumerable<AdImage> AdImages { get; set; }
         [NotMapped]
         public virtual IEnumerable<AdFeedback> AdFeedback { get; set; }

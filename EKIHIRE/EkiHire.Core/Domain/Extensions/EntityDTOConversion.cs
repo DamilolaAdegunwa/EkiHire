@@ -76,6 +76,7 @@ namespace EkiHire.Core.Domain.Extensions
             if (entities != null )
             {
                 List<AdDTO> result = new List<AdDTO>();
+             //   var ent = entities.ToList();
                 foreach (var entity in entities)
                 {
                     AdDTO dto = entity;

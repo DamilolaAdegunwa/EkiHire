@@ -71,6 +71,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> TopAvailable();
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
         Task<string> SendNotification(List<string> clientToken, string title, string body);
+        Task<IEnumerable<Ad>> SearchTest(SearchVM model, string username, bool allowanonymous = false);
     }
     public class AdService: IAdService
     {
@@ -180,6 +181,7 @@ namespace EkiHire.Business.Services
                 ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}{new Random().Next(1_000_000_000, int.MaxValue)}";
                 ad.AdsStatus = AdsStatus.INREVIEW;
                 ad.IsActive = true;
+                ad.AdImages = null;
 
                 var inserted = await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
@@ -625,6 +627,30 @@ namespace EkiHire.Business.Services
             //use raw sql or linq statement
             return default;
         }
+        public async Task<IEnumerable<Ad>> SearchTest(SearchVM model, string username, bool allowanonymous = false)
+        {
+            try
+            {
+                List<Ad> result = new List<Ad>();
+                //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
+                // var images = _AdImageRepo.GetAll().
+                //var ads = adRepository.GetAll().Include("AdImages");
+
+                //// var newAds = ads.Join(images, x => x.Id, y => y.AdId, (x, y) => x).ToDTO();
+
+                //var r = ads.Where(a => !a.IsDeleted);
+                //result = r.ToList();
+                var data = from ad in adRepository.GetAll() 
+                           
+                           select ad; 
+                return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                throw ex;
+            }
+        }
         public async Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false)
         {
             try
@@ -646,20 +672,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 #region filter based on the search entry
-
-                //var ad = adRepository.GetAllIncluding(a => a.Subcategory).Where(a => 
-                //(a.Id == model.AdId || model.AdId == null)
-                //&& (a.Name.Contains(model.SearchText) 
-                ///* experimental */
-                ////|| model.SearchText.Contains(a.Name) || Split(a.Name, " ").Contains(model.SearchText) || Split(model.SearchText, " ").Contains(a.Name)
-                //|| string.IsNullOrWhiteSpace(model.SearchText))
-                //&& (a.SubcategoryId == model.SubcategoryId || (model.SubcategoryId == null || model.SubcategoryId == 0))
-                //&& (a.Subcategory.CategoryId == model.CategoryId || (model.CategoryId == null || model.CategoryId == 0))
-                //).ToList();
-                ////var hasAnyKeyword = Split("House", ",").Any(k => (model.Keywords).Contains(k));
-                
                 var ads = adRepository.GetAll().Where(x => x.IsDeleted == false);
-                //var ads = adRepository.GetAllIncluding(a => a.User).Where(x => x.IsDeleted == false);
                 if (model.AdId != null && model.AdId != 0)
                 {
                     ads = ads.Where(a => a.Id == model.AdId);
@@ -738,34 +751,49 @@ namespace EkiHire.Business.Services
                         }
                     }
                 }
-                var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
-                var r2 = adk.Where(a => a.IsDeleted == false).ToDTO();
-                var r = r2.ToArray();
-                
-                for(var i=0; i < r.Length; i++)
-                {
-                    if(r[i].User == null)
-                    {
-                        r[i].User = UserRepository.Get(r[i].UserId??0);
-                    }
-                    var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
-                    var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
-                    var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false).ToDTO().ToList();
-                    r[i].AdImages = images;
-                    r[i].AdPropertyValue = adPropValues;
-                    r[i].AdFeedback = adfeedback;
-                    r[i].Likes = adfeedback.Where(l => l.Like??false).Count();
+                //var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
+                var r = ads.Where(a => a.IsDeleted == false).ToDTO().ToArray();
+                //var r = r2.ToArray();
 
-                    var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
-                    double ratingSum = rating.Sum(x => ((int)x.Rating));
-                    double ratingCount = rating.Count();
-                    r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
-                    r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
-                    if(user!=null)
-                    {
-                        r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
-                    }
-                }
+                #region really needs optimization
+                //for (var i = 0; i < r.Length; i++)
+                //{
+                //    try
+                //    {
+                //        //if (r[i].User == null)
+                //        //{
+                //        //    if (r[i].UserId == null || r[i].UserId == 0)
+                //        //    {
+                //        //        continue;
+                //        //    }
+                //        //    r[i].User = UserRepository.Get(r[i].UserId ?? 0);
+                //        //}
+                //        var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                //        var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                //        var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+                //        r[i].AdImages = images;
+                //        r[i].AdPropertyValue = adPropValues;
+                //        r[i].AdFeedback = adfeedback;
+                //        r[i].Likes = adfeedback.Where(l => l.Like ?? false).Count();
+
+                //        var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
+                //        double ratingSum = rating.Sum(x => ((int)x.Rating));
+                //        double ratingCount = rating.Count();
+                //        r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
+                //        r[i].Reviews = adfeedback.Where(a => string.IsNullOrWhiteSpace(a.Review)).Count();
+                //        if (user != null)
+                //        {
+                //            r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //    }
+                    
+                //}
+                #endregion
+
                 result = r.ToList();
                 #endregion
                 //save searches
@@ -1887,6 +1915,8 @@ namespace EkiHire.Business.Services
             var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message).ConfigureAwait(true);
             return "";
         }
+
+
     }
 }
 //show premium ads first
