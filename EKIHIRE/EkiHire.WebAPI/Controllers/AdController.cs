@@ -31,12 +31,12 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost, Route("AddAd")]
-        public async Task<IServiceResponse<bool>> AddAd(AdDTO model)
+        public async Task<IServiceResponse<long?>> AddAd(AdDTO model)
         {//working
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.AddAd(model, serviceHelper.GetCurrentUserEmail());
-                var response = new ServiceResponse<bool>(result);
+                var result = await adService.AddAd(model, /*images,*/ serviceHelper.GetCurrentUserEmail());
+                var response = new ServiceResponse<long?>(result);
                 return response;
             });
         }
@@ -129,11 +129,11 @@ namespace EkiHire.WebAPI.Controllers
         }
         //filter, search and scan ads
         [HttpPost, Route("Search")]
-        public async Task<IServiceResponse<IEnumerable<Ad>>> Search(SearchVM model)
+        public async Task<IServiceResponse<IEnumerable<Ad>>> Search(AdFilter model)
         {
             return await HandleApiOperationAsync(async () =>
             {
-                IEnumerable<Ad> result = await adService.SearchTest(model, serviceHelper.GetCurrentUserEmail());
+                IEnumerable<Ad> result = await adService.GetAds(model, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<IEnumerable<Ad>>(result);
                 return response;
             });
@@ -379,7 +379,7 @@ namespace EkiHire.WebAPI.Controllers
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<AdDTO>();
                 //var data = await adService.GetAd(Id);
-                var data = (await adService.Search(new SearchVM { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
+                var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
                 response.Object = data;
                 return response;
             });
@@ -468,6 +468,18 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [HttpPost]
+        [Route("AddAdImage/{AdId}")]
+        public async Task<ServiceResponse<bool>> AddAdImage(long AdId, string username)
+        {
+            IFormFileCollection images = Request.Form.Files;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddAdImage(AdId, images, serviceHelper.GetCurrentUserEmail()/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+                response.Object = data;
+                return response;
+            });
+        }
         //[HttpPost]
         //[Route("SendNotification")]
         //Task<string> SendNotification(string title, string body)

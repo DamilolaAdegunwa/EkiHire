@@ -31,7 +31,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     AdImageDTO response = new AdImageDTO
                     {
                         ImagePath = model.ImagePath,
-                        ImageString = model.ImageString,
+                        //ImageString = model.ImageString,
                         AdId = model.AdId,
                         Ad = model.Ad,
                         Id = model.Id

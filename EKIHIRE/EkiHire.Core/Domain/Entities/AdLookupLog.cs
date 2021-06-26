@@ -6,7 +6,7 @@ using System.Text;
 
 namespace EkiHire.Core.Domain.Entities
 {
-    public class Search : FullAuditedEntity
+    public class AdLookupLog : FullAuditedEntity
     {
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }

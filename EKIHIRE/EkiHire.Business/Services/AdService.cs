@@ -32,23 +32,15 @@ using FirebaseAdmin;
 using FirebaseAdmin.Messaging;
 using System.Collections;
 using MoreLinq;
+using Microsoft.AspNetCore.Http;
+using System.Threading;
+using System.Collections.Concurrent;
+
 namespace EkiHire.Business.Services
 {
-    public class EkiHireEqualityComparer : IEqualityComparer<long>
-    {
-        public new bool Equals(long x, long y)
-        {
-            return x == y;
-        }
-
-        public int GetHashCode(long obj)
-        {
-            return 10;
-        }
-    }
     public interface IAdService
     {
-        Task<bool> AddAd(AdDTO model, string username);
+        Task<long?> AddAd(AdDTO model, /*IFormFileCollection images,*/ string username);
         Task<bool> CloseAd(long model, string username);
         Task<bool> EditAd(AdDTO adDto, long model, string username);
         Task<bool> PromoteAd(long model, string username);
@@ -57,7 +49,7 @@ namespace EkiHire.Business.Services
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
-        Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false);
+        //Task<IEnumerable<AdDTO>> GetAd(AdFilter model, string username, bool allowanonymous = false);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
@@ -84,10 +76,12 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> TopAvailable();
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
         Task<string> SendNotification(List<string> clientToken, string title, string body);
-        Task<IEnumerable<Ad>> SearchTest(SearchVM model, string username, bool allowanonymous = false);
+        Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false);
+        Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
     }
     public class AdService: IAdService
     {
+        #region AdService properties
         private readonly IRepository<Ad> adRepository;
         private readonly IRepository<AdFeedback> adFeedbackRepository;
         private readonly IServiceHelper _serviceHelper;
@@ -104,7 +98,7 @@ namespace EkiHire.Business.Services
         private readonly IRepository<User> _userRepo;
         private readonly IRepository<AdImage> _AdImageRepo;
         private readonly AppConfig appConfig;
-        private readonly IRepository<Search> SearchRepository;
+        private readonly IRepository<AdLookupLog> AdLookupLogRepository;
         private readonly IRepository<Category> CategoryRepository;
         private readonly IRepository<User> UserRepository;
         private readonly IRepository<RequestQuote> RequestQuoteRepository;
@@ -112,8 +106,10 @@ namespace EkiHire.Business.Services
         private readonly SmtpConfig _smtpsettings;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IMailService _mailSvc;
+
+        #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
-            IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<Search> SearchRepository,
+            IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
             IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, IMailService mailSvc)
         {
             this.adRepository = adRepository;
@@ -131,7 +127,7 @@ namespace EkiHire.Business.Services
             this._userRepo = _userRepo;
             this._AdImageRepo = _AdImageRepo;
             this.appConfig = _appConfig.Value;
-            this.SearchRepository = SearchRepository;
+            this.AdLookupLogRepository = AdLookupLogRepository;
             this.CategoryRepository = CategoryRepository;
             this.UserRepository = UserRepository;
             this.RequestQuoteRepository = RequestQuoteRepository;
@@ -140,7 +136,7 @@ namespace EkiHire.Business.Services
             this._hostingEnvironment = _hostingEnvironment;
             this._mailSvc = mailSvc;
         }
-        public async Task<bool> AddAd(AdDTO model, string username)
+        public async Task<long?> AddAd(AdDTO model, string username)
         {
             
             try
@@ -150,7 +146,7 @@ namespace EkiHire.Business.Services
                 //check that the model carries data
                 if (model == null)
                 {
-                    throw await _serviceHelper.GetExceptionAsync("no input");
+                    throw await _serviceHelper.GetExceptionAsync("no input provided!");
                 }
                 //check for non-empty username 
                 if (string.IsNullOrWhiteSpace(username))
@@ -170,16 +166,17 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
                 }
-
                 //check for validate usertype, validate the adtype if premium whether user can put premium ad
-
                 #endregion
 
-                #region add ad to the db
-                _unitOfWork.BeginTransaction();
+                #region prepare data
                 Ad ad = new Ad();
                 ad = model;
+                
                 ad.AdsStatus = AdsStatus.INREVIEW;
+                ad.UserId = user.Id;
+                ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}{new Random().Next(1_000_000_000, int.MaxValue)}";
+                ad.IsActive = true;
                 //basic properties
                 ad.CreationTime = DateTime.Now;
                 ad.CreatorUserId = user.Id;
@@ -189,46 +186,248 @@ namespace EkiHire.Business.Services
                 ad.DeleterUserId = null;
                 ad.DeletionTime = null;
                 ad.Id = 0;
+                #endregion
 
-                //others
-                ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}{new Random().Next(1_000_000_000, int.MaxValue)}";
-                ad.AdsStatus = AdsStatus.INREVIEW;
-                ad.IsActive = true;
+                #region first send images to cloudinary
+                var images = model.AdImages?.ToList();
+                //List<string> imgPaths = new List<string>();
+                //if (images != null && images.Count > 0)
+                //{
+                //    foreach (var i in images)
+                //    {
+                //        var byteArray = Convert.FromBase64String(i.ImageString);
+                //        var stream = new MemoryStream(byteArray);
+                //        var imgPath = _serviceHelper.UploadPhoto(stream);
+                //        imgPaths.Add(imgPath);
+                //    }
+                //}
+                ConcurrentBag<string> imgPaths = new ConcurrentBag<string>();
+                if (images != null && images.Count > 0)
+                {
+                    Parallel.ForEach(images, (i) => {
+                        var byteArray = Convert.FromBase64String(i.ImageString);
+                        var stream = new MemoryStream(byteArray);
+                        var imgPath = _serviceHelper.UploadPhoto(stream);
+                        imgPaths.Add(imgPath);
+                    });
+                }
+                #endregion
+
+                #region first clear adimages before saving
                 ad.AdImages = null;
-
-                var inserted = await adRepository.InsertAsync(ad);
+                _unitOfWork.BeginTransaction();
+                var insertedData = await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
-                //await _unitOfWork.SaveChangesAsync();
+                #endregion
 
-                var savedAd = await adRepository.GetAll().Where(a => a.AdReference == ad.AdReference && a.IsDeleted == false).FirstOrDefaultAsync();
+                #region save the property values 
                 var adpv = model.AdPropertyValue?.ToList();
                 if (adpv != null && adpv.Count > 0)
                 {
-                    foreach (var p in adpv)
-                    {
-                        p.Ad = savedAd; p.AdId = savedAd?.Id;
-                        await AddOrUpdateAdPropertyValue(p, username);
-                    }
+                    //foreach (var p in adpv)
+                    //{
+                    //    p.Ad = insertedData; p.AdId = insertedData?.Id;
+                    //    await AddOrUpdateAdPropertyValue(p, username);
+                    //}
+                    _unitOfWork.BeginTransaction();
+                    Parallel.ForEach(adpv, (p) => {
+                        _adPropertyValueRepo.InsertAsync(
+                            new AdPropertyValue
+                            {
+                                Ad = null,
+                                AdId = insertedData?.Id,
+                                AdProperty = null,
+                                AdPropertyId = p.AdPropertyId,
+                                Value = p.Value,
+                                //basic properties
+                                CreationTime = DateTime.Now,
+                                CreatorUserId = user.Id,
+                                IsDeleted = false,
+                                LastModificationTime = DateTime.Now,
+                                LastModifierUserId = user.Id,
+                                DeleterUserId = null,
+                                DeletionTime = null,
+                                Id = 0,
+                            }
+                        );
+                    });
+                    _unitOfWork.Commit();
                 }
-
-                var images = model.AdImages?.ToList();
-                if(images != null && images.Count > 0)
-                {
-                    foreach(var i in images)
-                    {
-                        i.Ad = savedAd; i.AdId = savedAd?.Id;
-                        await AddAdImage(i,username);
-                    }
-                }
-                
                 #endregion
-                return true;
+
+                #region save the image
+                if (imgPaths != null && imgPaths.Count > 0)
+                {
+                    _unitOfWork.BeginTransaction();
+                    Parallel.ForEach(imgPaths, (p) => 
+                    {
+                        _AdImageRepo.InsertAsync(
+                            new AdImage
+                            {
+                                AdId = insertedData?.Id,
+                                ImagePath = p,
+                                //basic properties
+                                CreationTime = DateTime.Now,
+                                CreatorUserId = user.Id,
+                                IsDeleted = false,
+                                LastModificationTime = DateTime.Now,
+                                LastModifierUserId = user.Id,
+                                DeleterUserId = null,
+                                DeletionTime = null,
+                                Id = 0,
+                            }
+                        );
+                    });
+                    //foreach (var p in imgPaths)
+                    //{
+                    //    _AdImageRepo.InsertAsync(
+                    //        new AdImage { 
+                    //            AdId = insertedData?.Id,
+                    //            ImagePath = p,
+                    //            //basic properties
+                    //            CreationTime = DateTime.Now,
+                    //            CreatorUserId = user.Id,
+                    //            IsDeleted = false,
+                    //            LastModificationTime = DateTime.Now,
+                    //            LastModifierUserId = user.Id,
+                    //            DeleterUserId = null,
+                    //            DeletionTime = null,
+                    //            Id = 0,
+                    //        }
+                    //    );
+                    //}
+                    _unitOfWork.Commit();
+                }
+                #endregion
+
+                #region comment
+                //if(images.Count > 0)
+                //{
+                //    List<AdImage> imgList = null;
+                //    foreach(var image in images)
+                //    {
+
+                //        //byte[] byteArray = System.IO.File.ReadAllBytes(@"C:\images\cow.png");
+
+                //        using(System.IO.MemoryStream stream = new System.IO.MemoryStream())
+                //        {
+                //            image.CopyTo(stream);
+                //            var imgPath = _serviceHelper.UploadPhoto(stream);
+                //            await AddAdImage(new AdImage { AdId = savedAd?.Id, ImagePath = imgPath }, username);
+                //        }
+                //    }
+
+                //}
+                #endregion
+
+                return insertedData?.Id;
             }
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
                 log.Error($"user ({username}) could not add a new ad {ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
-                return false;
+                throw ex;
+            }
+        }
+
+        public async Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false)
+        {
+            try
+            {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null && allowanonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
+                }
+                #endregion
+                List<Ad> result = new List<Ad>();
+                //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
+                // var images = _AdImageRepo.GetAll().
+                //var ads = adRepository.GetAll().Include("AdImages");
+
+                //// var newAds = ads.Join(images, x => x.Id, y => y.AdId, (x, y) => x).ToDTO();
+
+                //var r = ads.Where(a => !a.IsDeleted);
+                //result = r.ToList();
+                var data = (from ad in adRepository.GetAll()//.Include("AdImages")
+                            join s in _subcategoryRepo.GetAll() on ad.SubcategoryId equals s.Id
+                            join c in CategoryRepository.GetAll() on s.CategoryId equals c.Id
+                            join adprop in _adPropertyRepo.GetAll() on s.Id equals adprop.SubcategoryId
+                            join adpropVal in _adPropertyValueRepo.GetAll() on adprop.Id equals adpropVal.AdPropertyId
+                            //join images in _AdImageRepo.GetAll().DefaultIfEmpty() on ad.Id equals images.AdId
+
+                            where !ad.IsDeleted
+                            && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
+                            && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
+                            && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
+                            && (c.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
+                            && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
+                            && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
+                            && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
+                            && (ad.AdClass == model.AdClass || model.AdClass == null)
+                            && (ad.PhoneNumber.Contains(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.PhoneNumber))
+                            && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
+                            && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
+                            && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
+                            && (ad.UserId == model.UserId || model.UserId == null && model.UserId < 0)
+                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropVal.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
+
+                            let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
+                            let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
+                            //select ad; 
+                            select new Ad
+                            {
+                                AdClass = ad.AdClass,
+                                Address = ad.Address,
+                                AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                AdImages = _AdImageRepo.GetAll().Where(a => a.AdId == ad.Id && a.IsDeleted == false).ToList(),
+                                AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                AdReference = ad.AdReference,
+                                AdsStatus = ad.AdsStatus,
+                                Amount = ad.Amount,
+                                CreationTime = ad.CreationTime,
+                                CreatorUserId = ad.CreatorUserId,
+                                DeleterUserId = ad.DeleterUserId,
+                                DeletionTime = ad.DeletionTime,
+                                Description = ad.Description,
+                                Id = ad.Id,
+                                InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
+                                IsActive = ad.IsActive,
+                                IsDeleted = ad.IsDeleted,
+                                Keywords = ad.Keywords,
+                                LastModificationTime = ad.LastModificationTime,
+                                LastModifierUserId = ad.LastModifierUserId,
+                                Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count(),
+                                Location = ad.Location,
+                                Name = ad.Name,
+                                PhoneNumber = ad.PhoneNumber,
+                                Rank = default,
+                                Rating = rtn,
+                                Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count(),
+                                UserId = ad.UserId,
+                                SubcategoryId = ad.SubcategoryId,
+                                VideoPath = ad.VideoPath,
+                                User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
+                                Subcategory = s
+
+                            });
+                var returnVal = data.DistinctBy(x => x.Id);
+                return returnVal;
+
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                throw ex;
             }
         }
         public async Task<bool> CloseAd(long adid, string username)
@@ -250,11 +449,11 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
                 }
-
                 #endregion
+
                 _unitOfWork.BeginTransaction();
                 ad.IsActive = false;
-                await adRepository .UpdateAsync(ad);
+                await adRepository.UpdateAsync(ad);
                 _unitOfWork.Commit();
                 return true;
             }
@@ -362,7 +561,7 @@ namespace EkiHire.Business.Services
                             //update an imaage
                             var imgData = imgs.Where(i => i.Id == img.Id).FirstOrDefault();
                             imgData.ImagePath = string.IsNullOrWhiteSpace(img.ImagePath)? imgData.ImagePath: img.ImagePath;
-                            imgData.ImageString = img.ImageString;
+                            //imgData.ImageString = img.ImageString;
                             _AdImageRepo.Update(imgData);
                         }
                         else
@@ -635,115 +834,8 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<AdDTO>> SearchAlt(SearchVM model, string username, bool allowanonymous = false)
-        {
-            //use raw sql or linq statement
-            return default;
-        }
-        public async Task<IEnumerable<Ad>> SearchTest(SearchVM model, string username, bool allowanonymous = false)
-        {
-            try
-            {
-                #region validation
-                if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-                }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
-                if (user == null && allowanonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-                }
-                if (model == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
-                }
-                #endregion
-                List<Ad> result = new List<Ad>();
-                //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
-                // var images = _AdImageRepo.GetAll().
-                //var ads = adRepository.GetAll().Include("AdImages");
-
-                //// var newAds = ads.Join(images, x => x.Id, y => y.AdId, (x, y) => x).ToDTO();
-
-                //var r = ads.Where(a => !a.IsDeleted);
-                //result = r.ToList();
-                var data = (from ad in adRepository.GetAll()//.Include("AdImages")
-                            join s in _subcategoryRepo.GetAll() on ad.SubcategoryId equals s.Id
-                            join c in CategoryRepository.GetAll() on s.CategoryId equals c.Id
-                            join adprop in _adPropertyRepo.GetAll() on s.Id equals adprop.SubcategoryId
-                            join adpropVal in _adPropertyValueRepo.GetAll() on adprop.Id equals adpropVal.AdPropertyId
-                            //join images in _AdImageRepo.GetAll().DefaultIfEmpty() on ad.Id equals images.AdId
-
-                            where !ad.IsDeleted
-                            && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
-                            && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
-                            && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
-                            && (c.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
-                            && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
-                            && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
-                            && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
-                            && (ad.AdClass == model.AdClass || model.AdClass == null)
-                            && (ad.PhoneNumber.Contains(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.PhoneNumber))
-                            && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
-                            && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
-                            && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
-                            && (ad.UserId == model.UserId || model.UserId == null && model.UserId < 0)
-                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropVal.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
-
-                            let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
-                            let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
-                            //select ad; 
-                            select new Ad
-                            {
-                                AdClass = ad.AdClass,
-                                Address = ad.Address,
-                                AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                AdImages = null,
-                                AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                AdReference = ad.AdReference,
-                                AdsStatus = ad.AdsStatus,
-                                Amount = ad.Amount,
-                                CreationTime = ad.CreationTime,
-                                CreatorUserId = ad.CreatorUserId,
-                                DeleterUserId = ad.DeleterUserId,
-                                DeletionTime = ad.DeletionTime,
-                                Description = ad.Description,
-                                Id = ad.Id,
-                                InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
-                                IsActive = ad.IsActive,
-                                IsDeleted = ad.IsDeleted,
-                                Keywords = ad.Keywords,
-                                LastModificationTime = ad.LastModificationTime,
-                                LastModifierUserId = ad.LastModifierUserId,
-                                Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count(),
-                                Location = ad.Location,
-                                Name = ad.Name,
-                                PhoneNumber = ad.PhoneNumber,
-                                Rank = default,
-                                Rating = rtn,
-                                Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count(),
-                                UserId = ad.UserId,
-                                SubcategoryId = ad.SubcategoryId,
-                                VideoPath = ad.VideoPath,
-                                User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
-                                Subcategory = s
-
-                            });
-                var returnVal =  data.DistinctBy(x => x.Id);
-                //var returnVal2 =  data.GroupBy(elem => elem.Id).Select(group => group.First()).ToList(); ;
-                //var returnVal3 =  data.ToList();
-                //var returnVal4 =  data.ToList();
-                return returnVal;
-                
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                throw ex;
-            }
-        }
-        public async Task<IEnumerable<AdDTO>> Search(SearchVM model, string username, bool allowanonymous = false)
+        
+        public async Task<IEnumerable<AdDTO>> GetAdOld(AdFilter model, string username, bool allowanonymous = false)
         {
             try
             {
@@ -896,11 +988,11 @@ namespace EkiHire.Business.Services
                     {
                         try
                         {
-                            var sdata = new Search
+                            var sdata = new AdLookupLog
                             {
                                 AdId = s.Id
                             };
-                            await SearchRepository.InsertAsync(sdata);
+                            await AdLookupLogRepository.InsertAsync(sdata);
                         }
                         catch (Exception ex)
                         {
@@ -1602,7 +1694,7 @@ namespace EkiHire.Business.Services
                 //result = adRepository.GetAll().Select(model => TrendingRank(model)).AsEnumerable().OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 //result = (from a in adRepository.GetAll() select TrendingRank(a)).OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 List<Ad> ar = new List<Ad>();
-                var aList = await Search(new SearchVM(), username, allowanonymous);//adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var aList = await GetAds(new AdFilter(), username, allowanonymous);//adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
                 Parallel.ForEach(aList, (a) => {
                     var data = TrendingRank(a);
                     ar.Add(data);
@@ -1655,7 +1747,7 @@ namespace EkiHire.Business.Services
                 var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
                 reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review) && a.IsDeleted == false).Count();
                 likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && (a.Like??false) && a.IsDeleted == false).Count();
-                searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id && s.IsDeleted == false).Count();
+                searches = AdLookupLogRepository.GetAll().Where(s => s.AdId == model.Id && s.IsDeleted == false).Count();
                 daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days; daysSincePosts = daysSincePosts < 1 ? 1 : daysSincePosts;
 
                 double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
@@ -1751,7 +1843,7 @@ namespace EkiHire.Business.Services
                     Ad = ad,
                     AdId = model.AdId,
                     ImagePath = model.ImagePath,
-                    ImageString = model.ImageString,
+                    //ImageString = model.ImageString,
                     //basic properties
                     CreationTime = DateTime.Now,
                     CreatorUserId = user.Id,
@@ -1766,6 +1858,49 @@ namespace EkiHire.Business.Services
                 await _AdImageRepo.InsertAsync(data);
                 _unitOfWork.Commit();
                 return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+
+        public async Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username)
+        {
+            try
+            {
+                //images upload
+                if (images.Count > 0)
+                {
+                    _unitOfWork.BeginTransaction();
+                    List<AdImage> imgList = null;
+                    foreach (var image in images)
+                    {
+
+                        //byte[] byteArray = System.IO.File.ReadAllBytes(@"C:\images\cow.png");
+
+                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+                        {
+                            image.CopyTo(stream);
+                            var imgPath = _serviceHelper.UploadPhoto(stream);
+                            _AdImageRepo.Insert(new AdImage { AdId = AdId, ImagePath = imgPath });
+                        }
+                    }
+                    _unitOfWork.Commit();
+                }
+                return true;
+                ////////////////////////////////////////
+                //var images = model.AdImages?.ToList();
+                //if(images != null && images.Count > 0)
+                //{
+                //    foreach(var i in images)
+                //    {
+                //        i.Ad = savedAd; i.AdId = savedAd?.Id;
+                //        await AddAdImage(i,username);
+                //    }
+                //}
             }
             catch (Exception ex)
             {
@@ -1896,7 +2031,7 @@ namespace EkiHire.Business.Services
                 //send to the job advertizer/hr
                 try
                 {
-                    var replacement = new StringDictionary
+                    var replacement = new System.Collections.Specialized.StringDictionary
                     {
                         ["FullName"] = data.FullName,
                         ["Position"] = data.JobTitle,

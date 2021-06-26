@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.Extensions;
+using Microsoft.AspNetCore.Http;
 
 namespace EkiHire.Core.Domain.DataTransferObjects
 {
@@ -34,6 +35,7 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         //[ForeignKey("UserId")]
         public virtual long? UserId { get; set; }
         public virtual User User { get; set; }
+        public virtual IFormFile FormFile { get; set; }
 
         #endregion
 

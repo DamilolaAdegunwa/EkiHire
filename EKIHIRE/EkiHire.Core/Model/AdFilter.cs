@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EkiHire.Core.Model
 {
-    public class SearchVM
+    public class AdFilter
     {
         public long? AdId { get; set; }
         public string SearchText { get; set; }

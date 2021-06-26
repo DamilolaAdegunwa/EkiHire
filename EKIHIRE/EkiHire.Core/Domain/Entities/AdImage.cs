@@ -12,7 +12,7 @@ namespace EkiHire.Core.Domain.Entities
     {
         #region ad image properties
         [DataType(DataType.Text)] public virtual string ImagePath { get; set; }
-        [DataType(DataType.Text)] public virtual string ImageString { get; set; }
+        //[DataType(DataType.Text)] public virtual string ImageString { get; set; }
         [ForeignKey("AdId")]
         public virtual long? AdId { get; set; }
         [NotMapped]
@@ -28,7 +28,7 @@ namespace EkiHire.Core.Domain.Entities
                     AdImage response = new AdImage
                     {
                         ImagePath = model.ImagePath,
-                        ImageString = model.ImageString,
+                        //ImageString = model.ImageString,
                         AdId = model.AdId,
                         Ad = model.Ad,
                         Id = model.Id

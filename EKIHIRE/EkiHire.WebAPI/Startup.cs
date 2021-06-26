@@ -120,7 +120,7 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<Keyword>, EfCoreRepository<DbContext, Keyword>>();
             services.AddScoped<IRepository<AdProperty>, EfCoreRepository<DbContext, AdProperty>>();
             services.AddScoped<IRepository<AdPropertyValue>, EfCoreRepository<DbContext, AdPropertyValue>>();
-            services.AddScoped<IRepository<Search>, EfCoreRepository<DbContext, Search>>();
+            services.AddScoped<IRepository<AdLookupLog>, EfCoreRepository<DbContext, AdLookupLog>>();
             services.AddScoped<IRepository<RequestQuote>, EfCoreRepository<DbContext, RequestQuote>>();
             services.AddScoped<IRepository<JobApplication>, EfCoreRepository<DbContext, JobApplication>>();
 
@@ -172,8 +172,8 @@ namespace EkiHire.WebAPI
             services.Configure<JwtConfig>(options =>
                         Configuration.GetSection(WebConstants.Sections.AuthJwtBearer).Bind(options));
 
-            services.Configure<BookingConfig>(options =>
-                       Configuration.GetSection(WebConstants.Sections.Booking).Bind(options));
+            //services.Configure<BookingConfig>(options =>
+            //           Configuration.GetSection(WebConstants.Sections.Booking).Bind(options));
 
             services.Configure<AppConfig>(options =>
                      Configuration.GetSection(WebConstants.Sections.App).Bind(options));
