@@ -737,7 +737,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -833,226 +833,8 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-
-        
-        public async Task<IEnumerable<AdDTO>> GetAdOld(AdFilter model, string username, bool allowanonymous = false)
-        {
-            try
-            {
-                List<AdDTO> result = new List<AdDTO>();
-                #region validation
-                if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-                }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
-                if (user == null && allowanonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-                }
-                if (model == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
-                }
-                #endregion
-                #region filter based on the search entry
-                var ads = adRepository.GetAll().Where(x => x.IsDeleted == false);
-                if (model.AdId != null && model.AdId != 0)
-                {
-                    ads = ads.Where(a => a.Id == model.AdId);
-                }
-                if (!string.IsNullOrWhiteSpace(model.SearchText))
-                {
-                    ads = ads.Where(a => a.Name.Contains(model.SearchText));
-                }
-                if (model.SubcategoryId != null && model.SubcategoryId != 0)
-                {
-                    ads = ads.Where(a => a.SubcategoryId == model.SubcategoryId);
-                }
-                if (model.CategoryId != null && model.CategoryId != 0)
-                {
-                    ads = from a in ads
-                          join s in _subcategoryRepo.GetAll() on a.SubcategoryId equals s.Id
-                          join c  in CategoryRepository.GetAll() on s.CategoryId equals c.Id
-                          where c.Id == model.CategoryId select a;
-                }
-                if (model.min_amount != null)
-                {
-                    ads = ads.Where(a => a.Amount >= model.min_amount);
-                }
-                if (model.max_amount != null)
-                {
-                    ads = ads.Where(a => a.Amount <= model.max_amount);
-                }
-                //if(model.StateId != null && model.StateId != 0)
-                //{
-                //    ads = ads.Where(a => a.StateId == model.StateId);
-                //}
-                //if (model.LGAId != null && model.LGAId != 0)
-                //{
-                //    ads = ads.Where(a => a.LGAId == model.LGAId);
-                //}
-                if (!string.IsNullOrWhiteSpace(model.Address))
-                {
-                    ads = ads.Where(a => a.Address.Contains(model.Address));
-                }
-                if (model.AdClass != null)
-                {
-                    ads = ads.Where(a => a.AdClass == model.AdClass);
-                }
-                if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
-                {
-                    ads = ads.Where(a => a.PhoneNumber.Contains(model.PhoneNumber));
-                }
-                //if (!string.IsNullOrWhiteSpace(model.Location))
-                //{
-                //    ads = ads.Where(a => a.Location.Contains(model.Location));
-                //}
-                if (!string.IsNullOrWhiteSpace(model.AdReference))
-                {
-                    ads = ads.Where(a => a.AdReference.Contains(model.AdReference));
-                }
-                if (!string.IsNullOrWhiteSpace(model.Description))
-                {
-                    ads = ads.Where(a => a.Description.Contains(model.Description));
-                }
-                if (model.AdsStatus != null)
-                {
-                    ads = ads.Where(a => a.AdsStatus == model.AdsStatus);
-                }
-                if (model.UserId != null && model.UserId != 0)
-                {
-                    ads = ads.Where(a => a.UserId == model.UserId);
-                }
-                if (model.PropertyValuePairs != null && model.PropertyValuePairs.Count > 0)
-                {
-                    foreach (var pv in model.PropertyValuePairs)
-                    {
-                        if(pv.PropertyId != 0)
-                        {
-                            var PropertyValues = _adPropertyValueRepo.GetAll().Where(v => v.Value.Contains(pv.Value) && v.AdPropertyId == pv.PropertyId && v.IsDeleted == false);
-                            ads = ads.Where(a => PropertyValues.Any(x => x.AdId == a.Id));
-                        }
-                    }
-                }
-                //var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
-                var r = ads.Where(a => a.IsDeleted == false).ToDTO().ToArray();
-                //var r = r2.ToArray();
-
-                #region really needs optimization
-                for (var i = 0; i < r.Length; i++)
-                {
-                    try
-                    {
-                        if (r[i].User == null)
-                        {
-                            if (r[i].UserId == null || r[i].UserId == 0)
-                            {
-                                continue;
-                            }
-                            r[i].User = UserRepository.Get(r[i].UserId ?? 0);
-                        }
-                        var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                        var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                        var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
-                        r[i].AdImages = images;
-                        r[i].AdPropertyValue = adPropValues;
-                        r[i].AdFeedback = adfeedback;
-                        r[i].Likes = adfeedback.Where(l => l.Like ?? false).Count();
-
-                        var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
-                        double ratingSum = rating.Sum(x => ((int)x.Rating));
-                        double ratingCount = rating.Count();
-                        r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
-                        r[i].Reviews = adfeedback.Where(a => !string.IsNullOrWhiteSpace(a.Review)).Count();
-                        if (user != null)
-                        {
-                            r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                    }
-
-                }
-                #endregion
-
-                result = r.ToList();
-                #endregion
-                //save searches
-                //_ = Task.Run<IRepository<Search>>((IRepository<Search> ssy) =>
-                {
-                    _unitOfWork.BeginTransaction();
-                    foreach (var s in result)
-                    {
-                        try
-                        {
-                            var sdata = new AdLookupLog
-                            {
-                                AdId = s.Id
-                            };
-                            await AdLookupLogRepository.InsertAsync(sdata);
-                        }
-                        catch (Exception ex)
-                        {
-                        }
-                    }
-                    _unitOfWork.Commit();
-                }
-                //);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _unitOfWork.Rollback();
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                //return null;
-                throw ex;
-            }
-        }
-        public static List<string> Split(string str, string separator)
-        {
-            var resp = str.Split(new[] { separator }, StringSplitOptions.None).ToList();
-            return resp;
-        }
-
         #region reviews
-        //public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0)
-        //{
-        //    try
-        //    {
-        //        #region validation
-        //        if (string.IsNullOrWhiteSpace(username))
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-        //        }
-        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-        //        if (user == null)
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-        //        }
-        //        var ad = adRepository.Get(adId);
-        //        if (ad == null)
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
-        //        }
-        //        #endregion
-
-        //        var result = new List<AdFeedback>();
-
-        //        result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
-        //        && (a.AdId == adId || adId == 0)
-        //        ).ToListAsync();
-
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}",ex);
-        //        return null;
-        //    }
-        //}
+        
         public async Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
         {
             try
@@ -1080,42 +862,7 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        //public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId  = 0)
-        //{
-        //    try
-        //    {
-        //        #region validation
-        //        if (string.IsNullOrWhiteSpace(username))
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
-        //        }
-        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-        //        if (user == null)
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
-        //        }
-        //        var ad = adRepository.Get(adId);
-        //        if (ad == null)
-        //        {
-        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
-        //        }
-        //        #endregion
-        //        var result = await adFeedbackRepository.GetAll().Where(a => adRepository.Get(a.AdId).User.UserName == username
-        //        && (a.AdId == adId || adId == 0)
-        //        ).ToListAsync();
-        //        return result;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
-        //        return null;
-        //    }
-        //}
-        //private long? getUserFromAd(long? adid)
-        //{
-        //    var resp = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false).UserId;
-        //    return resp;
-        //}
+        
         public async Task<IEnumerable<AdFeedbackDTO>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/)
         {
             try
@@ -1670,20 +1417,7 @@ namespace EkiHire.Business.Services
         }
         //create new ad property, update ad prop, delete,
         #endregion
-        public async Task<IEnumerable<Ad>> GetActiveAds()
-        {
-            try
-            {
-                List<Ad> result = new List<Ad>();
-                result = await adRepository.GetAll().Where(a => a.IsActive == true && a.IsDeleted == false).ToListAsync();
-                return result;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return null;
-            }
-        }
+
         public async Task<IEnumerable<AdDTO>> Trending(long count = 0, string username = null, bool allowanonymous = false)
         {
             try
@@ -1713,33 +1447,7 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        //private double TrendingRank(Ad model, out Ad ad)
-        //{
-        //    try
-        //    {
-        //        var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
-        //        reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
-        //        likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
-        //        searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
-        //        daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days;
-
-        //        double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
-
-        //        //test
-        //        rank = 5;
-
-        //        model.Rank = rank;
-        //        ad = model;
-        //        return rank;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-        //        ad = model;
-        //        return 0;
-        //    }
-        //}
-
+        
         private Ad TrendingRank(Ad model)
         {
             try
@@ -1769,31 +1477,6 @@ namespace EkiHire.Business.Services
                 return model;
             }
         }
-        //public async Task<bool> PostAds()
-        //{
-        //    try
-        //    {
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-
-        //    }
-        //}
-        //public async Task<AdDTO> GetAd(long Id)
-        //{
-        //    try
-        //    {
-        //        //var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == Id);
-        //        //return ad;
-        //        return default;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-        //        return null;
-        //    }
-        //}
 
         public async Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus)
         {
@@ -1996,7 +1679,7 @@ namespace EkiHire.Business.Services
                 }
 
                 //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
                 if (user == null && allowAnonymous == false)
                 {
                     throw await _serviceHelper.GetExceptionAsync("User does not exist!");
@@ -2064,34 +1747,6 @@ namespace EkiHire.Business.Services
 
                 #endregion
 
-                #region comment
-                //SendAccountCredentials(user, model.Password);
-                //the email needs to be worked on and be further simplified in it's process flow
-                //#region send emnail
-                //try
-                //{
-                //    //first file
-                //    if (File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
-                //    {
-                //        var fileString = File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
-                //        if (!string.IsNullOrWhiteSpace(fileString))
-                //        {
-                //            //fileString = fileString.Replace("{{FirstName}}", user.FirstName);
-                //            fileString = fileString.Replace("{{ActivationCode}}", user.AccountConfirmationCode);
-
-                //            _mailSvc.SendMailAsync(user.UserName, "EkiHire.com: Account Verification Code", fileString);
-                //        }
-                //    }
-                //}
-                //catch (Exception ex)
-                //{
-
-                //    //throw;
-                //}
-
-                //#endregion
-                #endregion
-
                 return true;
             }
             catch (Exception ex)
@@ -2143,7 +1798,349 @@ namespace EkiHire.Business.Services
             return "";
         }
 
+        #region comments
+        //public async Task<IEnumerable<Ad>> GetActiveAds()
+        //{
+        //    try
+        //    {
+        //        List<Ad> result = new List<Ad>();
+        //        result = await adRepository.GetAll().Where(a => a.IsActive == true && a.IsDeleted == false).ToListAsync();
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        return null;
+        //    }
+        //}
+        //private double TrendingRank(Ad model, out Ad ad)
+        //{
+        //    try
+        //    {
+        //        var reviews = 0; var likes = 0; var searches = 0; var daysSincePosts = 0;
+        //        reviews = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && !string.IsNullOrWhiteSpace(a.Review)).Count();
+        //        likes = adFeedbackRepository.GetAll().Where(a => a.AdId == model.Id && a.Like).Count();
+        //        searches = SearchRepository.GetAll().Where(s => s.AdId == model.Id).Count();
+        //        daysSincePosts = (DateTime.Now.Date - model.CreationTime.Date).Days;
 
+        //        double rank = ((reviews * appConfig.ReviewsWeight) + (likes * appConfig.LikesWeight) + (searches * appConfig.SearchWeight)) / (daysSincePosts * appConfig.DaysSincePostWeight);
+
+        //        //test
+        //        rank = 5;
+
+        //        model.Rank = rank;
+        //        ad = model;
+        //        return rank;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        ad = model;
+        //        return 0;
+        //    }
+        //}
+        //public async Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId  = 0)
+        //{
+        //    try
+        //    {
+        //        #region validation
+        //        if (string.IsNullOrWhiteSpace(username))
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+        //        }
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+        //        if (user == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+        //        }
+        //        var ad = adRepository.Get(adId);
+        //        if (ad == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+        //        }
+        //        #endregion
+        //        var result = await adFeedbackRepository.GetAll().Where(a => adRepository.Get(a.AdId).User.UserName == username
+        //        && (a.AdId == adId || adId == 0)
+        //        ).ToListAsync();
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}", ex);
+        //        return null;
+        //    }
+        //}
+        //private long? getUserFromAd(long? adid)
+        //{
+        //    var resp = adRepository.FirstOrDefault(x => x.Id == adid && x.IsDeleted == false).UserId;
+        //    return resp;
+        //}
+        //public async Task<bool> PostAds()
+        //{
+        //    try
+        //    {
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+
+        //    }
+        //}
+        //public async Task<AdDTO> GetAd(long Id)
+        //{
+        //    try
+        //    {
+        //        //var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == Id);
+        //        //return ad;
+        //        return default;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        return null;
+        //    }
+        //}
+        //SendAccountCredentials(user, model.Password);
+        //the email needs to be worked on and be further simplified in it's process flow
+        //#region send emnail
+        //try
+        //{
+        //    //first file
+        //    if (File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
+        //    {
+        //        var fileString = File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
+        //        if (!string.IsNullOrWhiteSpace(fileString))
+        //        {
+        //            //fileString = fileString.Replace("{{FirstName}}", user.FirstName);
+        //            fileString = fileString.Replace("{{ActivationCode}}", user.AccountConfirmationCode);
+
+        //            _mailSvc.SendMailAsync(user.UserName, "EkiHire.com: Account Verification Code", fileString);
+        //        }
+        //    }
+        //}
+        //catch (Exception ex)
+        //{
+
+        //    //throw;
+        //}
+
+        //#endregion
+        //public async Task<IEnumerable<AdDTO>> GetAdOld(AdFilter model, string username, bool allowanonymous = false)
+        //{
+        //    try
+        //    {
+        //        List<AdDTO> result = new List<AdDTO>();
+        //        #region validation
+        //        if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+        //        }
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+        //        if (user == null && allowanonymous == false)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+        //        }
+        //        if (model == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
+        //        }
+        //        #endregion
+        //        #region filter based on the search entry
+        //        var ads = adRepository.GetAll().Where(x => x.IsDeleted == false);
+        //        if (model.AdId != null && model.AdId != 0)
+        //        {
+        //            ads = ads.Where(a => a.Id == model.AdId);
+        //        }
+        //        if (!string.IsNullOrWhiteSpace(model.SearchText))
+        //        {
+        //            ads = ads.Where(a => a.Name.Contains(model.SearchText));
+        //        }
+        //        if (model.SubcategoryId != null && model.SubcategoryId != 0)
+        //        {
+        //            ads = ads.Where(a => a.SubcategoryId == model.SubcategoryId);
+        //        }
+        //        if (model.CategoryId != null && model.CategoryId != 0)
+        //        {
+        //            ads = from a in ads
+        //                  join s in _subcategoryRepo.GetAll() on a.SubcategoryId equals s.Id
+        //                  join c  in CategoryRepository.GetAll() on s.CategoryId equals c.Id
+        //                  where c.Id == model.CategoryId select a;
+        //        }
+        //        if (model.min_amount != null)
+        //        {
+        //            ads = ads.Where(a => a.Amount >= model.min_amount);
+        //        }
+        //        if (model.max_amount != null)
+        //        {
+        //            ads = ads.Where(a => a.Amount <= model.max_amount);
+        //        }
+        //        //if(model.StateId != null && model.StateId != 0)
+        //        //{
+        //        //    ads = ads.Where(a => a.StateId == model.StateId);
+        //        //}
+        //        //if (model.LGAId != null && model.LGAId != 0)
+        //        //{
+        //        //    ads = ads.Where(a => a.LGAId == model.LGAId);
+        //        //}
+        //        if (!string.IsNullOrWhiteSpace(model.Address))
+        //        {
+        //            ads = ads.Where(a => a.Address.Contains(model.Address));
+        //        }
+        //        if (model.AdClass != null)
+        //        {
+        //            ads = ads.Where(a => a.AdClass == model.AdClass);
+        //        }
+        //        if (!string.IsNullOrWhiteSpace(model.PhoneNumber))
+        //        {
+        //            ads = ads.Where(a => a.PhoneNumber.Contains(model.PhoneNumber));
+        //        }
+        //        //if (!string.IsNullOrWhiteSpace(model.Location))
+        //        //{
+        //        //    ads = ads.Where(a => a.Location.Contains(model.Location));
+        //        //}
+        //        if (!string.IsNullOrWhiteSpace(model.AdReference))
+        //        {
+        //            ads = ads.Where(a => a.AdReference.Contains(model.AdReference));
+        //        }
+        //        if (!string.IsNullOrWhiteSpace(model.Description))
+        //        {
+        //            ads = ads.Where(a => a.Description.Contains(model.Description));
+        //        }
+        //        if (model.AdsStatus != null)
+        //        {
+        //            ads = ads.Where(a => a.AdsStatus == model.AdsStatus);
+        //        }
+        //        if (model.UserId != null && model.UserId != 0)
+        //        {
+        //            ads = ads.Where(a => a.UserId == model.UserId);
+        //        }
+        //        if (model.PropertyValuePairs != null && model.PropertyValuePairs.Count > 0)
+        //        {
+        //            foreach (var pv in model.PropertyValuePairs)
+        //            {
+        //                if(pv.PropertyId != 0)
+        //                {
+        //                    var PropertyValues = _adPropertyValueRepo.GetAll().Where(v => v.Value.Contains(pv.Value) && v.AdPropertyId == pv.PropertyId && v.IsDeleted == false);
+        //                    ads = ads.Where(a => PropertyValues.Any(x => x.AdId == a.Id));
+        //                }
+        //            }
+        //        }
+        //        //var adk = ads.AsEnumerable().Where(a => (model.Keywords == null || Split(a.Keywords,",").Any(k => model.Keywords.Contains(k))));
+        //        var r = ads.Where(a => a.IsDeleted == false).ToDTO().ToArray();
+        //        //var r = r2.ToArray();
+
+        //        #region really needs optimization
+        //        for (var i = 0; i < r.Length; i++)
+        //        {
+        //            try
+        //            {
+        //                if (r[i].User == null)
+        //                {
+        //                    if (r[i].UserId == null || r[i].UserId == 0)
+        //                    {
+        //                        continue;
+        //                    }
+        //                    r[i].User = UserRepository.Get(r[i].UserId ?? 0);
+        //                }
+        //                var images = _AdImageRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+        //                var adPropValues = _adPropertyValueRepo.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+        //                var adfeedback = adFeedbackRepository.GetAll().Where(a => a.AdId == r[i].Id && a.IsDeleted == false)?.ToDTO()?.ToList();
+        //                r[i].AdImages = images;
+        //                r[i].AdPropertyValue = adPropValues;
+        //                r[i].AdFeedback = adfeedback;
+        //                r[i].Likes = adfeedback.Where(l => l.Like ?? false).Count();
+
+        //                var rating = adfeedback.Where(a => ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5);
+        //                double ratingSum = rating.Sum(x => ((int)x.Rating));
+        //                double ratingCount = rating.Count();
+        //                r[i].Rating = (ratingCount > 0 && ratingSum > 0) ? (double)(ratingSum / ratingCount) : 0;
+        //                r[i].Reviews = adfeedback.Where(a => !string.IsNullOrWhiteSpace(a.Review)).Count();
+        //                if (user != null)
+        //                {
+        //                    r[i].InUserCart = CartItemRepository.GetAll().Any(c => c.UserId == user.Id && c.AdId == r[i].Id && c.IsDeleted == false);
+        //                }
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //            }
+
+        //        }
+        //        #endregion
+
+        //        result = r.ToList();
+        //        #endregion
+        //        //save searches
+        //        //_ = Task.Run<IRepository<Search>>((IRepository<Search> ssy) =>
+        //        {
+        //            _unitOfWork.BeginTransaction();
+        //            foreach (var s in result)
+        //            {
+        //                try
+        //                {
+        //                    var sdata = new AdLookupLog
+        //                    {
+        //                        AdId = s.Id
+        //                    };
+        //                    await AdLookupLogRepository.InsertAsync(sdata);
+        //                }
+        //                catch (Exception ex)
+        //                {
+        //                }
+        //            }
+        //            _unitOfWork.Commit();
+        //        }
+        //        //);
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _unitOfWork.Rollback();
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        //return null;
+        //        throw ex;
+        //    }
+        //}
+        //public static List<string> Split(string str, string separator)
+        //{
+        //    var resp = str.Split(new[] { separator }, StringSplitOptions.None).ToList();
+        //    return resp;
+        //}
+        //public async Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0)
+        //{
+        //    try
+        //    {
+        //        #region validation
+        //        if (string.IsNullOrWhiteSpace(username))
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+        //        }
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+        //        if (user == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+        //        }
+        //        var ad = adRepository.Get(adId);
+        //        if (ad == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Cannot find ad!");
+        //        }
+        //        #endregion
+
+        //        var result = new List<AdFeedback>();
+
+        //        result = await adFeedbackRepository.GetAll().Where(a => a.UserId == user.Id
+        //        && (a.AdId == adId || adId == 0)
+        //        ).ToListAsync();
+
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"A error occured while trying to get reviews - error - {ex.Message} - stackTraack - {ex.StackTrace} :: {MethodBase.GetCurrentMethod().Name}",ex);
+        //        return null;
+        //    }
+        //}
+        #endregion
     }
 }
-//show premium ads first
