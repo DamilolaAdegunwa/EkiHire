@@ -139,7 +139,6 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        //[AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
         [Route("GetCategories/{withOtherData:bool}")]
@@ -437,7 +436,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("SaveReview")]
-        public async Task<ServiceResponse<bool>> SaveReview(AdFeedbackDTO model/*, string username*/)
+        public async Task<ServiceResponse<bool>> SaveReview(AdFeedback model/*, string username*/)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();

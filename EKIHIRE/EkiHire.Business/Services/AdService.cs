@@ -71,7 +71,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdImage(AdImageDTO model, string username);
         Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
         Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username);
-        Task<bool> SaveReview(AdFeedbackDTO model, string username);
+        Task<bool> SaveReview(AdFeedback model, string username);
         Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
         Task<IEnumerable<AdDTO>> TopAvailable();
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
@@ -1088,7 +1088,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> SaveReview(AdFeedbackDTO model, string username)
+        public async Task<bool> SaveReview(AdFeedback model, string username)
         {
             try
             {
@@ -1127,7 +1127,7 @@ namespace EkiHire.Business.Services
                 data.DeleterUserId = null;
                 data.DeletionTime = null;
                 data.Id = 0;
-                var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == user.Id);
+                var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == user.Id && f.AdId == model.AdId);
                 _unitOfWork.BeginTransaction();
                 if(feedback == null)
                 {
@@ -2297,14 +2297,23 @@ namespace EkiHire.Business.Services
         }
         public async Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username)
         {
-            username = "adegunwad@accessbankplc.com";
             try
             {
-                ConcurrentBag<Ad> ads = new ConcurrentBag<Ad>();
-                Parallel.ForEach(Ids, async (id) => {
-                    var ad = await GetAd(id,username);
+                //username = "adegunwad@accessbankplc.com"; 
+                //ConcurrentBag<Ad> ads = new ConcurrentBag<Ad>();
+                //Parallel.ForEach(Ids,(id) =>
+                //{
+                //    //var ad = GetAd(id, username).Result;
+                //    var ad = GetAd(id, username).GetAwaiter().GetResult();
+                //    ads.Add(ad);
+                //});
+
+                List<Ad> ads = new List<Ad>();
+                foreach (var id in Ids)
+                {
+                    var ad = await GetAd(id, username);
                     ads.Add(ad);
-                });
+                }
 
                 return ads;
             }
