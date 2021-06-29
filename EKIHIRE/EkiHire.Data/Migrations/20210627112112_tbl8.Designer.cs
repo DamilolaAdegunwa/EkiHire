@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210627112112_tbl8")]
+    partial class tbl8
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,7 +266,7 @@ namespace EkiHire.Data.Migrations
 
                     b.HasIndex("AdId");
 
-                    b.ToTable("AdLookupLog");
+                    b.ToTable("Search");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.AdProperty", b =>
@@ -685,7 +687,7 @@ namespace EkiHire.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("JobApplication");
+                    b.ToTable("JobApplications");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Keyword", b =>
@@ -727,42 +729,6 @@ namespace EkiHire.Data.Migrations
                     b.HasIndex("SubcategoryId");
 
                     b.ToTable("Keyword");
-                });
-
-            modelBuilder.Entity("EkiHire.Core.Domain.Entities.NewsletterSubscriber", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityColumn();
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NewsletterSubscriber");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.PreviousWorkExperience", b =>
@@ -815,7 +781,7 @@ namespace EkiHire.Data.Migrations
 
                     b.HasIndex("JobApplicationId");
 
-                    b.ToTable("PreviousWorkExperience");
+                    b.ToTable("PreviousWorkExperiences");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.RequestQuote", b =>
@@ -877,7 +843,7 @@ namespace EkiHire.Data.Migrations
 
                     b.HasIndex("RequesterId");
 
-                    b.ToTable("RequestQuote");
+                    b.ToTable("RequestQuotes");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Role", b =>
@@ -951,7 +917,7 @@ namespace EkiHire.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Skill");
+                    b.ToTable("Skills");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Subcategory", b =>
@@ -999,45 +965,6 @@ namespace EkiHire.Data.Migrations
                     b.HasIndex("CategoryId");
 
                     b.ToTable("Subcategory");
-                });
-
-            modelBuilder.Entity("EkiHire.Core.Domain.Entities.SubscriptionPackage", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .UseIdentityColumn();
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SubscriptionPackage");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.Transaction", b =>
@@ -1111,14 +1038,8 @@ namespace EkiHire.Data.Migrations
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("datetime2");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
 
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("datetime2");
@@ -1153,9 +1074,6 @@ namespace EkiHire.Data.Migrations
 
                     b.Property<DateTime?>("LastModificationTime")
                         .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
 
                     b.Property<string>("LastName")
                         .HasColumnType("nvarchar(max)");

@@ -33,11 +33,13 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<Transaction> Transaction { get; set; }
         public DbSet<CartItem> CartItem { get; set; }
         public DbSet<Wallet> Wallet { get; set; }
-        public DbSet<AdLookupLog> Search { get; set; }
-        public DbSet<RequestQuote> RequestQuotes { get; set; }
-        public DbSet<Skill> Skills { get; set; }
-        public DbSet<PreviousWorkExperience> PreviousWorkExperiences { get; set; }
-        public DbSet<JobApplication> JobApplications { get; set; }
+        public DbSet<AdLookupLog> AdLookupLog { get; set; }
+        public DbSet<RequestQuote> RequestQuote { get; set; }
+        public DbSet<Skill> Skill { get; set; }
+        public DbSet<PreviousWorkExperience> PreviousWorkExperience { get; set; }
+        public DbSet<JobApplication> JobApplication { get; set; }
+        public DbSet<SubscriptionPackage> SubscriptionPackage { get; set; }
+        public DbSet<NewsletterSubscriber> NewsletterSubscriber { get; set; }
 
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }

@@ -76,8 +76,29 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> TopAvailable();
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
         Task<string> SendNotification(List<string> clientToken, string title, string body);
-        Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false);
+        Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
+        Task<string> UploadFile(IFormFile file, string username);
+        Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25);
+        Task<Transaction> GetTransactionById(long Id, string username);
+        Task<IEnumerable<User>> GetUsers(string username, int page = 1, int size = 25);
+        Task<User> GetUserById(long Id, string username);
+        Task<bool> DeletetUserById(long Id, string username);
+        Task<IEnumerable<SubscriptionPackage>> GetSubscriptionPackages(string username, int page = 1, int size = 25);
+        Task<SubscriptionPackage> GetSubscriptionPackageById(long Id, string username);
+        Task<bool> UpdateSubscriptionPackage(SubscriptionPackage model, string username);
+        Task<bool> DeletetSubscriptionPackageById(long Id, string username);
+        Task<bool> AddTransaction(Transaction model, string username);
+        Task<bool> AddUser(User model, string username);
+        Task<bool> AddSubscriptionPackage(SubscriptionPackage model, string username);
+        Task<bool> AddNewsletterSubscriber(NewsletterSubscriber model, string username);
+        Task<IEnumerable<NewsletterSubscriber>> GetNewsletterSubscriber(string username, int page = 1, int size = 25);
+        Task<NewsletterSubscriber> GetNewsletterSubscriberById(long Id, string username);
+        Task<Ad> GetAd(long Id, string username);
+        Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username);
+        Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
+        Task<bool> DeleteNewsletterSubscriber(long id, string username);
+        Task<bool> ChangeUserType(UserType userType, long clientId, string username);
     }
     public class AdService: IAdService
     {
@@ -106,11 +127,13 @@ namespace EkiHire.Business.Services
         private readonly SmtpConfig _smtpsettings;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IMailService _mailSvc;
-
+        private readonly IRepository<Transaction> TransactionRepository;
+        private readonly IRepository<SubscriptionPackage> SubscriptionPackageRepository;
+        private readonly IRepository<NewsletterSubscriber> NewsletterSubscriberRepository;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, IMailService mailSvc)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, IMailService mailSvc, IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -135,6 +158,8 @@ namespace EkiHire.Business.Services
             this._smtpsettings = settingSvc.Value;
             this._hostingEnvironment = _hostingEnvironment;
             this._mailSvc = mailSvc;
+            this.TransactionRepository = TransactionRepository;
+            this.SubscriptionPackageRepository = SubscriptionPackageRepository;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
@@ -166,6 +191,19 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
                 }
+
+                //check for valid subcategory
+                if(model.SubcategoryId == null || model.SubcategoryId < 1)
+                {
+                    throw new Exception("Invalid SubcategoryId");
+                }
+                var subcategory = _subcategoryRepo.Get(model.SubcategoryId??0);
+                if(subcategory == null)
+                {
+                    throw new Exception("Cannot find Subcategory");
+                }
+
+                //
                 //check for validate usertype, validate the adtype if premium whether user can put premium ad
                 #endregion
 
@@ -330,10 +368,31 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false)
+        public async Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
         {
             try
             {
+                #region test
+                //var _1 = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == 46 && a.IsDeleted == false).DefaultIfEmpty().ToList();
+                //var _2 = (from a in _adPropertyValueRepo.GetAll()
+                //         join ap in _adPropertyRepo.GetAll() on a.AdPropertyId equals ap.Id
+
+                //         where a.AdId == 46 && !a.IsDeleted
+                //         select new AdPropertyValue
+                //         {
+                //             AdId = 46,
+                //             Id = a.Id,
+                //             AdPropertyId = a.AdPropertyId,
+                //             Value = a.Value,
+                //             AdProperty = new AdProperty { 
+                //                Name = ap.Name,
+                //                Id = ap.Id
+                //             },
+                //         }).ToList();
+                //var _3 = "";
+                //return default;
+                #endregion
+
                 #region validation
                 if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
                 {
@@ -358,11 +417,12 @@ namespace EkiHire.Business.Services
 
                 //var r = ads.Where(a => !a.IsDeleted);
                 //result = r.ToList();
-                var data = (from ad in adRepository.GetAll()//.Include("AdImages")
-                            join s in _subcategoryRepo.GetAll() on ad.SubcategoryId equals s.Id
-                            join c in CategoryRepository.GetAll() on s.CategoryId equals c.Id
-                            join adprop in _adPropertyRepo.GetAll() on s.Id equals adprop.SubcategoryId
-                            join adpropVal in _adPropertyValueRepo.GetAll() on adprop.Id equals adpropVal.AdPropertyId
+                var data = (from ad in adRepository.GetAll().DefaultIfEmpty()//.Include("AdImages")
+                            join s in _subcategoryRepo.GetAll().DefaultIfEmpty() on ad.SubcategoryId equals s.Id
+                            join c in CategoryRepository.GetAll().DefaultIfEmpty() on s.CategoryId equals c.Id
+                            join adprop in _adPropertyRepo.GetAll().DefaultIfEmpty() on s.Id equals adprop.SubcategoryId
+                            join adpropVal in _adPropertyValueRepo.GetAll().DefaultIfEmpty() on ad.Id equals adpropVal.AdId
+
                             //join images in _AdImageRepo.GetAll().DefaultIfEmpty() on ad.Id equals images.AdId
 
                             where !ad.IsDeleted
@@ -378,19 +438,35 @@ namespace EkiHire.Business.Services
                             && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
                             && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
                             && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
-                            && (ad.UserId == model.UserId || model.UserId == null && model.UserId < 0)
+                            && (ad.UserId == model.UserId || model.UserId == null || model.UserId < 1)
                             && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropVal.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
 
                             let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
                             let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
-                            //select ad; 
+                             
                             select new Ad
                             {
                                 AdClass = ad.AdClass,
                                 Address = ad.Address,
                                 AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
                                 AdImages = _AdImageRepo.GetAll().Where(a => a.AdId == ad.Id && a.IsDeleted == false).ToList(),
-                                AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                //AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                //AdPropertyValue = _adPropertyValueRepo.GetAll().Include("AdProperty").DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                AdPropertyValue = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().Select<AdPropertyValue, AdPropertyValue>(adpropv => new AdPropertyValue { 
+                                    Id = adpropv.Id,
+                                    AdId = adpropv.AdId,
+                                    AdPropertyId = adpropv.AdPropertyId,
+                                    Value = adpropv.Value,
+                                    
+                                    AdProperty = new AdProperty
+                                    {
+                                        Id = adpropv.AdProperty.Id,
+                                        Name = adpropv.AdProperty.Name,
+                                        PropertyType = adpropv.AdProperty.PropertyType,
+                                        Range = adpropv.AdProperty.Range,
+                                        SubcategoryId = adpropv.AdProperty.SubcategoryId,
+                                    }
+                                }).ToList(),
                                 AdReference = ad.AdReference,
                                 AdsStatus = ad.AdsStatus,
                                 Amount = ad.Amount,
@@ -420,13 +496,130 @@ namespace EkiHire.Business.Services
                                 Subcategory = s
 
                             });
-                var returnVal = data.DistinctBy(x => x.Id);
-                return returnVal;
+                var returnVal = data.DistinctBy(x => x.Id).ToList();
+                var filteredval = returnVal.Skip((page - 1) * size).Take(size);
+                //var integer = filteredval.ToList().Count;
+                return filteredval.ToList();
 
             }
             catch (Exception ex)
             {
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                throw ex;
+            }
+        }
+        public async Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false)
+        {
+            try
+            {
+                #region validate credential
+
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("no input!");
+                }
+                //check for non-empty username
+                if (string.IsNullOrWhiteSpace(username) && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please login and retry!");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
+                if (user == null && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist!");
+                }
+
+                //check that the username is a valid email ( the password would be validate by the Identity builder)
+                if (!Regex.IsMatch(username, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase) && allowAnonymous == false)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
+                }
+                #endregion
+
+                #region save and send data
+                JobApplication data = new JobApplication();
+                data = model;
+
+                //basic properties
+                data.CreationTime = DateTime.Now;
+                data.CreatorUserId = user.Id;
+                data.IsDeleted = false;
+                data.LastModificationTime = DateTime.Now;
+                data.LastModifierUserId = user.Id;
+                data.DeleterUserId = null;
+                data.DeletionTime = null;
+                data.Id = 0;
+
+                _unitOfWork.BeginTransaction();
+                JobApplicationRepository.Insert(data);
+                _unitOfWork.Commit();
+                //check if it saved the prev-work-experience
+
+                //send to the job advertizer/hr
+                Task.Run(async () => {
+                    try
+                    {
+                        var replacement = new System.Collections.Specialized.StringDictionary
+                        {
+                            ["FullName"] = data.FullName,
+                            ["Position"] = data.JobTitle,
+                            ["ContactPhoneNumber"] = data.ContactPhoneNumber,
+                            ["ContactEmail"] = data.ContactEmail,
+                            ["Address"] = data.Address,
+                            ["Skills"] = data.Skills,
+                            ["ExpectedSalary"] = data.ExpectedSalary,
+                            ["Age"] = data.Age.ToString(),
+                            ["Certification"] = data.Certification,
+                            ["HighestLevelOfEducation"] = data.HighestLevelOfEducation,
+                            ["Gender"] = data.Gender,
+
+                        };
+
+                        var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code",
+                            user.Email
+                            //"damee1993@gmail.com"
+                            )
+                        {
+                            BodyIsFile = true,
+                            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                            SenderDisplayName = _smtpsettings.SenderDisplayName,
+
+                        };
+
+                        await _mailSvc.SendMailAsync(mail, replacement);
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+                });
+
+                #endregion
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+                //throw ex;
+            }
+        }
+        public async Task<string> UploadFile(IFormFile file, string username)
+        {
+            try
+            {
+                MemoryStream stream = new MemoryStream();
+                file.CopyTo(stream);
+                var filePath = _serviceHelper.UploadPhoto(stream);
+                return filePath;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"error while trying to close ad for user ({username}) :: stackTrace => {ex.StackTrace}", ex);
                 throw ex;
             }
         }
@@ -474,8 +667,8 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
-                if (user == null)
+                var loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (loggedInUser == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
@@ -485,7 +678,7 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
                 }
                 //check that it is the owner of the ad that is editing it
-                if(user.Id != adDto.UserId)
+                if(loggedInUser.Id != adDto.UserId)
                 {
                     throw await _serviceHelper.GetExceptionAsync("you are not authorized to edit this ad!");
                 }
@@ -504,7 +697,7 @@ namespace EkiHire.Business.Services
                     ad.Address = adDto.Address;
                 }
                 //amount
-                if (!string.IsNullOrWhiteSpace(adDto.Amount.ToString()) && !string.Equals(ad.Amount.ToString(), adDto.Amount.ToString()) && adDto.Amount >= 0)
+                if (!string.IsNullOrWhiteSpace(adDto.Amount?.ToString()) && !string.Equals(ad.Amount?.ToString(), adDto.Amount?.ToString()) && adDto.Amount >= 0)
                 {
                     ad.Amount = adDto.Amount;
                 }
@@ -549,7 +742,7 @@ namespace EkiHire.Business.Services
                 {
                     ad.AdsStatus = adDto.AdsStatus;
                 }
-                //remove sub, cat
+                //remove sub, cat, user
                 //images
                 if(adDto.AdImages != null && adDto.AdImages.Count() > 0)
                 {
@@ -922,6 +1115,8 @@ namespace EkiHire.Business.Services
 
                 //first check if the user has a row in the db for feedback (that is not deleted)
                 AdFeedback data = model;
+                data.AdId = model.AdId;
+                data.UserId = model.UserId;
 
                 //basic properties
                 data.CreationTime = DateTime.Now;
@@ -1238,7 +1433,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -1247,12 +1442,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.SubcategoryId);
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.SubcategoryId && s.IsDeleted == false);
                 if (subcat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
-                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.SubcategoryId && a.Name.ToLower() == model.Name.ToLower());
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.SubcategoryId && a.Name.ToLower() == model.Name.ToLower() && a.IsDeleted == false);
                 if (adprop != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
@@ -1382,12 +1577,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid data!");
                 }
-                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.Subcategory.Id && s.IsDeleted == false);
+                var subcat = _subcategoryRepo.FirstOrDefault(s => s.Id == model.SubcategoryId && s.IsDeleted == false);
                 if (subcat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid subcategory!");
                 }
-                var adprop = _adPropertyRepo.FirstOrDefault(a => a.Subcategory.Id == model.Subcategory.Id && a.Name == model.Name && a.IsDeleted == false);
+                var adprop = _adPropertyRepo.FirstOrDefault(a => a.SubcategoryId == model.SubcategoryId && a.Name == model.Name && a.IsDeleted == false);
                 if (adprop != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("This property has already been created for this subcategory!");
@@ -1412,7 +1607,8 @@ namespace EkiHire.Business.Services
             {
                 _unitOfWork.Rollback();
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return false;
+                //return false;
+                throw ex;
             }
         }
         //create new ad property, update ad prop, delete,
@@ -1482,11 +1678,15 @@ namespace EkiHire.Business.Services
         {
             try
             {
+                #region validate
                 var ad = await adRepository.GetAll().FirstOrDefaultAsync(a => a.Id == AdId && a.IsDeleted == false);
                 if(ad == null)
                 {
                     throw new Exception("Ad not found!");
                 }
+
+                //check that the person is an admin
+                #endregion
                 _unitOfWork.BeginTransaction();
                 ad.AdsStatus = adsStatus;
                 adRepository.Update(ad);
@@ -1661,101 +1861,7 @@ namespace EkiHire.Business.Services
                 //throw ex;
             }
         }
-        public async Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false)
-        {
-            try
-            {
-                #region validate credential
-
-                //check that the model carries data
-                if (model == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("no input!");
-                }
-                //check for non-empty username
-                if (string.IsNullOrWhiteSpace(username) && allowAnonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please login and retry!");
-                }
-
-                //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
-                if (user == null && allowAnonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("User does not exist!");
-                }
-
-                //check that the username is a valid email ( the password would be validate by the Identity builder)
-                if (!Regex.IsMatch(username, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase) && allowAnonymous == false)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
-                }
-                #endregion
-
-                #region save and send data
-                JobApplication data = new JobApplication();
-                data = model;
-
-                //basic properties
-                data.CreationTime = DateTime.Now;
-                data.CreatorUserId = user.Id;
-                data.IsDeleted = false;
-                data.LastModificationTime = DateTime.Now;
-                data.LastModifierUserId = user.Id;
-                data.DeleterUserId = null;
-                data.DeletionTime = null;
-                data.Id = 0;
-
-                _unitOfWork.BeginTransaction();
-                JobApplicationRepository.Insert(data);
-                _unitOfWork.Commit();
-                //check if it saved the prev-work-experience
-
-                //send to the job advertizer/hr
-                try
-                {
-                    var replacement = new System.Collections.Specialized.StringDictionary
-                    {
-                        ["FullName"] = data.FullName,
-                        ["Position"] = data.JobTitle,
-                        ["ContactPhoneNumber"] = data.ContactPhoneNumber,
-                        ["ContactEmail"] = data.ContactEmail,
-                        ["Address"] = data.Address,
-                        ["Skills"] = data.Skills,
-                        ["ExpectedSalary"] = data.ExpectedSalary,
-                        ["Age"] = data.Age.ToString(),
-                        ["Certification"] = data.Certification,
-                        ["HighestLevelOfEducation"] = data.HighestLevelOfEducation,
-                        ["Gender"] = data.Gender,
-
-                    };
-
-                    var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
-                    {
-                        BodyIsFile = true,
-                        BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
-                        SenderDisplayName = _smtpsettings.SenderDisplayName,
-
-                    };
-
-                    await _mailSvc.SendMailAsync(mail, replacement);
-                }
-                catch (Exception ex)
-                {
-                    
-                }
-
-                #endregion
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return false;
-                //throw ex;
-            }
-        }
+        
         public async Task<IEnumerable<AdDTO>> TopAvailable()
         {
             try
@@ -1782,7 +1888,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public virtual async Task<string> SendNotification(List<string> clientToken, string title, string body)
+        public async Task<string> SendNotification(List<string> clientToken, string title, string body)
         {
             var registrationTokens = clientToken;
             var message = new MulticastMessage()
@@ -1797,7 +1903,418 @@ namespace EkiHire.Business.Services
             var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message).ConfigureAwait(true);
             return "";
         }
+        public async Task<bool> AddTransaction(Transaction model, string username)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                TransactionRepository.Insert(model);
+                _unitOfWork.Commit();
 
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25)
+        {
+            try
+            {
+                return TransactionRepository.GetAll().Skip((page - 1) * size).Take(size);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<Transaction> GetTransactionById(long Id, string username)
+        {
+            try
+            {
+                return TransactionRepository.Get(Id);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> AddUser(User model, string username)
+        {
+            try
+            {
+                #region validate credential
+
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("no input provided!");
+                }
+                //check for non-empty username 
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please login and retry");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+                //check that the person is an administrator
+                if(user.UserType == UserType.Administrator)
+                {
+                    throw new Exception("you are not authorized to add user");
+                }
+                
+                //check for valid usertype, validate the adtype if premium whether user can put premium ad
+                #endregion
+
+                //basic properties
+                model.CreationTime = DateTime.Now;
+                model.CreatorUserId = user.Id;
+                model.IsDeleted = false;
+                model.LastModificationTime = DateTime.Now;
+                model.LastModifierUserId = user.Id;
+                model.DeleterUserId = null;
+                model.DeletionTime = null;
+                model.Id = 0;
+
+                _unitOfWork.BeginTransaction();
+                _userRepo.Insert(model);
+                _unitOfWork.Commit();
+
+                //you'd need to email the person...
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<User>> GetUsers(string username, int page = 1, int size = 25)
+        {
+            try
+            {
+                return UserRepository.GetAll().Skip((page - 1) * size).Take(size);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<User> GetUserById(long Id, string username)
+        {
+            try
+            {
+                return UserRepository.Get(Id);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> DeletetUserById(long Id, string username)
+        {
+            try
+            {
+                var user = UserRepository.Get(Id);
+                if(user == null)
+                {
+                    return false;
+                }
+                _unitOfWork.BeginTransaction();
+                _userRepo.DeleteAsync(user);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> AddSubscriptionPackage(SubscriptionPackage model, string  username)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                SubscriptionPackageRepository.Insert(model);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<SubscriptionPackage>> GetSubscriptionPackages(string username, int page = 1, int size = 25)
+        {
+            try
+            {
+                return SubscriptionPackageRepository.GetAll().Skip((page - 1) * size).Take(size);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<SubscriptionPackage> GetSubscriptionPackageById(long Id, string username)
+        {
+            try
+            {
+                return SubscriptionPackageRepository.Get(Id);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> UpdateSubscriptionPackage(SubscriptionPackage model, string username)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                SubscriptionPackageRepository.Update(model);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<bool> DeletetSubscriptionPackageById(long Id, string username)
+        {
+            try
+            {
+                var package = SubscriptionPackageRepository.Get(Id);
+                if (package == null)
+                {
+                    return false;
+                }
+                _unitOfWork.BeginTransaction();
+                SubscriptionPackageRepository.DeleteAsync(package);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> AddNewsletterSubscriber(NewsletterSubscriber model, string username)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                NewsletterSubscriberRepository.Insert(model);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<NewsletterSubscriber>> GetNewsletterSubscriber(string username, int page = 1, int size = 25)
+        {
+            try
+            {
+                return NewsletterSubscriberRepository.GetAll().Skip((page - 1) * size).Take(size);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<NewsletterSubscriber> GetNewsletterSubscriberById(long Id, string username)
+        {
+            try
+            {
+                return NewsletterSubscriberRepository.Get(Id);
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username)
+        {
+            try
+            {
+                _unitOfWork.BeginTransaction();
+                NewsletterSubscriberRepository.Update(model);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<bool> DeleteNewsletterSubscriber(long id, string username)
+        {
+            try
+            {
+                var model = NewsletterSubscriberRepository.FirstOrDefault(id);
+                if(model == null)
+                {
+                    return false;
+                }
+                _unitOfWork.BeginTransaction();
+                NewsletterSubscriberRepository.Delete(model);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<bool> ChangeUserType(UserType userType, long clientId, string username)
+        {
+            try
+            {
+                #region validate
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+                //check that the person is an administrator
+                if (user.UserType == UserType.Administrator)
+                {
+                    throw new Exception("you are not authorized to add user");
+                }
+
+                //check that  the client exist
+                var client = _userRepo.FirstOrDefault(x => x.Id == clientId);
+                if (client == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Client does not exist");
+                }
+                #endregion
+
+                client.UserType = userType;
+                _unitOfWork.BeginTransaction();
+                _userRepo.Update(client);
+                _unitOfWork.Commit();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<Ad> GetAd(long Id, string username)
+        {
+            try
+            {
+                
+                #region validate
+                //check that the user exist
+                var loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (loggedInUser == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+                #endregion
+                var ad = adRepository.FirstOrDefault(x => x.Id == Id);
+                if(ad == null)
+                {
+                    throw new Exception("Invalid Ad Id");
+                }
+                //you can now add other properties
+                ad.AdImages = _AdImageRepo.GetAll().Where(x => x.AdId == Id);
+                ad.AdFeedback = adFeedbackRepository.GetAll().Where(x => x.AdId == Id);
+                ad.AdPropertyValue = _adPropertyValueRepo.GetAll().Where(x => x.AdId == Id);
+                //ad.Rank = 0;
+                var rating = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.Id == Id && !a.IsDeleted && (int)(a.Rating??0) >= 1 && (int)(a.Rating??0) <= 5).DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0));
+                ad.Rating = rating;//adFeedbackRepository.GetAll().Where(x => x.AdId == Id && (int)(x.Rating??0) >= 1 && (int)(x.Rating ?? 0) <= 5).Average(y => (int)y.Rating);
+                ad.Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count();
+                ad.Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count();
+                ad.InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == loggedInUser.Id && c.AdId == ad.Id && c.IsDeleted == false);
+                ad.User = UserRepository.FirstOrDefault(u => u.Id == ad.UserId);//owner
+                ad.Subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == ad.SubcategoryId);
+                return ad;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username)
+        {
+            username = "adegunwad@accessbankplc.com";
+            try
+            {
+                ConcurrentBag<Ad> ads = new ConcurrentBag<Ad>();
+                Parallel.ForEach(Ids, async (id) => {
+                    var ad = await GetAd(id,username);
+                    ads.Add(ad);
+                });
+
+                return ads;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
         #region comments
         //public async Task<IEnumerable<Ad>> GetActiveAds()
         //{

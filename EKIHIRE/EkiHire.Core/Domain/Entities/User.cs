@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Core.Domain.Entities
 {
-    public class User : IdentityUser<long>, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
+    public class User : IdentityUser<long>, IFullAudited, IAudited, ICreationAudited, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
     {
         #region all user property
         public string FirstName { get; set; }
@@ -48,10 +48,13 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
-        public SubscriptionPlan SubscriptionPlan { get; set; }
+        public Enums.SubscriptionPlan SubscriptionPlan { get; set; }
         [NotMapped]
-        public IEnumerable<CartItem> CartItems { get; set; } 
-        
+        public IEnumerable<CartItem> CartItems { get; set; }
+        public long? CreatorUserId { get; set; }
+        public long? LastModifierUserId { get; set; }
+        public long? DeleterUserId { get; set; }
+
         #endregion
         public bool IsTransient()
         {

@@ -32,7 +32,8 @@ namespace EkiHire.Core.Domain.Entities
         //public virtual long? AdId { get; set; }
         //public virtual Ad Ad { get; set; }
         //public virtual IFormFile Resume { get; set; }
-        public virtual byte[] Resume { get; set; }
+        //public virtual byte[] Resume { get; set; }
+        public virtual string ResumePath { get; set; }
         #region contact details
         public virtual string JobTitle { get; set; }
         public virtual string ContactPhoneNumber { get; set; }
@@ -92,9 +93,9 @@ namespace EkiHire.Core.Domain.Entities
                 {
                     return null;
                 }
-                var resume = new JobApplication().ConvertIFormFileToByteArray(model.Resume);
+                //var resume = new JobApplication().ConvertIFormFileToByteArray(model.Resume);
                 JobApplication response = new JobApplication {
-                    Resume = resume,
+                    ResumePath = model.ResumePath,
                     JobTitle = model.JobTitle,
                     ContactPhoneNumber = model.ContactPhoneNumber,
                     Address = model.Address,

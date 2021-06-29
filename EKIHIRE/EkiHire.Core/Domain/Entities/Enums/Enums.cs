@@ -43,4 +43,14 @@ namespace EkiHire.Core.Domain.Entities.Enums
     {
         Unemployed = 0, Employed = 1, Self_Employed = 2
     }
+    public enum TransactionType
+    {
+        DebitCard = 0
+    }
+    public enum TransactionStatus
+    {
+        Pending = 0,
+        Success = 1,
+        Failed = 2
+    }
 }

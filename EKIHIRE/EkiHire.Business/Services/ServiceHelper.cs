@@ -97,6 +97,7 @@ namespace EkiHire.Business.Services
         }
         public string UploadPhoto(Stream stream)
         {
+            stream.Position = 0;
             Account account = new Account(
              appConfig.CLOUDINARY_CLOUD_NAME,
              appConfig.CLOUDINARY_API_KEY,
@@ -113,6 +114,7 @@ namespace EkiHire.Business.Services
             var result = uploadResult.Url.ToString();
             return result;
         }
+
         // Convert an object to a byte array
         public byte[] ObjectToByteArray(Object obj)
         {

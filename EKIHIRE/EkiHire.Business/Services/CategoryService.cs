@@ -123,9 +123,9 @@ namespace EkiHire.Business.Services
                 {
                     foreach (var r in result)
                     {
-                        List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == r.Id).ToDTO().ToList();
+                        List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == r.Id && !s.IsDeleted).ToDTO().ToList();
                         subcategories.ForEach(x => {
-                            var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id).ToDTO().ToList();
+                            var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToDTO().ToList();
                             x.AdProperties = _adProperties;
                         });
                         r.Subcategories = subcategories;
@@ -145,9 +145,9 @@ namespace EkiHire.Business.Services
                 CategoryDTO result = _categoryRepo.Get(Id);
                 if(withOtherData)
                 {
-                    List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == result.Id).ToDTO().ToList();
+                    List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == result.Id && !s.IsDeleted).ToDTO().ToList();
                     subcategories.ForEach(x => {
-                        var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id).ToDTO().ToList();
+                        var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToDTO().ToList();
                         x.AdProperties = _adProperties;
                     });
                     result.Subcategories = subcategories;
@@ -225,7 +225,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -234,7 +234,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
                 }
-                var entity = _categoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
+                var entity = _categoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower() && !x.IsDeleted);
                 if (entity != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Category already exist!!");
@@ -282,7 +282,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
@@ -291,12 +291,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input valid data!");
                 }
-                var entity = _subcategoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower());
+                var entity = _subcategoryRepo.FirstOrDefault(x => x.Name.ToLower() == model.Name.ToLower() && !x.IsDeleted);
                 if (entity != null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Subcategory already exist!!");
                 }
-                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.CategoryId);
+                var cat = _categoryRepo.FirstOrDefault(c => c.Id == model.CategoryId && !c.IsDeleted);
                 if (cat == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Category does not exist!!");
@@ -346,12 +346,12 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Please input a username!");
                 }
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && !x.IsDeleted);
                 if (user == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
-                var entity = _subcategoryRepo.FirstOrDefault(x => x.Id == subId);
+                var entity = _subcategoryRepo.FirstOrDefault(x => x.Id == subId && !x.IsDeleted);
                 if (entity == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("Subcategory does not exist!!");
@@ -359,12 +359,12 @@ namespace EkiHire.Business.Services
                 #endregion
                 /*go to the item table, search out all the ones with subcategoryId = subId, grouped by the groupname*/
                 //List<IGrouping<string, Item>> result = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).ToList().GroupBy(g => g.GroupName).ToList();
-                var list = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId).ToList();
+                var list = _itemRepository.GetAll().Where(a => a.Subcategory.Id == subId && !a.IsDeleted).ToList();
                 List<List<Item>> itemsbygroup = new List<List<Item>>();
                 var uniqueGroups = list.Select(x => x.GroupName).Distinct();
                 foreach (var g in uniqueGroups)
                 {
-                    var itemsInEachGroup = list.Where(x => x.GroupName == g).ToList();
+                    var itemsInEachGroup = list.Where(x => x.GroupName == g && !x.IsDeleted).ToList();
                     itemsbygroup.Add(itemsInEachGroup);
                 }
                 return itemsbygroup;
@@ -382,7 +382,7 @@ namespace EkiHire.Business.Services
             {
                 Dictionary<Category, List<string>> catAndSub = new Dictionary<Category, List<string>>();
                 #region (1) Real Estate
-                var reCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Real Estate");
+                var reCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Real Estate" && !x.IsDeleted);
                 var reSubData = new List<string>()
                 {
                     "Houses & Apartments For Sale",
@@ -397,7 +397,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (2) SERVICES
-                var servicesCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Services");
+                var servicesCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Services" && !x.IsDeleted);
                 var servicesSubData = new List<string>
                 {
                     "Agency",
@@ -428,7 +428,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (3) Jobs
-                var JobsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Jobs");
+                var JobsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Jobs" && !x.IsDeleted);
                 var JobsSubData = new List<string> {
             "Account", "Administrative", "Advert & Marketing", "Architecture", "Beauty", "Consultnat", "Driver", "Engineering", "Farming", "HealthCare", "Hotel", "House Keeping", "Human Resouces", "IT & Software", "Internship", "Legal", "Logistics", "Management", "Manufacturing", "Nanny", "Oil & Gas", "Others...", "Part-Time", "Quality Control / Assurance", "Research", "Restaurant", "Retail", "Sales & Telemarketing", "Security", "Sports", "Teaching", "technology", "Travel & Tourism"
                 };
@@ -436,7 +436,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (4) Automobile
-                var AutomobileCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Automobile");
+                var AutomobileCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Automobile" && !x.IsDeleted);
                 var AutomobileSubData = new List<string>{
                     "Cars",
                     "Trucks & Trailers",
@@ -450,7 +450,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (5) Retails
-                var RetailsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Retails");
+                var RetailsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Retails" && !x.IsDeleted);
                 var RetailsSubData = new List<string> {
                 "Agriculture & farming",
                 "Apparel",
@@ -492,7 +492,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (6) Hotels
-                var HotelsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Hotels");
+                var HotelsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Hotels" && !x.IsDeleted);
                 var HotelsSubData = new List<string> { 
                 
                 };
@@ -500,7 +500,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (7) Attractions
-                var AttractionsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Attractions");
+                var AttractionsCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Attractions" && !x.IsDeleted);
                 var AttractionsSubData = new List<string> {
                     "Cinema", "Bar & Lounges", "Parks"
                 };
@@ -508,7 +508,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region (8) Restaurant
-                var RestaurantCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Restaurant");
+                var RestaurantCat = _categoryRepo.GetAll().FirstOrDefault(x => x.Name == "Restaurant" && !x.IsDeleted);
                 var RestaurantSubData = new List<string> {
                 
                 };
@@ -535,9 +535,9 @@ namespace EkiHire.Business.Services
                 {
                     foreach (var name in kv.Value)//subcategories
                     {
-                        var test = _subcategoryRepo.FirstOrDefault(x => true);
-                        var json = Newtonsoft.Json.JsonConvert.SerializeObject(test);
-                        var subData = _subcategoryRepo.FirstOrDefault(x => x.Category.Id == kv.Key.Id && kv.Key.Name == name);//category = kv.Key
+                        //var test = _subcategoryRepo.FirstOrDefault(x => true);
+                        //var json = Newtonsoft.Json.JsonConvert.SerializeObject(test);
+                        var subData = _subcategoryRepo.FirstOrDefault(x => x.Category.Id == kv.Key.Id && kv.Key.Name == name && !x.IsDeleted);//category = kv.Key
                         if (subData != null)
                         {
                             continue;

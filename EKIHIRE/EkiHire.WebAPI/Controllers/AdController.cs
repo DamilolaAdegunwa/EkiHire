@@ -128,8 +128,8 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         //filter, search and scan ads
-        [HttpPost, Route("Search")]
-        public async Task<IServiceResponse<IEnumerable<Ad>>> Search(AdFilter model)
+        [HttpPost, Route("Search"), Route("Search/{page}"), Route("Search/{page}/{size}")]
+        public async Task<IServiceResponse<IEnumerable<Ad>>> Search(AdFilter model, int page = 1, int size = 25)
         {
             return await HandleApiOperationAsync(async () =>
             {
@@ -374,12 +374,27 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAd/{Id}")]
-        public async Task<IServiceResponse<AdDTO>> GetAd(long Id)
+        
+        public async Task<IServiceResponse<Ad>> GetAd(long Id)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<AdDTO>();
-                //var data = await adService.GetAd(Id);
-                var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
+                var response = new ServiceResponse<Ad>();
+                var data = await adService.GetAd(Id, serviceHelper.GetCurrentUserEmail());
+                //var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetAd/bulk")]
+        [AllowAnonymous]
+        public async Task<IServiceResponse<IEnumerable<Ad>>> GetAdBulk(long[] Ids)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Ad>>();
+                var data = await adService.GetAdBulk(Ids, serviceHelper.GetCurrentUserEmail());
+                //var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
                 response.Object = data;
                 return response;
             });
@@ -470,12 +485,273 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdImage/{AdId}")]
-        public async Task<ServiceResponse<bool>> AddAdImage(long AdId, string username)
+        public async Task<ServiceResponse<bool>> AddAdImage(long AdId)
         {
             IFormFileCollection images = Request.Form.Files;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
                 var data = await adService.AddAdImage(AdId, images, serviceHelper.GetCurrentUserEmail()/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("UploadFile")]
+        public async Task<ServiceResponse<string>> UploadFile()
+        {
+            IFormFile file = Request.Form.Files[0];
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<string>();
+                var data = await adService.UploadFile(file, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetTransactions")]
+        [Route("GetTransactions/{page}")]
+        [Route("GetTransactions/{page}/{size}")]
+        public async Task<ServiceResponse<IEnumerable<Transaction>>> GetTransactions(int page = 1, int size = 25)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Transaction>>();
+                var data = await adService.GetTransactions(serviceHelper.GetCurrentUserEmail(), page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetTransaction/{Id}")]
+        public async Task<ServiceResponse<Transaction>> GetTransactionById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<Transaction>();
+                var data = await adService.GetTransactionById(Id,serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetUsers")]
+        [Route("GetUsers/{page}")]
+        [Route("GetUsers/{page}/{size}")]
+        public async Task<ServiceResponse<IEnumerable<User>>> GetUsers( int page = 1, int size = 25)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<User>>();
+                var data = await adService.GetUsers(serviceHelper.GetCurrentUserEmail(), page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetUser/{Id}")]
+        public async Task<IServiceResponse<User>> GetUserById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<User>();
+                var data = await adService.GetUserById(Id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("DeletetUser/{Id}")]
+        public async Task<ServiceResponse<bool>> DeletetUserById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeletetUserById(Id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetSubscriptionPackages")]
+        [Route("GetSubscriptionPackages/{page}")]
+        [Route("GetSubscriptionPackages/{page}/{size}")]
+        public async Task<ServiceResponse<IEnumerable<SubscriptionPackage>>> GetSubscriptionPackages(int page = 1, int size = 25)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<SubscriptionPackage>>();
+                var data = await adService.GetSubscriptionPackages(serviceHelper.GetCurrentUserEmail(), page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetSubscriptionPackage/{Id}")]
+        public async Task<ServiceResponse<SubscriptionPackage>> GetSubscriptionPackageById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<SubscriptionPackage>();
+                var data = await adService.GetSubscriptionPackageById(Id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("UpdateSubscriptionPackage")]
+        public async Task<ServiceResponse<bool>> UpdateSubscriptionPackage(SubscriptionPackage model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.UpdateSubscriptionPackage(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("DeletetSubscriptionPackage/{Id}")]
+        public async Task<ServiceResponse<bool>> DeletetSubscriptionPackageById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeletetSubscriptionPackageById(Id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddTransaction")]
+        public async Task<ServiceResponse<bool>> AddTransaction(Transaction model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddTransaction(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("UpdateAdProperty")]
+        public async Task<ServiceResponse<bool>> UpdateAdProperty(AdProperty model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.UpdateAdProperty(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddAdImage")]
+        public async Task<ServiceResponse<bool>> AddAdImage(AdImageDTO model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddAdImage(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddUser")]
+        public async Task<ServiceResponse<bool>> AddUser(User model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddUser(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddSubscriptionPackage")]
+        public async Task<ServiceResponse<bool>> AddSubscriptionPackage(SubscriptionPackage model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddSubscriptionPackage(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddNewsletterSubscriber")]
+        public async Task<ServiceResponse<bool>> AddNewsletterSubscriber(NewsletterSubscriber model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.AddNewsletterSubscriber(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetNewsletterSubscriber")]
+        [Route("GetNewsletterSubscriber/{page}")]
+        [Route("GetNewsletterSubscriber/{page}/{size}")]
+        public async Task<ServiceResponse<IEnumerable<NewsletterSubscriber>>> GetNewsletterSubscriber(int page = 1, int size = 25)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<NewsletterSubscriber>>();
+                var data = await adService.GetNewsletterSubscriber(serviceHelper.GetCurrentUserEmail(), page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("GetNewsletterSubscriber/{Id}")]
+        public async Task<ServiceResponse<NewsletterSubscriber>> GetNewsletterSubscriberById(long Id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<NewsletterSubscriber>();
+                var data = await adService.GetNewsletterSubscriberById(Id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("UpdateNewsletterSubscriber")]
+        public async Task<ServiceResponse<bool>> UpdateNewsletterSubscriber(NewsletterSubscriber model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.UpdateNewsletterSubscriber(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("DeleteNewsletterSubscriber/{id}")]
+        public async Task<ServiceResponse<bool>> DeleteNewsletterSubscriber(long id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeleteNewsletterSubscriber(id, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("ChangeUserType/{userType}/{clientId}")]
+        public async Task<ServiceResponse<bool>> ChangeUserType(UserType userType, long clientId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.ChangeUserType(userType, clientId, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });
