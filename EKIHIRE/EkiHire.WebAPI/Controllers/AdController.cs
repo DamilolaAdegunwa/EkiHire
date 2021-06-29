@@ -424,7 +424,7 @@ namespace EkiHire.WebAPI.Controllers
         }
         [HttpPost]
         [Route("SaveRequestQuote")]
-        public async Task<ServiceResponse<bool>> SaveRequestQuote(RequestQuoteDTO model)
+        public async Task<ServiceResponse<bool>> SaveRequestQuote(RequestQuote model)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();

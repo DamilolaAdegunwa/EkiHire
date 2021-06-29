@@ -70,7 +70,7 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model, string username);
         Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
-        Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username);
+        Task<bool> SaveRequestQuote(RequestQuote model, string username);
         Task<bool> SaveReview(AdFeedback model, string username);
         Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
         Task<IEnumerable<AdDTO>> TopAvailable();
@@ -1106,28 +1106,35 @@ namespace EkiHire.Business.Services
                 }
 
                 //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
+                var loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (loggedInUser == null)
                 {
                     throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+
+                //check that the AdId was passed and that it is valid 
+                var ad = adRepository.FirstOrDefault(x => x.Id == model.AdId);
+                if(ad == null)
+                {
+                    throw new Exception("Invalid Ad Id");
                 }
                 #endregion
 
                 //first check if the user has a row in the db for feedback (that is not deleted)
                 AdFeedback data = model;
                 data.AdId = model.AdId;
-                data.UserId = model.UserId;
+                data.UserId = loggedInUser.Id;
 
                 //basic properties
                 data.CreationTime = DateTime.Now;
-                data.CreatorUserId = user.Id;
+                data.CreatorUserId = loggedInUser.Id;
                 data.IsDeleted = false;
                 data.LastModificationTime = DateTime.Now;
-                data.LastModifierUserId = user.Id;
+                data.LastModifierUserId = loggedInUser.Id;
                 data.DeleterUserId = null;
                 data.DeletionTime = null;
                 data.Id = 0;
-                var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == user.Id && f.AdId == model.AdId);
+                var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == loggedInUser.Id && f.AdId == model.AdId);
                 _unitOfWork.BeginTransaction();
                 if(feedback == null)
                 {
@@ -1816,7 +1823,7 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        public async Task<bool> SaveRequestQuote(RequestQuoteDTO model, string username)
+        public async Task<bool> SaveRequestQuote(RequestQuote model, string username)
         {
             try
             {
@@ -1852,7 +1859,7 @@ namespace EkiHire.Business.Services
                 RequestQuoteRepository.Insert(request);
                 _unitOfWork.Commit();
                 #endregion
-                return default;
+                return true;
             }
             catch (Exception ex)
             {
