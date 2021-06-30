@@ -62,6 +62,7 @@ namespace EkiHire.Business.Services
         //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
         Task<bool> ChangeProfileImage(string profileImageString, string username);
         Task<bool> ChangeIsActive(bool isActive, string username);
+        Task<bool> AddUser(User model, string username);
     }
 
     public class UserService : IUserService
@@ -76,6 +77,7 @@ namespace EkiHire.Business.Services
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         private readonly IUnitOfWork _unitOfWork;
         readonly SmtpConfig _smtpsettings;
+        private readonly IUserService _userSvc;
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
@@ -84,7 +86,8 @@ namespace EkiHire.Business.Services
             IHostingEnvironment hostingEnvironment,
             IOptions<AppConfig> _appConfig,
             IUnitOfWork unitOfWork
-            , IOptions<SmtpConfig> settingSvc)
+            , IOptions<SmtpConfig> settingSvc
+            , IUserService _userSvc)
         {
             _userManager = userManager;
             _svcHelper = svcHelper;
@@ -94,6 +97,7 @@ namespace EkiHire.Business.Services
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _smtpsettings = settingSvc.Value;
+            this._userSvc = _userSvc;
         }
 
         protected virtual Task<IdentityResult> CreateAsync(User user)
@@ -781,7 +785,91 @@ namespace EkiHire.Business.Services
             }
 
         }
+        public async Task<bool> AddUser(User model, string username)
+        {
+            try
+            {
+                #region validate credential
 
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw new Exception("no input provided!");
+                }
+                //check for non-empty username 
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw new Exception("Please login and retry");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw new Exception("User does not exist");
+                }
+                //check that the person is an administrator
+                if (user.UserType == UserType.Administrator)
+                {
+                    throw new Exception("you are not authorized to add user");
+                }
+
+                //check for valid usertype, validate the adtype if premium whether user can put premium ad
+                #endregion
+
+                //basic properties
+                model.CreationTime = DateTime.Now;
+                model.CreatorUserId = user.Id;
+                model.IsDeleted = false;
+                model.LastModificationTime = DateTime.Now;
+                model.LastModifierUserId = user.Id;
+                model.DeleterUserId = null;
+                model.DeletionTime = null;
+                model.Id = 0;
+
+                _unitOfWork.BeginTransaction();
+                var saved = await _userRepository.InsertAsync(model);
+                _unitOfWork.Commit();
+
+                //generate a password
+                var changeToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                var result = await _userManager.ResetPasswordAsync(user, changeToken, "123456");
+
+                if (!result.Succeeded)
+                {
+                    throw new Exception(result.Errors?.FirstOrDefault().Description);
+                }
+
+                //you'd need to email the account credentials to the new user...
+                try
+                {
+                    //first get the file
+                    var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AccountActivationEmail);
+                    if (File.Exists(filePath))
+                    {
+                        var fileString = File.ReadAllText(filePath);
+                        if (!string.IsNullOrWhiteSpace(fileString))
+                        {
+                            fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
+                            fileString = fileString.Replace("{{UserName}}", $"{model.UserName}");
+                            fileString = fileString.Replace("{{DefaultPassword}}", $"{"123456"}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
 
     }
 }

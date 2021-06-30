@@ -126,6 +126,7 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<Transaction>, EfCoreRepository<DbContext, Transaction>>();
             services.AddScoped<IRepository<SubscriptionPackage>, EfCoreRepository<DbContext, SubscriptionPackage>>();
             services.AddScoped<IRepository<NewsletterSubscriber>, EfCoreRepository<DbContext, NewsletterSubscriber>>();
+            services.AddScoped<IRepository<PreviousWorkExperience>, EfCoreRepository<DbContext, PreviousWorkExperience>>();
 
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
@@ -341,6 +342,7 @@ namespace EkiHire.WebAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService, IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
+            //categoryService.TestMail();
             //var replacement = new StringDictionary
             //{
             //    ["FirstName"] = "user.FirstName",

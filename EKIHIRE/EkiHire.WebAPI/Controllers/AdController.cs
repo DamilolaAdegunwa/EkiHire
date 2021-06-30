@@ -23,11 +23,13 @@ namespace EkiHire.WebAPI.Controllers
         private readonly IAdService adService;
         private readonly ICategoryService categoryService;
         private readonly IServiceHelper serviceHelper;
-        public AdController(IAdService adService, ICategoryService categoryService, IServiceHelper serviceHelper)
+        private readonly IUserService userService;
+        public AdController(IAdService adService, ICategoryService categoryService, IServiceHelper serviceHelper, IUserService userService)
         {
             this.adService = adService;
             this.categoryService = categoryService;
             this.serviceHelper = serviceHelper;
+            this.userService = userService;
         }
 
         [HttpPost, Route("AddAd")]
@@ -448,6 +450,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("ApplyForJob")]
+        
         public async Task<ServiceResponse<bool>> ApplyForJob(JobApplicationDTO model, bool allowAnonymous = false)
         {
             return await HandleApiOperationAsync(async () => {
@@ -460,6 +463,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("TopAvailable")]
+        [AllowAnonymous]
         public async Task<ServiceResponse<IEnumerable<AdDTO>>> TopAvailable()
         {
             return await HandleApiOperationAsync(async () => {
@@ -472,6 +476,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("SimilarAd/{subcategoryId}")]
+        [AllowAnonymous]
         public async Task<ServiceResponse<IEnumerable<AdDTO>>> SimilarAd(long subcategoryId)
         {
             return await HandleApiOperationAsync(async () => {
@@ -664,7 +669,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.AddUser(model, serviceHelper.GetCurrentUserEmail());
+                var data = await userService.AddUser(model, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

@@ -13,6 +13,7 @@ namespace EkiHire.Core.Messaging.Email
         public string Server { get; set; }
         public string Password { get; set; }
         public string UserName { get; set; }
+        public string From { get; set; }
         public string SenderDisplayName { get; set; }
         public bool UseDefaultCredentials { get; set; }
         //

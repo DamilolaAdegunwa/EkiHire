@@ -27,7 +27,8 @@
     <PackageReference Include="CloudinaryDotNet" Version="1.15.2" />
     <PackageReference Include="FirebaseAdmin" Version="2.2.0" />
     <PackageReference Include="log4net" Version="2.0.12" />
-    <PackageReference Include="MimeKit" Version="2.12.0" />
+    <PackageReference Include="MailKit" Version="2.13.0" />
+    <!-- <PackageReference Include="MimeKit" Version="2.12.0" /> -->
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="PagedList.Mvc" Version="4.5.0" />
   </ItemGroup>

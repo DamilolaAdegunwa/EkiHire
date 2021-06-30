@@ -634,7 +634,8 @@ namespace EkiHire.Business.Services
         }
         public Task TestMail()//using outlook account
         {
-            string to = "damee1993@gmail.com"; //To address    
+            //string to = "damee1993@gmail.com"; //To address    
+            string to = "adegunwad@accessbankplc.com"; //To address    
             //string from = "damilola_093425@yahoo.com"; //From address    
             string from = "damilolar_moyo@outlook.com"; //From address    
             MailMessage message = new MailMessage(from, to);

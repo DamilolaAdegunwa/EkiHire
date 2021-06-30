@@ -89,7 +89,7 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateSubscriptionPackage(SubscriptionPackage model, string username);
         Task<bool> DeletetSubscriptionPackageById(long Id, string username);
         Task<bool> AddTransaction(Transaction model, string username);
-        Task<bool> AddUser(User model, string username);
+        
         Task<bool> AddSubscriptionPackage(SubscriptionPackage model, string username);
         Task<bool> AddNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<IEnumerable<NewsletterSubscriber>> GetNewsletterSubscriber(string username, int page = 1, int size = 25);
@@ -126,14 +126,15 @@ namespace EkiHire.Business.Services
         private readonly IRepository<JobApplication> JobApplicationRepository;
         private readonly SmtpConfig _smtpsettings;
         private readonly IHostingEnvironment _hostingEnvironment;
-        private readonly IMailService _mailSvc;
+        //private readonly IMailService _mailSvc;
         private readonly IRepository<Transaction> TransactionRepository;
         private readonly IRepository<SubscriptionPackage> SubscriptionPackageRepository;
         private readonly IRepository<NewsletterSubscriber> NewsletterSubscriberRepository;
+        private readonly IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, IMailService mailSvc, IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -157,9 +158,10 @@ namespace EkiHire.Business.Services
             this.JobApplicationRepository = JobApplicationRepository;
             this._smtpsettings = settingSvc.Value;
             this._hostingEnvironment = _hostingEnvironment;
-            this._mailSvc = mailSvc;
+            //this._mailSvc = mailSvc;
             this.TransactionRepository = TransactionRepository;
             this.SubscriptionPackageRepository = SubscriptionPackageRepository;
+            this.PreviousWorkExperienceRepository = PreviousWorkExperienceRepository;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
@@ -554,46 +556,52 @@ namespace EkiHire.Business.Services
                 data.Id = 0;
 
                 _unitOfWork.BeginTransaction();
-                JobApplicationRepository.Insert(data);
+                var savedData = await JobApplicationRepository.InsertAsync(data);
                 _unitOfWork.Commit();
-                //check if it saved the prev-work-experience
 
+                //check if it saved the prev-work-experience
+                if(savedData != null && savedData.Id > 0 && data.PreviousWorkExperiences != null && data.PreviousWorkExperiences.Count() > 0)
+                {
+                    foreach(var p in data.PreviousWorkExperiences)
+                    {
+                        _unitOfWork.BeginTransaction();
+                         await JobApplicationRepository.InsertAsync(data);
+                        _unitOfWork.Commit();
+                    }
+                }
                 //send to the job advertizer/hr
-                Task.Run(async () => {
+                
+                _ = Task.Run(async () =>
+                {
                     try
                     {
-                        var replacement = new System.Collections.Specialized.StringDictionary
+                        //first get the file
+                        var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.JobApplicationEmail);
+                        if (File.Exists(filePath))
                         {
-                            ["FullName"] = data.FullName,
-                            ["Position"] = data.JobTitle,
-                            ["ContactPhoneNumber"] = data.ContactPhoneNumber,
-                            ["ContactEmail"] = data.ContactEmail,
-                            ["Address"] = data.Address,
-                            ["Skills"] = data.Skills,
-                            ["ExpectedSalary"] = data.ExpectedSalary,
-                            ["Age"] = data.Age.ToString(),
-                            ["Certification"] = data.Certification,
-                            ["HighestLevelOfEducation"] = data.HighestLevelOfEducation,
-                            ["Gender"] = data.Gender,
+                            var fileString = File.ReadAllText(filePath);
+                            if (!string.IsNullOrWhiteSpace(fileString))
+                            {
+                                fileString = fileString.Replace("{{FullName}}", $"{model.FullName}");
+                                fileString = fileString.Replace("{{Position}}", $"{model.JobTitle}");
+                                fileString = fileString.Replace("{{ContactPhoneNumber}}", $"{model.ContactPhoneNumber}");
+                                fileString = fileString.Replace("{{ContactEmail}}", $"{model.CompanyEmail}");
+                                fileString = fileString.Replace("{{Address}}", $"{model.Address}");
+                                fileString = fileString.Replace("{{Skills}}", $"{model.Skills}");
+                                fileString = fileString.Replace("{{ExpectedSalary}}", $"{model.ExpectedSalary}");
+                                fileString = fileString.Replace("{{Age}}", $"{model.Age}");
+                                fileString = fileString.Replace("{{Certification}}", $"{model.Certification}");
+                                fileString = fileString.Replace("{{HighestLevelOfEducation}}", $"{model.HighestLevelOfEducation}");
+                                fileString = fileString.Replace("{{Gender}}", $"{model.Gender}");
 
-                        };
-
-                        var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code",
-                            user.Email
-                            //"damee1993@gmail.com"
-                            )
-                        {
-                            BodyIsFile = true,
-                            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
-                            SenderDisplayName = _smtpsettings.SenderDisplayName,
-
-                        };
-
-                        await _mailSvc.SendMailAsync(mail, replacement);
+                                _serviceHelper.SendEMail(model.CompanyEmail, fileString, "EkiHire.com: Account Verification Code");
+                                //_serviceHelper.SendEMail("damee1993@gmail.com", fileString, "(Test) EkiHire.com: Account Verification Code");
+                            }
+                        }
                     }
                     catch (Exception ex)
                     {
-
+                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
                     }
                 });
 
@@ -1953,62 +1961,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<bool> AddUser(User model, string username)
-        {
-            try
-            {
-                #region validate credential
-
-                //check that the model carries data
-                if (model == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("no input provided!");
-                }
-                //check for non-empty username 
-                if (string.IsNullOrWhiteSpace(username))
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Please login and retry");
-                }
-
-                //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
-                }
-                //check that the person is an administrator
-                if(user.UserType == UserType.Administrator)
-                {
-                    throw new Exception("you are not authorized to add user");
-                }
-                
-                //check for valid usertype, validate the adtype if premium whether user can put premium ad
-                #endregion
-
-                //basic properties
-                model.CreationTime = DateTime.Now;
-                model.CreatorUserId = user.Id;
-                model.IsDeleted = false;
-                model.LastModificationTime = DateTime.Now;
-                model.LastModifierUserId = user.Id;
-                model.DeleterUserId = null;
-                model.DeletionTime = null;
-                model.Id = 0;
-
-                _unitOfWork.BeginTransaction();
-                _userRepo.Insert(model);
-                _unitOfWork.Commit();
-
-                //you'd need to email the person...
-                return true;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                //return false;
-                throw ex;
-            }
-        }
+       
         public async Task<IEnumerable<User>> GetUsers(string username, int page = 1, int size = 25)
         {
             try
@@ -2306,6 +2259,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
+                #region con-current
                 //username = "adegunwad@accessbankplc.com"; 
                 //ConcurrentBag<Ad> ads = new ConcurrentBag<Ad>();
                 //Parallel.ForEach(Ids,(id) =>
@@ -2314,6 +2268,7 @@ namespace EkiHire.Business.Services
                 //    var ad = GetAd(id, username).GetAwaiter().GetResult();
                 //    ads.Add(ad);
                 //});
+                #endregion
 
                 List<Ad> ads = new List<Ad>();
                 foreach (var id in Ids)
@@ -2332,6 +2287,42 @@ namespace EkiHire.Business.Services
             }
         }
         #region comments
+        //try
+        //{
+        //    var replacement = new System.Collections.Specialized.StringDictionary
+        //    {
+        //        ["FullName"] = data.FullName,
+        //        ["Position"] = data.JobTitle,
+        //        ["ContactPhoneNumber"] = data.ContactPhoneNumber,
+        //        ["ContactEmail"] = data.ContactEmail,
+        //        ["Address"] = data.Address,
+        //        ["Skills"] = data.Skills,
+        //        ["ExpectedSalary"] = data.ExpectedSalary,
+        //        ["Age"] = data.Age.ToString(),
+        //        ["Certification"] = data.Certification,
+        //        ["HighestLevelOfEducation"] = data.HighestLevelOfEducation,
+        //        ["Gender"] = data.Gender,
+
+        //    };
+
+        //    var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code",
+        //        user.Email
+        //        //"damee1993@gmail.com"
+        //        )
+        //    {
+        //        BodyIsFile = true,
+        //        BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+        //        SenderDisplayName = _smtpsettings.SenderDisplayName,
+
+        //    };
+
+        //    await _mailSvc.SendMailAsync(mail, replacement);
+        //}
+        //catch (Exception ex)
+        //{
+
+        //}
+        
         //public async Task<IEnumerable<Ad>> GetActiveAds()
         //{
         //    try

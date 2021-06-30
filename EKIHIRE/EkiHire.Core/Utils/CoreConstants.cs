@@ -33,6 +33,7 @@ namespace EkiHire.Core.Utils
             public const string BookingSuccessEmail = "wwwroot/messaging/emailtemplates/confirm-email.html";
             public const string BookingAndReturnSuccessEmail = "wwwroot/messaging/emailtemplates/confirm-return-email.html";
             public const string ActivationCodeEmail = "wwwroot/messaging/emailtemplates/activation-code-email.html";
+            public const string JobApplicationEmail = "wwwroot/messaging/emailtemplates/job-application-email.html";
             public const string BookingUnSuccessEmail = "wwwroot/messaging/emailtemplates/failed-email.html";
             public const string RescheduleSuccessEmail = "wwwroot/messaging/emailtemplates/reschedule-success.html";
             public const string AdminHireBookingEmail = "wwwroot/messaging/emailtemplates/hirebooking-admin.html";

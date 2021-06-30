@@ -11,6 +11,12 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using MailKit;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using MimeKit.Text;
+using EkiHire.Core.Messaging.Email;
 
 namespace EkiHire.Business.Services
 {
@@ -26,6 +32,7 @@ namespace EkiHire.Business.Services
         string UploadPhoto(Stream stream);
         byte[] ObjectToByteArray(Object obj);
         Object ByteArrayToObject(byte[] arrBytes);
+        public void SendEMail(string to, string message, string subject);
     }
     public class ServiceHelper : IServiceHelper
     {
@@ -33,12 +40,14 @@ namespace EkiHire.Business.Services
         readonly ICacheManager _cacheManager;
         readonly IHttpContextAccessor _httpContext;
         private readonly AppConfig appConfig;
-        public ServiceHelper(IErrorCodeService errorCodesSvc, ICacheManager cacheManager, IHttpContextAccessor httpContext, IOptions<AppConfig> _appConfig)
+        private readonly SmtpConfig _smtpsettings;
+        public ServiceHelper(IErrorCodeService errorCodesSvc, ICacheManager cacheManager, IHttpContextAccessor httpContext, IOptions<AppConfig> _appConfig, IOptions<SmtpConfig> settingSvc)
         {
             _errorCodesSvc = errorCodesSvc;
             _cacheManager = cacheManager;
             _httpContext = httpContext;
             appConfig = _appConfig.Value;
+            _smtpsettings = settingSvc.Value;
         }
 
         public string GetCurrentUserEmail()
@@ -137,6 +146,32 @@ namespace EkiHire.Business.Services
                 var obj = binForm.Deserialize(memStream);
                 return obj;
             }
+        }
+        public void SendEMail(string to, string message, string subject)
+        {
+            // create email message
+            var email = new MimeMessage();
+            email.From.Add(MailboxAddress.Parse(_smtpsettings.From));
+
+            //email.To.Add(MailboxAddress.Parse("adegunwad@accessbankplc.com"));
+            //email.To.Add(MailboxAddress.Parse("damee1993@gmail.com"));
+            //email.To.Add(MailboxAddress.Parse("damilola_093425@yahoo.com"));
+            email.To.Add(MailboxAddress.Parse(to));
+
+            //email.Subject = "Test Email Subject";
+            email.Subject = subject;
+            //email.Body = new TextPart(TextFormat.Html) { Text = "<h1>Example HTML Message Body</h1>" };
+            email.Body = new TextPart(TextFormat.Html) { Text = message };
+
+            // send email
+            using var smtp = new SmtpClient();
+            //smtp.Connect("smtp.ethereal.email", 587, SecureSocketOptions.StartTls);
+            //smtp.Connect("smtp-mail.outlook.com", 587, SecureSocketOptions.StartTls);
+            //smtp.Authenticate("damilolar_moyo@outlook.com", "Damilola#123");
+            smtp.Connect(_smtpsettings.Host, _smtpsettings.Port, SecureSocketOptions.StartTls);
+            smtp.Authenticate(_smtpsettings.UserName, _smtpsettings.Password);
+            smtp.Send(email);
+            smtp.Disconnect(true);
         }
     }
 

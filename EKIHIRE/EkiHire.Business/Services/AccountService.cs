@@ -41,6 +41,8 @@ namespace EkiHire.Business.Services
         Task SignUp(LoginViewModel model);
         Task SendAccountCredentials(User user, string password);
         Task TestEHMail();
+        //Task<bool> AddUser(User model, string username);
+
     }
 
     public class AccountService : IAccountService
@@ -52,12 +54,14 @@ namespace EkiHire.Business.Services
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
         private readonly ISMSService _smsSvc;
-        private readonly IMailService _mailSvc;
+        //private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IGuidGenerator _guidGenerator;
         private readonly AppConfig appConfig;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         readonly SmtpConfig _smtpsettings;
+        private readonly IRepository<User> _userRepo;
+
         public AccountService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             IRepository<Wallet> walletRepo,
@@ -65,11 +69,12 @@ namespace EkiHire.Business.Services
             IUserService userSvc,
             IRoleService roleSvc,
             ISMSService smsSvc,
-            IMailService mailSvc,
+            //IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
             IGuidGenerator guidGenerator,
             IOptions<AppConfig> _appConfig
-            , IOptions<SmtpConfig> settingSvc)
+            , IOptions<SmtpConfig> settingSvc
+            , IRepository<User> _userRepo)
         {
             _unitOfWork = unitOfWork;
             _repo = employeeRepo;
@@ -77,12 +82,13 @@ namespace EkiHire.Business.Services
             _serviceHelper = serviceHelper;
             _userSvc = userSvc;
             _smsSvc = smsSvc;
-            _mailSvc = mailSvc;
+            //_mailSvc = mailSvc;
             appConfig = _appConfig.Value;
             _hostingEnvironment = hostingEnvironment;
             _guidGenerator = guidGenerator;
             _roleSvc = roleSvc;
             _smtpsettings = settingSvc.Value;
+            this._userRepo = _userRepo;
         }
         public async Task<bool> AccountExist(string username)
         {
@@ -312,6 +318,8 @@ namespace EkiHire.Business.Services
                 log.Error($"could not send credentials for user : {user.UserName}");
             }
         }
+
+        
         #region account
         public Task<AccountDTO> GetAccountsByemailAsync(string email)
         {
