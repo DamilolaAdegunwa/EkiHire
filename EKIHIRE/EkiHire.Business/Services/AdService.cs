@@ -134,7 +134,7 @@ namespace EkiHire.Business.Services
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -161,6 +161,7 @@ namespace EkiHire.Business.Services
             //this._mailSvc = mailSvc;
             this.TransactionRepository = TransactionRepository;
             this.SubscriptionPackageRepository = SubscriptionPackageRepository;
+            this.NewsletterSubscriberRepository = NewsletterSubscriberRepository;
             this.PreviousWorkExperienceRepository = PreviousWorkExperienceRepository;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
@@ -2098,8 +2099,43 @@ namespace EkiHire.Business.Services
         {
             try
             {
+                #region validate credential
+
+                //check that the model carries data
+                if (model == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("no input provided!");
+                }
+                //check for non-empty username 
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please login and retry");
+                }
+
+                //check that the user exist
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                }
+
+                //check that the username is a valid email ( the password would be validate by the Identity builder)
+                if (!Regex.IsMatch(username, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
+                }
+                #endregion
                 _unitOfWork.BeginTransaction();
-                NewsletterSubscriberRepository.Insert(model);
+                //basic properties
+                model.CreationTime = DateTime.Now;
+                model.CreatorUserId = user.Id;
+                model.IsDeleted = false;
+                model.LastModificationTime = DateTime.Now;
+                model.LastModifierUserId = user.Id;
+                model.DeleterUserId = null;
+                model.DeletionTime = null;
+                model.Id = 0;
+                NewsletterSubscriberRepository.InsertAsync(model);
                 _unitOfWork.Commit();
 
                 return true;
@@ -2115,7 +2151,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return NewsletterSubscriberRepository.GetAll().Skip((page - 1) * size).Take(size);
+                return NewsletterSubscriberRepository.GetAll().Where(n => !n.IsDeleted).Skip((page - 1) * size).Take(size);
             }
             catch (Exception ex)
             {
@@ -2128,7 +2164,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return NewsletterSubscriberRepository.Get(Id);
+                return NewsletterSubscriberRepository.FirstOrDefault(n => n.Id == Id && !n.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -2159,7 +2195,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var model = NewsletterSubscriberRepository.FirstOrDefault(id);
+                var model = NewsletterSubscriberRepository.FirstOrDefault(n => n.Id == id && !n.IsDeleted);
                 if(model == null)
                 {
                     return false;
@@ -2190,7 +2226,7 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("User does not exist");
                 }
                 //check that the person is an administrator
-                if (user.UserType == UserType.Administrator)
+                if (user.UserType != UserType.Administrator)
                 {
                     throw new Exception("you are not authorized to add user");
                 }
