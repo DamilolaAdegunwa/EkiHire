@@ -94,7 +94,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<IEnumerable<NewsletterSubscriber>> GetNewsletterSubscriber(string username, int page = 1, int size = 25);
         Task<NewsletterSubscriber> GetNewsletterSubscriberById(long Id, string username);
-        Task<Ad> GetAd(long Id, string username);
+        Task<Ad> GetAd(long Id, string username, bool allowAnonymous = false);
         Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username);
         Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<bool> DeleteNewsletterSubscriber(long id, string username);
@@ -2031,7 +2031,8 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return SubscriptionPackageRepository.GetAll().Skip((page - 1) * size).Take(size);
+                var result = SubscriptionPackageRepository.GetAll().Where(x => x.Id > 0).Skip((page - 1) * size).Take(size);
+                return result;
             }
             catch (Exception ex)
             {
@@ -2216,18 +2217,23 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<Ad> GetAd(long Id, string username)
+        public async Task<Ad> GetAd(long Id, string username, bool allowAnonymous = false)
         {
             try
             {
                 
                 #region validate
                 //check that the user exist
-                var loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (loggedInUser == null)
+                User loggedInUser = null;
+                if (!allowAnonymous)
                 {
-                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                    loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                    if (loggedInUser == null)
+                    {
+                        throw await _serviceHelper.GetExceptionAsync("User does not exist");
+                    }
                 }
+                
                 #endregion
                 var ad = adRepository.FirstOrDefault(x => x.Id == Id);
                 if(ad == null)
@@ -2243,7 +2249,10 @@ namespace EkiHire.Business.Services
                 ad.Rating = rating;//adFeedbackRepository.GetAll().Where(x => x.AdId == Id && (int)(x.Rating??0) >= 1 && (int)(x.Rating ?? 0) <= 5).Average(y => (int)y.Rating);
                 ad.Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count();
                 ad.Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count();
-                ad.InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == loggedInUser.Id && c.AdId == ad.Id && c.IsDeleted == false);
+                if (!allowAnonymous)
+                {
+                    ad.InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == loggedInUser.Id && c.AdId == ad.Id && c.IsDeleted == false);
+                }
                 ad.User = UserRepository.FirstOrDefault(u => u.Id == ad.UserId);//owner
                 ad.Subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == ad.SubcategoryId);
                 return ad;

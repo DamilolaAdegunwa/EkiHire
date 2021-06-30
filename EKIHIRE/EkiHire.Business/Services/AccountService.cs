@@ -39,8 +39,8 @@ namespace EkiHire.Business.Services
         Task<AccountDTO> GetAccount(int id);
         Task UpdateAccount(int id, AccountDTO model);
         Task SignUp(LoginViewModel model);
-        Task SendAccountCredentials(User user, string password);
-        Task TestEHMail();
+        //Task SendAccountCredentials(User user, string password);
+        //Task TestEHMail();
         //Task<bool> AddUser(User model, string username);
 
     }
@@ -54,7 +54,7 @@ namespace EkiHire.Business.Services
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
         private readonly ISMSService _smsSvc;
-        //private readonly IMailService _mailSvc;
+        private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IGuidGenerator _guidGenerator;
         private readonly AppConfig appConfig;
@@ -138,7 +138,7 @@ namespace EkiHire.Business.Services
                         AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
                         EmailConfirmed = false,
                         PhoneNumberConfirmed = false,
-                        UserType = model.UserType,
+                        UserType = UserType.Customer,//model.UserType,
                         IsActive = true,
                     };
                     var creationStatus = await _userSvc.CreateAsync(user, model.Password);
@@ -293,31 +293,31 @@ namespace EkiHire.Business.Services
         //    //    throw;
         //    //}
         //}
-        public async Task SendAccountCredentials(User user, string password)
-        {
-            try
-            {
+        //public async Task SendAccountCredentials(User user, string password)
+        //{
+        //    try
+        //    {
 
-                var replacement = new StringDictionary
-                {
-                    ["FirstName"] = user.FirstName,
-                    ["UserName"] = user.UserName,
-                    ["DefaultPassword"] = password
-                };
+        //        var replacement = new StringDictionary
+        //        {
+        //            ["FirstName"] = user.FirstName,
+        //            ["UserName"] = user.UserName,
+        //            ["DefaultPassword"] = password
+        //        };
 
-                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New User Account Information", user.Email)
-                {
-                    BodyIsFile = true,
-                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AccountActivationEmail)
-                };
+        //        var mail = new Mail(appConfig.AppEmail, "EkiHire.com: New User Account Information", user.Email)
+        //        {
+        //            BodyIsFile = true,
+        //            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AccountActivationEmail)
+        //        };
 
-                await _mailSvc.SendMailAsync(mail, replacement);
-            }
-            catch (Exception ex)
-            {
-                log.Error($"could not send credentials for user : {user.UserName}");
-            }
-        }
+        //        await _mailSvc.SendMailAsync(mail, replacement);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"could not send credentials for user : {user.UserName}");
+        //    }
+        //}
 
         
         #region account
@@ -482,30 +482,30 @@ namespace EkiHire.Business.Services
             await _unitOfWork.SaveChangesAsync();
         }
         #endregion
-        public async Task TestEHMail()
-        {
-            try
-            {
-                var replacement = new StringDictionary
-                {
-                    ["FirstName"] = "user.FirstName",
-                    ["ActivationCode"] = "user.AccountConfirmationCode"
-                };
+        //public async Task TestEHMail()
+        //{
+        //    try
+        //    {
+        //        var replacement = new StringDictionary
+        //        {
+        //            ["FirstName"] = "user.FirstName",
+        //            ["ActivationCode"] = "user.AccountConfirmationCode"
+        //        };
 
-                var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
-                {
-                    BodyIsFile = true,
-                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
-                    SenderDisplayName = _smtpsettings.SenderDisplayName
-                };
+        //        var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
+        //        {
+        //            BodyIsFile = true,
+        //            BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+        //            SenderDisplayName = _smtpsettings.SenderDisplayName
+        //        };
 
-                await _mailSvc.SendMailAsync(mail, replacement);
-                _ = default(string);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
+        //        await _mailSvc.SendMailAsync(mail, replacement);
+        //        _ = default(string);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
     }
 }

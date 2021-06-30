@@ -22,15 +22,15 @@ namespace EkiHire.WebAPI.Controllers
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
         private readonly IAccountService _accountService;
-
+        private readonly IServiceHelper serviceHelper;
         public AccountController(IUserService userSvc, IRoleService roleSvc
-            ,IAccountService accountService
-            /*, IEmployeeService employeeService*/)
+            ,IAccountService accountService, IServiceHelper serviceHelper
+            )
         {
             _userSvc = userSvc;
             _roleSvc = roleSvc;
             _accountService = accountService;
-            //_employeeService = employeeService;
+            this.serviceHelper = serviceHelper;
         }
 
         private async Task<List<Claim>> GetUserIdentityClaims(User user)
@@ -381,6 +381,18 @@ namespace EkiHire.WebAPI.Controllers
             return await HandleApiOperationAsync(async () => {
                 bool result = await _userSvc.ChangeIsActive(isActive, User.FindFirst(JwtClaimTypes.Name)?.Value);
                 var response = new ServiceResponse<bool>(result);
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("AddUser")]
+        public async Task<ServiceResponse<bool>> AddUser(LoginViewModel model)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await _userSvc.AddUser(model, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
                 return response;
             });
         }

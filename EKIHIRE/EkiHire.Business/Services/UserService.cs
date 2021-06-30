@@ -62,7 +62,7 @@ namespace EkiHire.Business.Services
         //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
         Task<bool> ChangeProfileImage(string profileImageString, string username);
         Task<bool> ChangeIsActive(bool isActive, string username);
-        Task<bool> AddUser(User model, string username);
+        Task<bool> AddUser(LoginViewModel model, string username);
     }
 
     public class UserService : IUserService
@@ -77,7 +77,6 @@ namespace EkiHire.Business.Services
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         private readonly IUnitOfWork _unitOfWork;
         readonly SmtpConfig _smtpsettings;
-        private readonly IUserService _userSvc;
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
@@ -87,7 +86,7 @@ namespace EkiHire.Business.Services
             IOptions<AppConfig> _appConfig,
             IUnitOfWork unitOfWork
             , IOptions<SmtpConfig> settingSvc
-            , IUserService _userSvc)
+            )
         {
             _userManager = userManager;
             _svcHelper = svcHelper;
@@ -97,7 +96,6 @@ namespace EkiHire.Business.Services
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _smtpsettings = settingSvc.Value;
-            this._userSvc = _userSvc;
         }
 
         protected virtual Task<IdentityResult> CreateAsync(User user)
@@ -785,7 +783,7 @@ namespace EkiHire.Business.Services
             }
 
         }
-        public async Task<bool> AddUser(User model, string username)
+        public async Task<bool> AddUser(LoginViewModel model, string username)
         {
             try
             {
@@ -803,42 +801,35 @@ namespace EkiHire.Business.Services
                 }
 
                 //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+                var user = await FindFirstAsync(x => x.UserName == username);
                 if (user == null)
                 {
                     throw new Exception("User does not exist");
                 }
                 //check that the person is an administrator
-                if (user.UserType == UserType.Administrator)
+                if (user.UserType != UserType.Administrator)
                 {
                     throw new Exception("you are not authorized to add user");
                 }
 
                 //check for valid usertype, validate the adtype if premium whether user can put premium ad
                 #endregion
-
-                //basic properties
-                model.CreationTime = DateTime.Now;
-                model.CreatorUserId = user.Id;
-                model.IsDeleted = false;
-                model.LastModificationTime = DateTime.Now;
-                model.LastModifierUserId = user.Id;
-                model.DeleterUserId = null;
-                model.DeletionTime = null;
-                model.Id = 0;
-
-                _unitOfWork.BeginTransaction();
-                var saved = await _userRepository.InsertAsync(model);
-                _unitOfWork.Commit();
-
-                //generate a password
-                var changeToken = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-                var result = await _userManager.ResetPasswordAsync(user, changeToken, "123456");
-
-                if (!result.Succeeded)
+                user = new User
                 {
-                    throw new Exception(result.Errors?.FirstOrDefault().Description);
+                    UserName = model.UserName,
+                    Email = model.UserName,
+                    AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
+                    EmailConfirmed = true,
+                    PhoneNumberConfirmed = true,
+                    UserType = model.UserType,
+                    IsActive = true,
+                };
+                var password = CommonHelper.GenerateRandonAlphaNumeric();
+                var creationStatus = await CreateAsync(user, password);
+
+                if (!creationStatus.Succeeded)
+                {
+                    throw new Exception(creationStatus.Errors?.FirstOrDefault().Description);
                 }
 
                 //you'd need to email the account credentials to the new user...
@@ -851,9 +842,11 @@ namespace EkiHire.Business.Services
                         var fileString = File.ReadAllText(filePath);
                         if (!string.IsNullOrWhiteSpace(fileString))
                         {
-                            fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
+                            //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
                             fileString = fileString.Replace("{{UserName}}", $"{model.UserName}");
-                            fileString = fileString.Replace("{{DefaultPassword}}", $"{"123456"}");
+                            fileString = fileString.Replace("{{DefaultPassword}}", $"{password}");
+
+                            _svcHelper.SendEMail(model.UserName, fileString, "Ekihire.com: You are welcome on board!");
                         }
                     }
                 }

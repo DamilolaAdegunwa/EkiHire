@@ -375,12 +375,13 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetAd/{Id}")]
-        
+        [AllowAnonymous]
         public async Task<IServiceResponse<Ad>> GetAd(long Id)
         {
+            bool anonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) ? true : false; 
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<Ad>();
-                var data = await adService.GetAd(Id, serviceHelper.GetCurrentUserEmail());
+                var data = await adService.GetAd(Id, serviceHelper.GetCurrentUserEmail(), anonymous);
                 //var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
                 response.Object = data;
                 return response;
@@ -663,17 +664,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("AddUser")]
-        public async Task<ServiceResponse<bool>> AddUser(User model)
-        {
-            return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<bool>();
-                var data = await userService.AddUser(model, serviceHelper.GetCurrentUserEmail());
-                response.Object = data;
-                return response;
-            });
-        }
+        
 
         [HttpPost]
         [Route("AddSubscriptionPackage")]
