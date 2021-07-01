@@ -54,7 +54,7 @@ namespace EkiHire.Business.Services
         private readonly IUserService _userSvc;
         private readonly IRoleService _roleSvc;
         private readonly ISMSService _smsSvc;
-        private readonly IMailService _mailSvc;
+        //private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly IGuidGenerator _guidGenerator;
         private readonly AppConfig appConfig;
@@ -147,25 +147,39 @@ namespace EkiHire.Business.Services
                     {
                         try
                         {
-                            var replacement = new StringDictionary
+                            #region old email implementation
+                            //var replacement = new StringDictionary
+                            //{
+                            //    //["FirstName"] = user.FirstName,
+                            //    ["ActivationCode"] = user.AccountConfirmationCode
+                            //};
+
+                            //var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
+                            //{
+                            //    BodyIsFile = true,
+                            //    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                            //    SenderDisplayName = _smtpsettings.SenderDisplayName,
+
+                            //};
+                            //await _mailSvc.SendMailAsync(mail, replacement);
+                            #endregion
+
+                            //first get the file
+                            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
+                            if (File.Exists(filePath))
                             {
-                                //["FirstName"] = user.FirstName,
-                                ["ActivationCode"] = user.AccountConfirmationCode
-                            };
+                                var fileString = File.ReadAllText(filePath);
+                                if (!string.IsNullOrWhiteSpace(fileString))
+                                {
+                                    fileString = fileString.Replace("{{ActivationCode}}", $"{user.AccountConfirmationCode}");
 
-                            var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
-                            {
-                                BodyIsFile = true,
-                                BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
-                                SenderDisplayName = _smtpsettings.SenderDisplayName,
-
-                            };
-
-                            await _mailSvc.SendMailAsync(mail, replacement);
+                                    _serviceHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
+                                }
+                            }
                         }
                         catch (Exception ex)
                         {
-                            //throw ex;
+                            log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
                         }
                         //SendAccountCredentials(user, model.Password);
                         //the email needs to be worked on and be further simplified in it's process flow

@@ -14,10 +14,10 @@ namespace EkiHire.Core.Domain.Entities
         #region follow
         [ForeignKey("FollowerId")]
         public virtual long? FollowerId { get; set; }
-        public virtual User Follower { get; set; }
+        public virtual User Follower { get; set; }//fan
         [ForeignKey("FollowingId")]
         public virtual long? FollowingId { get; set; }
-        public virtual User Following { get; set; }
+        public virtual User Following { get; set; }//receipient
         #endregion
 
         public static implicit operator Follow(FollowDTO model)

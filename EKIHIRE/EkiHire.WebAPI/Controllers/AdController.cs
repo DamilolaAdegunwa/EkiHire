@@ -34,10 +34,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost, Route("AddAd")]
         public async Task<IServiceResponse<long?>> AddAd(AdDTO model)
-        {//working
+        {
             return await HandleApiOperationAsync(async () =>
             {
-                var result = await adService.AddAd(model, /*images,*/ serviceHelper.GetCurrentUserEmail());
+                var result = await adService.AddAd(model, serviceHelper.GetCurrentUserEmail());
                 var response = new ServiceResponse<long?>(result);
                 return response;
             });
@@ -751,6 +751,8 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        #region comments
         //[HttpPost]
         //[Route("SendNotification")]
         //Task<string> SendNotification(string title, string body)
@@ -773,7 +775,7 @@ namespace EkiHire.WebAPI.Controllers
         //        return response;
         //    });
         //}
-        #region APIs in progress
+
         //update profile 
         //Basket
         //Statistics
@@ -792,4 +794,3 @@ namespace EkiHire.WebAPI.Controllers
         #endregion
     }
 }
-//ad, categories

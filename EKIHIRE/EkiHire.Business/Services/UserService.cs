@@ -52,7 +52,7 @@ namespace EkiHire.Business.Services
         Task<bool> IsInRoleAsync(User user, string role);
         Task<IdentityResult> RemoveFromRolesAsync(User user, IEnumerable<string> roles);
         Task<bool> ResendVerificationCode(string username);
-        Task<bool> TestEmail();
+        //Task<bool> TestEmail();
         Task<bool> ValidatePassordResetCode(PassordResetDTO model);
         Task<bool> ChangeName(Name name, string username);
         Task<bool> ChangeGender(Gender gender, string username);
@@ -72,7 +72,7 @@ namespace EkiHire.Business.Services
         private readonly AppConfig appConfig;
         private readonly IRepository<User> _userRepository;
         private readonly IServiceHelper _svcHelper;
-        private readonly IMailService _mailSvc;
+        //private readonly IMailService _mailSvc;
         private readonly IHostingEnvironment _hostingEnvironment;
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         private readonly IUnitOfWork _unitOfWork;
@@ -81,7 +81,7 @@ namespace EkiHire.Business.Services
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
             IRepository<User> userRepository,
-            IMailService mailSvc,
+            //IMailService mailSvc,
             IHostingEnvironment hostingEnvironment,
             IOptions<AppConfig> _appConfig,
             IUnitOfWork unitOfWork
@@ -90,7 +90,7 @@ namespace EkiHire.Business.Services
         {
             _userManager = userManager;
             _svcHelper = svcHelper;
-            _mailSvc = mailSvc;
+            //_mailSvc = mailSvc;
             appConfig = _appConfig.Value;
             _hostingEnvironment = hostingEnvironment;
             _userRepository = userRepository;
@@ -356,19 +356,43 @@ namespace EkiHire.Business.Services
             user.OTP = CommonHelper.RandomDigits(5);
             await _userManager.UpdateAsync(user);
 
-            var replacement = new StringDictionary
-            {
-                ["FirstName"] = user.UserName,
-                ["Otp"] = user.OTP
-            };
+            #region old email implementation
+            //var replacement = new StringDictionary
+            //{
+            //    ["FirstName"] = user.UserName,
+            //    ["Otp"] = user.OTP
+            //};
 
-            var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Password Reset OTP", user.Email)
-            {
-                BodyIsFile = true,
-                BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail)
-            };
+            //var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Password Reset OTP", user.Email)
+            //{
+            //    BodyIsFile = true,
+            //    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail)
+            //};
 
-            await _mailSvc.SendMailAsync(mail, replacement);
+            //await _mailSvc.SendMailAsync(mail, replacement);
+            #endregion
+
+            try
+            {
+                //first get the file
+                var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
+                if (File.Exists(filePath))
+                {
+                    var fileString = File.ReadAllText(filePath);
+                    if (!string.IsNullOrWhiteSpace(fileString))
+                    {
+                        //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
+                        fileString = fileString.Replace("{{FirstName}}", $"{user.UserName}");
+                        fileString = fileString.Replace("{{Otp}}", $"{user.OTP}");
+
+                        _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+            }
 
             return await Task.FromResult(true);
         }
@@ -549,19 +573,64 @@ namespace EkiHire.Business.Services
                 var user = _userRepository.FirstOrDefault(u => u.UserName == username);
                 if (user != null)
                 {
-                    var replacement = new StringDictionary
-                    {
-                        //["FirstName"] = user.FirstName,
-                        ["ActivationCode"] = user.AccountConfirmationCode
-                    };
+                    #region old email implementation
+                    //var replacement = new StringDictionary
+                    //{
+                    //    //["FirstName"] = user.FirstName,
+                    //    ["ActivationCode"] = user.AccountConfirmationCode
+                    //};
 
-                    var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
-                    {
-                        BodyIsFile = true,
-                        BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
-                    };
+                    //var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", user.Email)
+                    //{
+                    //    BodyIsFile = true,
+                    //    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+                    //};
 
-                    await _mailSvc.SendMailAsync(mail, replacement);
+                    //await _mailSvc.SendMailAsync(mail, replacement);
+                    #endregion
+
+                    try
+                    {
+                        //first get the file
+                        var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail);
+                        if (File.Exists(filePath))
+                        {
+                            var fileString = File.ReadAllText(filePath);
+                            if (!string.IsNullOrWhiteSpace(fileString))
+                            {
+                                //fileString = fileString.Replace("{{FirstName}}", $"{user.FirstName}");
+                                fileString = fileString.Replace("{{ActivationCode}}", $"{user.AccountConfirmationCode}");
+
+                                _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Account Verification Code");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                    }
+
+                    try
+                    {
+                        //first get the file
+                        var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
+                        if (File.Exists(filePath))
+                        {
+                            var fileString = File.ReadAllText(filePath);
+                            if (!string.IsNullOrWhiteSpace(fileString))
+                            {
+                                //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
+                                fileString = fileString.Replace("{{FirstName}}", $"{user.UserName}");
+                                fileString = fileString.Replace("{{Otp}}", $"{user.OTP}");
+
+                                _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                    }
                     return true;
                 }
                 return false;
@@ -573,27 +642,27 @@ namespace EkiHire.Business.Services
             }
             
         }
-		public async Task<bool> TestEmail()
-        {
-			try{
-				var replacement = new StringDictionary
-                {
-                    //["FirstName"] = "Damilola Adegunwa",
-                    ["ActivationCode"] = "FAKE123456"
-                };
+		//public async Task<bool> TestEmail()
+  //      {
+		//	try{
+		//		var replacement = new StringDictionary
+  //              {
+  //                  //["FirstName"] = "Damilola Adegunwa",
+  //                  ["ActivationCode"] = "FAKE123456"
+  //              };
 
-                var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
-                {
-                    BodyIsFile = true,
-                    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
-                };
+  //              var mail = new Mail(appConfig.AppEmail, "EkiHire.com: Account Verification Code", "damee1993@gmail.com")
+  //              {
+  //                  BodyIsFile = true,
+  //                  BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)
+  //              };
 
-                await _mailSvc.SendMailAsync(mail, replacement);
-                return true;
-			}catch(Exception e){
-				return false;
-			}
-        }
+  //              await _mailSvc.SendMailAsync(mail, replacement);
+  //              return true;
+		//	}catch(Exception e){
+		//		return false;
+		//	}
+  //      }
 
         public async Task<bool> ChangeName(Name name, string username)
         {

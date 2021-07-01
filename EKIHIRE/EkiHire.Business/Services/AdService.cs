@@ -206,8 +206,7 @@ namespace EkiHire.Business.Services
                     throw new Exception("Cannot find Subcategory");
                 }
 
-                //
-                //check for validate usertype, validate the adtype if premium whether user can put premium ad
+                //validate usertype, validate the adtype if premium whether user can put premium ad
                 #endregion
 
                 #region prepare data
@@ -265,11 +264,16 @@ namespace EkiHire.Business.Services
                 var adpv = model.AdPropertyValue?.ToList();
                 if (adpv != null && adpv.Count > 0)
                 {
+                    //single thread
+                    //_unitOfWork.BeginTransaction();
                     //foreach (var p in adpv)
                     //{
                     //    p.Ad = insertedData; p.AdId = insertedData?.Id;
                     //    await AddOrUpdateAdPropertyValue(p, username);
                     //}
+                    //_unitOfWork.Commit();
+
+                    //concurrent
                     _unitOfWork.BeginTransaction();
                     Parallel.ForEach(adpv, (p) => {
                         _adPropertyValueRepo.InsertAsync(
@@ -299,8 +303,30 @@ namespace EkiHire.Business.Services
                 #region save the image
                 if (imgPaths != null && imgPaths.Count > 0)
                 {
+                    //_unitOfWork.BeginTransaction();
+                    //_ = Parallel.ForEach(imgPaths, (p) =>
+                    //  {
+                    //      _ = _AdImageRepo.InsertAsync(
+                    //          new AdImage
+                    //          {
+                    //              AdId = insertedData?.Id,
+                    //              ImagePath = p,
+                    //              //basic properties
+                    //              CreationTime = DateTime.Now,
+                    //              CreatorUserId = user.Id,
+                    //              IsDeleted = false,
+                    //              LastModificationTime = DateTime.Now,
+                    //              LastModifierUserId = user.Id,
+                    //              DeleterUserId = null,
+                    //              DeletionTime = null,
+                    //              Id = 0,
+                    //          }
+                    //      );
+                    //  });
+                    //_unitOfWork.Commit();
+
                     _unitOfWork.BeginTransaction();
-                    Parallel.ForEach(imgPaths, (p) => 
+                    foreach (var p in imgPaths)
                     {
                         _AdImageRepo.InsertAsync(
                             new AdImage
@@ -318,25 +344,7 @@ namespace EkiHire.Business.Services
                                 Id = 0,
                             }
                         );
-                    });
-                    //foreach (var p in imgPaths)
-                    //{
-                    //    _AdImageRepo.InsertAsync(
-                    //        new AdImage { 
-                    //            AdId = insertedData?.Id,
-                    //            ImagePath = p,
-                    //            //basic properties
-                    //            CreationTime = DateTime.Now,
-                    //            CreatorUserId = user.Id,
-                    //            IsDeleted = false,
-                    //            LastModificationTime = DateTime.Now,
-                    //            LastModifierUserId = user.Id,
-                    //            DeleterUserId = null,
-                    //            DeletionTime = null,
-                    //            Id = 0,
-                    //        }
-                    //    );
-                    //}
+                    }
                     _unitOfWork.Commit();
                 }
                 #endregion
@@ -687,16 +695,16 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
                 }
                 //check that it is the owner of the ad that is editing it
-                if(loggedInUser.Id != adDto.UserId)
+                if (loggedInUser.Id != adDto.UserId && loggedInUser.UserType != UserType.Administrator)
                 {
                     throw await _serviceHelper.GetExceptionAsync("you are not authorized to edit this ad!");
                 }
                 #endregion
 
                 #region make the necessary edit on a property by property basis
-                
+
                 //name
-                if(!string.IsNullOrWhiteSpace(adDto.Name) && !string.Equals(ad.Name, adDto.Name))
+                if (!string.IsNullOrWhiteSpace(adDto.Name) && !string.Equals(ad.Name, adDto.Name))
                 {
                     ad.Name = adDto.Name;
                 }
@@ -706,7 +714,7 @@ namespace EkiHire.Business.Services
                     ad.Address = adDto.Address;
                 }
                 //amount
-                if (!string.IsNullOrWhiteSpace(adDto.Amount?.ToString()) && !string.Equals(ad.Amount?.ToString(), adDto.Amount?.ToString()) && adDto.Amount >= 0)
+                if (adDto.Amount != null && !string.Equals(ad.Amount, adDto.Amount) && adDto.Amount >= 0)
                 {
                     ad.Amount = adDto.Amount;
                 }
@@ -758,7 +766,8 @@ namespace EkiHire.Business.Services
                     var imgs = _AdImageRepo.GetAll().Where(i => i.AdId == ad.Id && i.IsDeleted == false).ToList() ?? new List<AdImage>();
                     foreach (var img in adDto.AdImages)
                     {
-                        if(imgs.Any(i => i.Id == img.Id))
+                        _unitOfWork.BeginTransaction();
+                        if (imgs.Any(i => i.Id == img.Id))
                         {
                             //update an imaage
                             var imgData = imgs.Where(i => i.Id == img.Id).FirstOrDefault();
@@ -766,12 +775,13 @@ namespace EkiHire.Business.Services
                             //imgData.ImageString = img.ImageString;
                             _AdImageRepo.Update(imgData);
                         }
-                        else
-                        {
-                            //insert
-                            img.AdId = ad.Id;
-                            _AdImageRepo.Insert(img);
-                        }
+                        _unitOfWork.Commit();
+                        //else
+                        //{
+                        //    //insert
+                        //    img.AdId = ad.Id;
+                        //    _AdImageRepo.Insert(img);
+                        //}
                     }
                 }
                 //property value
@@ -849,7 +859,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 _unitOfWork.BeginTransaction();
-                await itemRepository .InsertAsync(model);
+                await itemRepository.InsertAsync(model);
                 _unitOfWork.Commit();
                 return true;
             }
@@ -1219,7 +1229,7 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
                 var result = new List<Follow>();
-                result = await followRepository.GetAll().Where(f => f.Follower.UserName == username && f.IsDeleted == false).ToListAsync();
+                result = await followRepository.GetAll().Where(f => f.FollowerId == user.Id && f.IsDeleted == false).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1882,7 +1892,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return adRepository?.GetAll()?.Take(8)?.ToList()?.ToDTO();
+                return adRepository?.GetAll()?.Where(a => !a.IsDeleted).Take(8)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -1895,7 +1905,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId)?.Take(8)?.ToList()?.ToDTO();
+                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId && !a.IsDeleted)?.Take(8)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -1923,7 +1933,27 @@ namespace EkiHire.Business.Services
         {
             try
             {
+                #region validation
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                var user = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (user == null)
+                {
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                #endregion
                 _unitOfWork.BeginTransaction();
+                //basic properties
+                model.CreationTime = DateTime.Now;
+                model.CreatorUserId = user.Id;
+                model.IsDeleted = false;
+                model.LastModificationTime = DateTime.Now;
+                model.LastModifierUserId = user.Id;
+                model.DeleterUserId = null;
+                model.DeletionTime = null;
+                model.Id = 0;
                 TransactionRepository.Insert(model);
                 _unitOfWork.Commit();
 
@@ -1967,7 +1997,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return UserRepository.GetAll().Skip((page - 1) * size).Take(size);
+                return UserRepository.GetAll().Where(x => !x.IsDeleted).Skip((page - 1) * size).Take(size);
             }
             catch (Exception ex)
             {
@@ -1980,7 +2010,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return UserRepository.Get(Id);
+                return UserRepository.FirstOrDefault(x => x.Id == Id && !x.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -2046,7 +2076,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                return SubscriptionPackageRepository.Get(Id);
+                return SubscriptionPackageRepository.FirstOrDefault(x => x.Id == Id && !x.IsDeleted);
             }
             catch (Exception ex)
             {
@@ -2077,7 +2107,7 @@ namespace EkiHire.Business.Services
         {
             try
             {
-                var package = SubscriptionPackageRepository.Get(Id);
+                var package = SubscriptionPackageRepository.FirstOrDefault(x => x.Id == Id && !x.IsDeleted);
                 if (package == null)
                 {
                     return false;
