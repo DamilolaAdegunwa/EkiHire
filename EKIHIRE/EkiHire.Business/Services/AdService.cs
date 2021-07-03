@@ -484,13 +484,13 @@ namespace EkiHire.Business.Services
                                 User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
                                 Subcategory = sub
 
-                            });
-                var returnVal = data.DistinctBy(x => x.Id).ToList();
-                var filteredval = returnVal.Skip((page - 1) * size).Take(size);
+                            }).DistinctBy(x => x.Id).Skip((page - 1) * size).Take(size).ToList();
+                //var returnVal = data;
+                //var filteredval = returnVal;
                 //var integer = filteredval.ToList().Count;
 
                 //save searches
-                if (filteredval != null && filteredval.Count() > 0)
+                if (data != null && data.Count() > 0)
                 {
                     //1 task .run
                     //_ = Task.Run(() =>
@@ -498,7 +498,7 @@ namespace EkiHire.Business.Services
                     //    try
                     //    {
                     //        _unitOfWork.BeginTransaction();
-                    //        foreach (var s in filteredval)
+                    //        foreach (var s in data)
                     //        {
                     //            try
                     //            {
@@ -534,7 +534,7 @@ namespace EkiHire.Business.Services
 
                     //2 using parallel foreach
                     //_unitOfWork.BeginTransaction();
-                    //Parallel.ForEach(filteredval, (s) => {
+                    //Parallel.ForEach(data, (s) => {
                     //    try
                     //    {
                     //        var sdata = new AdLookupLog
@@ -563,7 +563,7 @@ namespace EkiHire.Business.Services
 
                     //3 using ordinary foreach
                     _unitOfWork.BeginTransaction();
-                    foreach (var s in filteredval)
+                    foreach (var s in data)
                     {
                         try
                         {
@@ -592,7 +592,7 @@ namespace EkiHire.Business.Services
                     _unitOfWork.Commit();
                 }
 
-                return filteredval.ToList();
+                return data;
 
             }
             catch (Exception ex)
