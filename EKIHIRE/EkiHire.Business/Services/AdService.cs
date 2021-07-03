@@ -99,6 +99,8 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<bool> DeleteNewsletterSubscriber(long id, string username);
         Task<bool> ChangeUserType(UserType userType, long clientId, string username);
+
+        //Task<IEnumerable<Ad>> GetAdsTest(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
     }
     public class AdService: IAdService
     {
@@ -378,32 +380,10 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-
         public async Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
         {
             try
             {
-                #region test
-                //var _1 = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == 46 && a.IsDeleted == false).DefaultIfEmpty().ToList();
-                //var _2 = (from a in _adPropertyValueRepo.GetAll()
-                //         join ap in _adPropertyRepo.GetAll() on a.AdPropertyId equals ap.Id
-
-                //         where a.AdId == 46 && !a.IsDeleted
-                //         select new AdPropertyValue
-                //         {
-                //             AdId = 46,
-                //             Id = a.Id,
-                //             AdPropertyId = a.AdPropertyId,
-                //             Value = a.Value,
-                //             AdProperty = new AdProperty { 
-                //                Name = ap.Name,
-                //                Id = ap.Id
-                //             },
-                //         }).ToList();
-                //var _3 = "";
-                //return default;
-                #endregion
-
                 #region validation
                 if (string.IsNullOrWhiteSpace(username) && allowanonymous == false)
                 {
@@ -419,28 +399,25 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
                 }
                 #endregion
-                List<Ad> result = new List<Ad>();
-                //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
-                // var images = _AdImageRepo.GetAll().
-                //var ads = adRepository.GetAll().Include("AdImages");
 
-                //// var newAds = ads.Join(images, x => x.Id, y => y.AdId, (x, y) => x).ToDTO();
+                var data = (from ad in adRepository.GetAll().DefaultIfEmpty()
+                            join s in _subcategoryRepo.GetAll().DefaultIfEmpty() on ad.SubcategoryId equals s.Id into subcategory
 
-                //var r = ads.Where(a => !a.IsDeleted);
-                //result = r.ToList();
-                var data = (from ad in adRepository.GetAll().DefaultIfEmpty()//.Include("AdImages")
-                            join s in _subcategoryRepo.GetAll().DefaultIfEmpty() on ad.SubcategoryId equals s.Id
-                            join c in CategoryRepository.GetAll().DefaultIfEmpty() on s.CategoryId equals c.Id
-                            join adprop in _adPropertyRepo.GetAll().DefaultIfEmpty() on s.Id equals adprop.SubcategoryId
-                            join adpropVal in _adPropertyValueRepo.GetAll().DefaultIfEmpty() on ad.Id equals adpropVal.AdId
+                            from sub in subcategory.DefaultIfEmpty()
+                            join c in CategoryRepository.GetAll().DefaultIfEmpty() on sub.CategoryId equals c.Id into category
 
-                            //join images in _AdImageRepo.GetAll().DefaultIfEmpty() on ad.Id equals images.AdId
+                            from cat in category.DefaultIfEmpty()
+                            join adp in _adPropertyRepo.GetAll().DefaultIfEmpty() on sub.Id equals adp.SubcategoryId into adproperty
 
+                            from adprop in adproperty.DefaultIfEmpty()
+                            join adpv in _adPropertyValueRepo.GetAll().DefaultIfEmpty() on ad.Id equals adpv.AdId into adpropertyvalue
+
+                            from adpropval in adpropertyvalue.DefaultIfEmpty()
                             where !ad.IsDeleted
                             && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
                             && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
                             && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
-                            && (c.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
+                            && (cat.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
                             && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
                             && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
                             && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
@@ -450,11 +427,11 @@ namespace EkiHire.Business.Services
                             && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
                             && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
                             && (ad.UserId == model.UserId || model.UserId == null || model.UserId < 1)
-                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropVal.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
+                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropval.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
 
                             let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
                             let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
-                             
+
                             select new Ad
                             {
                                 AdClass = ad.AdClass,
@@ -463,12 +440,13 @@ namespace EkiHire.Business.Services
                                 AdImages = _AdImageRepo.GetAll().Where(a => a.AdId == ad.Id && a.IsDeleted == false).ToList(),
                                 //AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
                                 //AdPropertyValue = _adPropertyValueRepo.GetAll().Include("AdProperty").DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                AdPropertyValue = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().Select<AdPropertyValue, AdPropertyValue>(adpropv => new AdPropertyValue { 
+                                AdPropertyValue = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().Select<AdPropertyValue, AdPropertyValue>(adpropv => new AdPropertyValue
+                                {
                                     Id = adpropv.Id,
                                     AdId = adpropv.AdId,
                                     AdPropertyId = adpropv.AdPropertyId,
                                     Value = adpropv.Value,
-                                    
+
                                     AdProperty = new AdProperty
                                     {
                                         Id = adpropv.AdProperty.Id,
@@ -504,12 +482,116 @@ namespace EkiHire.Business.Services
                                 SubcategoryId = ad.SubcategoryId,
                                 VideoPath = ad.VideoPath,
                                 User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
-                                Subcategory = s
+                                Subcategory = sub
 
                             });
                 var returnVal = data.DistinctBy(x => x.Id).ToList();
                 var filteredval = returnVal.Skip((page - 1) * size).Take(size);
                 //var integer = filteredval.ToList().Count;
+
+                //save searches
+                if (filteredval != null && filteredval.Count() > 0)
+                {
+                    //1 task .run
+                    //_ = Task.Run(() =>
+                    //{
+                    //    try
+                    //    {
+                    //        _unitOfWork.BeginTransaction();
+                    //        foreach (var s in filteredval)
+                    //        {
+                    //            try
+                    //            {
+                    //                var sdata = new AdLookupLog
+                    //                {
+                    //                    AdId = s.Id,
+                    //                    Ad = null,
+                    //                    //basic properties
+                    //                    CreationTime = DateTime.Now,
+                    //                    CreatorUserId = user.Id,
+                    //                    IsDeleted = false,
+                    //                    LastModificationTime = DateTime.Now,
+                    //                    LastModifierUserId = user.Id,
+                    //                    DeleterUserId = null,
+                    //                    DeletionTime = null,
+                    //                    Id = 0,
+
+                    //                };
+                    //                AdLookupLogRepository.Insert(sdata);
+                    //            }
+                    //            catch (Exception ex)
+                    //            {
+                    //                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                    //            }
+                    //        }
+                    //        _unitOfWork.Commit();
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                    //    }
+                    //});
+
+                    //2 using parallel foreach
+                    //_unitOfWork.BeginTransaction();
+                    //Parallel.ForEach(filteredval, (s) => {
+                    //    try
+                    //    {
+                    //        var sdata = new AdLookupLog
+                    //        {
+                    //            AdId = s.Id,
+                    //            Ad = null,
+                    //            //basic properties
+                    //            CreationTime = DateTime.Now,
+                    //            CreatorUserId = user.Id,
+                    //            IsDeleted = false,
+                    //            LastModificationTime = DateTime.Now,
+                    //            LastModifierUserId = user.Id,
+                    //            DeleterUserId = null,
+                    //            DeletionTime = null,
+                    //            Id = 0,
+
+                    //        };
+                    //        AdLookupLogRepository.Insert(sdata);
+                    //    }
+                    //    catch (Exception ex)
+                    //    {
+                    //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                    //    }
+                    //});
+                    //_unitOfWork.Commit();
+
+                    //3 using ordinary foreach
+                    _unitOfWork.BeginTransaction();
+                    foreach (var s in filteredval)
+                    {
+                        try
+                        {
+                            var sdata = new AdLookupLog
+                            {
+                                AdId = s.Id,
+                                Ad = null,
+                                //basic properties
+                                CreationTime = DateTime.Now,
+                                CreatorUserId = user.Id,
+                                IsDeleted = false,
+                                LastModificationTime = DateTime.Now,
+                                LastModifierUserId = user.Id,
+                                DeleterUserId = null,
+                                DeletionTime = null,
+                                Id = 0,
+
+                            };
+                            AdLookupLogRepository.InsertAsync(sdata);
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                        }
+                    }
+                    _unitOfWork.Commit();
+                }
+
                 return filteredval.ToList();
 
             }
@@ -519,6 +601,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
+
         public async Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false)
         {
             try
@@ -604,7 +687,10 @@ namespace EkiHire.Business.Services
                                 fileString = fileString.Replace("{{Gender}}", $"{model.Gender}");
 
                                 _serviceHelper.SendEMail(model.CompanyEmail, fileString, "EkiHire.com: Account Verification Code");
+
                                 //_serviceHelper.SendEMail("damee1993@gmail.com", fileString, "(Test) EkiHire.com: Account Verification Code");
+                                //_serviceHelper.SendEMail("damilola_093425@yahoo.com", fileString, "(Test) EkiHire.com: Account Verification Code");
+                                //_serviceHelper.SendEMail("adegunwad@accessbankplc.com", fileString, "(Test) EkiHire.com: Account Verification Code");
                             }
                         }
                     }
@@ -2361,7 +2447,38 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
+
+        #region test
+        
+        #endregion
         #region comments
+        //List<Ad> result = new List<Ad>();
+        //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
+        // var images = _AdImageRepo.GetAll().
+        //var ads = adRepository.GetAll().Include("AdImages");
+
+        //// var newAds = ads.Join(images, x => x.Id, y => y.AdId, (x, y) => x).ToDTO();
+
+        //var r = ads.Where(a => !a.IsDeleted);
+        //result = r.ToList();
+        //var _1 = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == 46 && a.IsDeleted == false).DefaultIfEmpty().ToList();
+        //var _2 = (from a in _adPropertyValueRepo.GetAll()
+        //         join ap in _adPropertyRepo.GetAll() on a.AdPropertyId equals ap.Id
+
+        //         where a.AdId == 46 && !a.IsDeleted
+        //         select new AdPropertyValue
+        //         {
+        //             AdId = 46,
+        //             Id = a.Id,
+        //             AdPropertyId = a.AdPropertyId,
+        //             Value = a.Value,
+        //             AdProperty = new AdProperty { 
+        //                Name = ap.Name,
+        //                Id = ap.Id
+        //             },
+        //         }).ToList();
+        //var _3 = "";
+        //return default;
         //try
         //{
         //    var replacement = new System.Collections.Specialized.StringDictionary
@@ -2397,7 +2514,7 @@ namespace EkiHire.Business.Services
         //{
 
         //}
-        
+
         //public async Task<IEnumerable<Ad>> GetActiveAds()
         //{
         //    try
@@ -2700,6 +2817,7 @@ namespace EkiHire.Business.Services
         //        throw ex;
         //    }
         //}
+
         //public static List<string> Split(string str, string separator)
         //{
         //    var resp = str.Split(new[] { separator }, StringSplitOptions.None).ToList();
