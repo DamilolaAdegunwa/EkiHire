@@ -36,6 +36,8 @@ namespace EkiHire.Core.Domain.Entities
         public virtual long? UserId { get; set; }
         [NotMapped]
         public virtual User User { get; set; }
+        public bool? Negotiable { get; set; }
+        public bool? ContactForPrice { get; set; }
 
         #endregion
 
@@ -89,6 +91,8 @@ namespace EkiHire.Core.Domain.Entities
                     Reviews = model.Reviews,
                     Rating = model.Rating,
                     Likes = model.Likes,
+                    Negotiable = model.Negotiable,
+                    ContactForPrice = model.ContactForPrice,
                 };
                 return output;
             }

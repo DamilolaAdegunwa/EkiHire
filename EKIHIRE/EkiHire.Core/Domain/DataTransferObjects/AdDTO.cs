@@ -36,7 +36,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
         public virtual long? UserId { get; set; }
         public virtual User User { get; set; }
         //public virtual IFormFile FormFile { get; set; }
-
+        public bool? Negotiable { get; set; }
+        public bool? ContactForPrice { get; set; }
         #endregion
 
         #region other addto property
@@ -82,6 +83,8 @@ namespace EkiHire.Core.Domain.DataTransferObjects
                     Reviews = model.Reviews,
                     Rating = model.Rating,
                     Likes = model.Likes,
+                    Negotiable = model.Negotiable,
+                    ContactForPrice = model.ContactForPrice,
                 };
                 return dto;
             }

@@ -131,12 +131,12 @@ namespace EkiHire.WebAPI.Controllers
         }
         //filter, search and scan ads
         [HttpPost, Route("Search"), Route("Search/{page}"), Route("Search/{page}/{size}")]
-        public async Task<IServiceResponse<IEnumerable<Ad>>> Search(AdFilter model, int page = 1, int size = 25)
+        public async Task<IServiceResponse<AdResponse>> Search(AdFilter model, int page = 1, int size = 25)
         {
             return await HandleApiOperationAsync(async () =>
             {
-                IEnumerable<Ad> result = await adService.GetAds(model, serviceHelper.GetCurrentUserEmail());
-                var response = new ServiceResponse<IEnumerable<Ad>>(result);
+                AdResponse result = (await adService.GetAds(model, serviceHelper.GetCurrentUserEmail(),page:page,size:size));
+                var response = new ServiceResponse<AdResponse>(result);
                 return response;
             });
         }

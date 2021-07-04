@@ -76,7 +76,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> TopAvailable();
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
         Task<string> SendNotification(List<string> clientToken, string title, string body);
-        Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
         Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25);
@@ -380,7 +380,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<IEnumerable<Ad>> GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
+        public async Task<AdResponse> /*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
         {
             try
             {
@@ -400,91 +400,96 @@ namespace EkiHire.Business.Services
                 }
                 #endregion
 
-                var data = (from ad in adRepository.GetAll().DefaultIfEmpty()
-                            join s in _subcategoryRepo.GetAll().DefaultIfEmpty() on ad.SubcategoryId equals s.Id into subcategory
+                var query = (from ad in adRepository.GetAll().DefaultIfEmpty()
+                             join s in _subcategoryRepo.GetAll().DefaultIfEmpty() on ad.SubcategoryId equals s.Id into subcategory
 
-                            from sub in subcategory.DefaultIfEmpty()
-                            join c in CategoryRepository.GetAll().DefaultIfEmpty() on sub.CategoryId equals c.Id into category
+                             from sub in subcategory.DefaultIfEmpty()
+                             join c in CategoryRepository.GetAll().DefaultIfEmpty() on sub.CategoryId equals c.Id into category
 
-                            from cat in category.DefaultIfEmpty()
-                            join adp in _adPropertyRepo.GetAll().DefaultIfEmpty() on sub.Id equals adp.SubcategoryId into adproperty
+                             from cat in category.DefaultIfEmpty()
+                             join adp in _adPropertyRepo.GetAll().DefaultIfEmpty() on sub.Id equals adp.SubcategoryId into adproperty
 
-                            from adprop in adproperty.DefaultIfEmpty()
-                            join adpv in _adPropertyValueRepo.GetAll().DefaultIfEmpty() on ad.Id equals adpv.AdId into adpropertyvalue
+                             from adprop in adproperty.DefaultIfEmpty()
+                             join adpv in _adPropertyValueRepo.GetAll().DefaultIfEmpty() on ad.Id equals adpv.AdId into adpropertyvalue
 
-                            from adpropval in adpropertyvalue.DefaultIfEmpty()
-                            where !ad.IsDeleted
-                            && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
-                            && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
-                            && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
-                            && (cat.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
-                            && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
-                            && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
-                            && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
-                            && (ad.AdClass == model.AdClass || model.AdClass == null)
-                            && (ad.PhoneNumber.Contains(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.PhoneNumber))
-                            && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
-                            && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
-                            && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
-                            && (ad.UserId == model.UserId || model.UserId == null || model.UserId < 1)
-                            && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropval.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
+                             from adpropval in adpropertyvalue.DefaultIfEmpty()
+                             where !ad.IsDeleted
+                             && (ad.Id == model.AdId || model.AdId == null || model.AdId < 1)
+                             && (ad.Name.Contains(model.SearchText) || string.IsNullOrWhiteSpace(model.SearchText))
+                             && (ad.SubcategoryId == model.SubcategoryId || model.SubcategoryId == null || model.SubcategoryId < 1)
+                             && (cat.Id == model.CategoryId || model.CategoryId == null || model.CategoryId < 1)
+                             && (ad.Amount >= model.min_amount || model.min_amount == null || model.min_amount < 0)
+                             && (ad.Amount <= model.max_amount || model.max_amount == null || model.max_amount < 0)
+                             && (ad.Name.Contains(model.Address) || string.IsNullOrWhiteSpace(model.Address))
+                             && (ad.AdClass == model.AdClass || model.AdClass == null)
+                             && (ad.PhoneNumber.Contains(model.PhoneNumber) || string.IsNullOrWhiteSpace(model.PhoneNumber))
+                             && (ad.AdReference.Contains(model.AdReference) || string.IsNullOrWhiteSpace(model.AdReference))
+                             && (ad.Description.Contains(model.Description) || string.IsNullOrWhiteSpace(model.Description))
+                             && (ad.AdsStatus == model.AdsStatus || model.AdsStatus == null)
+                             && (ad.UserId == model.UserId || model.UserId == null || model.UserId < 1)
+                             && (model.PropertyValuePairs.Any(pvp => pvp.PropertyId == adprop.Id && adpropval.Value.Contains(pvp.Value)) || model.PropertyValuePairs == null || model.PropertyValuePairs == new List<PropertyValuePair>())
 
-                            let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
-                            let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
+                             let rtnData = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && ((int)a.Rating) >= 1 && ((int)a.Rating) <= 5).DefaultIfEmpty().ToList()
+                             let rtn = rtnData.DefaultIfEmpty().Average(sf => (int)(sf.Rating ?? 0))
 
-                            select new Ad
-                            {
-                                AdClass = ad.AdClass,
-                                Address = ad.Address,
-                                AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                AdImages = _AdImageRepo.GetAll().Where(a => a.AdId == ad.Id && a.IsDeleted == false).ToList(),
-                                //AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                //AdPropertyValue = _adPropertyValueRepo.GetAll().Include("AdProperty").DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
-                                AdPropertyValue = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().Select<AdPropertyValue, AdPropertyValue>(adpropv => new AdPropertyValue
-                                {
-                                    Id = adpropv.Id,
-                                    AdId = adpropv.AdId,
-                                    AdPropertyId = adpropv.AdPropertyId,
-                                    Value = adpropv.Value,
+                             select new Ad
+                             {
+                                 AdClass = ad.AdClass,
+                                 Address = ad.Address,
+                                 AdFeedback = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                 AdImages = _AdImageRepo.GetAll().Where(a => a.AdId == ad.Id && a.IsDeleted == false).ToList(),
+                                 //AdPropertyValue = _adPropertyValueRepo.GetAll().DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                 //AdPropertyValue = _adPropertyValueRepo.GetAll().Include("AdProperty").DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().ToList(),
+                                 AdPropertyValue = _adPropertyValueRepo.GetAll().Include(u => u.AdProperty).DefaultIfEmpty().Where(a => a.AdId == ad.Id && a.IsDeleted == false).DefaultIfEmpty().Select<AdPropertyValue, AdPropertyValue>(adpropv => new AdPropertyValue
+                                 {
+                                     Id = adpropv.Id,
+                                     AdId = adpropv.AdId,
+                                     AdPropertyId = adpropv.AdPropertyId,
+                                     Value = adpropv.Value,
 
-                                    AdProperty = new AdProperty
-                                    {
-                                        Id = adpropv.AdProperty.Id,
-                                        Name = adpropv.AdProperty.Name,
-                                        PropertyType = adpropv.AdProperty.PropertyType,
-                                        Range = adpropv.AdProperty.Range,
-                                        SubcategoryId = adpropv.AdProperty.SubcategoryId,
-                                    }
-                                }).ToList(),
-                                AdReference = ad.AdReference,
-                                AdsStatus = ad.AdsStatus,
-                                Amount = ad.Amount,
-                                CreationTime = ad.CreationTime,
-                                CreatorUserId = ad.CreatorUserId,
-                                DeleterUserId = ad.DeleterUserId,
-                                DeletionTime = ad.DeletionTime,
-                                Description = ad.Description,
-                                Id = ad.Id,
-                                InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
-                                IsActive = ad.IsActive,
-                                IsDeleted = ad.IsDeleted,
-                                Keywords = ad.Keywords,
-                                LastModificationTime = ad.LastModificationTime,
-                                LastModifierUserId = ad.LastModifierUserId,
-                                Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count(),
-                                Location = ad.Location,
-                                Name = ad.Name,
-                                PhoneNumber = ad.PhoneNumber,
-                                Rank = default,
-                                Rating = rtn,
-                                Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count(),
-                                UserId = ad.UserId,
-                                SubcategoryId = ad.SubcategoryId,
-                                VideoPath = ad.VideoPath,
-                                User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
-                                Subcategory = sub
+                                     AdProperty = new AdProperty
+                                     {
+                                         Id = adpropv.AdProperty.Id,
+                                         Name = adpropv.AdProperty.Name,
+                                         PropertyType = adpropv.AdProperty.PropertyType,
+                                         Range = adpropv.AdProperty.Range,
+                                         SubcategoryId = adpropv.AdProperty.SubcategoryId,
+                                     }
+                                 }).ToList(),
+                                 AdReference = ad.AdReference,
+                                 AdsStatus = ad.AdsStatus,
+                                 Amount = ad.Amount,
+                                 CreationTime = ad.CreationTime,
+                                 CreatorUserId = ad.CreatorUserId,
+                                 DeleterUserId = ad.DeleterUserId,
+                                 DeletionTime = ad.DeletionTime,
+                                 Description = ad.Description,
+                                 Id = ad.Id,
+                                 InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
+                                 IsActive = ad.IsActive,
+                                 IsDeleted = ad.IsDeleted,
+                                 Keywords = ad.Keywords,
+                                 LastModificationTime = ad.LastModificationTime,
+                                 LastModifierUserId = ad.LastModifierUserId,
+                                 Likes = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && (a.Like ?? false)).DefaultIfEmpty().Count(),
+                                 Location = ad.Location,
+                                 Name = ad.Name,
+                                 PhoneNumber = ad.PhoneNumber,
+                                 Rank = default,
+                                 Rating = rtn,
+                                 Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count(),
+                                 UserId = ad.UserId,
+                                 SubcategoryId = ad.SubcategoryId,
+                                 VideoPath = ad.VideoPath,
+                                 User = UserRepository.GetAll().Where(u => u.Id == ad.UserId).FirstOrDefault(),
+                                 Subcategory = sub,
+                                 Negotiable = ad.Negotiable,
+                                 ContactForPrice = ad.ContactForPrice,
 
-                            }).DistinctBy(x => x.Id).Skip((page - 1) * size).Take(size).ToList();
+                             }).DistinctBy(x => x.Id);
+                var data = query.Skip((page - 1) * size).Take(size).ToList();
+                var total = query.Count();
+                long pages = (long)Math.Ceiling(((double)total / (double)size));
                 //var returnVal = data;
                 //var filteredval = returnVal;
                 //var integer = filteredval.ToList().Count;
@@ -591,9 +596,7 @@ namespace EkiHire.Business.Services
                     }
                     _unitOfWork.Commit();
                 }
-
-                return data;
-
+                return new AdResponse { Ads = data, Total = total, Pages = pages, Page = page, Size = size};
             }
             catch (Exception ex)
             {
@@ -1736,7 +1739,7 @@ namespace EkiHire.Business.Services
                 //result = adRepository.GetAll().Select(model => TrendingRank(model)).AsEnumerable().OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 //result = (from a in adRepository.GetAll() select TrendingRank(a)).OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
                 List<Ad> ar = new List<Ad>();
-                var aList = await GetAds(new AdFilter(), username, allowanonymous);//adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
+                var aList = (await GetAds(new AdFilter(), username, allowanonymous)).Ads;//adRepository.GetAll().Where(x => x.IsDeleted == false).ToList();
                 Parallel.ForEach(aList, (a) => {
                     var data = TrendingRank(a);
                     ar.Add(data);
