@@ -130,6 +130,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         //filter, search and scan ads
+        [AllowAnonymous]
         [HttpPost, Route("Search"), Route("Search/{page}"), Route("Search/{page}/{size}")]
         public async Task<IServiceResponse<AdResponse>> Search(AdFilter model, int page = 1, int size = 25)
         {
@@ -359,6 +360,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("Trending")]
         [Route("Trending/{count}")]
