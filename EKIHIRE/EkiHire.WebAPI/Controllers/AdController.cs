@@ -134,9 +134,10 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost, Route("Search"), Route("Search/{page}"), Route("Search/{page}/{size}")]
         public async Task<IServiceResponse<AdResponse>> Search(AdFilter model, int page = 1, int size = 25)
         {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () =>
             {
-                AdResponse result = (await adService.GetAds(model, serviceHelper.GetCurrentUserEmail(),page:page,size:size));
+                AdResponse result = (await adService.GetAds(model, serviceHelper.GetCurrentUserEmail(), allowanonymous, page:page,size:size));
                 var response = new ServiceResponse<AdResponse>(result);
                 return response;
             });
@@ -366,7 +367,7 @@ namespace EkiHire.WebAPI.Controllers
         [Route("Trending/{count}")]
         public async Task<IServiceResponse<IEnumerable<AdDTO>>> Trending(long count = 10)
         {
-            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) ? true : false;
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdDTO>>();
                 var data = await adService.Trending(count, serviceHelper.GetCurrentUserEmail(), allowanonymous);
@@ -380,10 +381,10 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         public async Task<IServiceResponse<Ad>> GetAd(long Id)
         {
-            bool anonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) ? true : false; 
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<Ad>();
-                var data = await adService.GetAd(Id, serviceHelper.GetCurrentUserEmail(), anonymous);
+                var data = await adService.GetAd(Id, serviceHelper.GetCurrentUserEmail(), allowanonymous);
                 //var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
                 response.Object = data;
                 return response;
@@ -395,9 +396,10 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         public async Task<IServiceResponse<IEnumerable<Ad>>> GetAdBulk(long[] Ids)
         {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<Ad>>();
-                var data = await adService.GetAdBulk(Ids, serviceHelper.GetCurrentUserEmail());
+                var data = await adService.GetAdBulk(Ids, serviceHelper.GetCurrentUserEmail(), allowanonymous);
                 //var data = (await adService.GetAds(new AdFilter { AdId = Id }, serviceHelper.GetCurrentUserEmail())).FirstOrDefault();
                 response.Object = data;
                 return response;
@@ -466,12 +468,14 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("TopAvailable")]
+        [Route("TopAvailable/{count}")]
         [AllowAnonymous]
-        public async Task<ServiceResponse<IEnumerable<AdDTO>>> TopAvailable()
+        public async Task<ServiceResponse<IEnumerable<AdDTO>>> TopAvailable(int count = 8)
         {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdDTO>>();
-                var data = await adService.TopAvailable(/*model, serviceHelper.GetCurrentUserEmail()*/);
+                var data = await adService.TopAvailable(count,allowanonymous/*model, serviceHelper.GetCurrentUserEmail()*/);
                 response.Object = data;
                 return response;
             });
@@ -479,12 +483,14 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("SimilarAd/{subcategoryId}")]
+        [Route("SimilarAd/{subcategoryId}/{count}")]
         [AllowAnonymous]
-        public async Task<ServiceResponse<IEnumerable<AdDTO>>> SimilarAd(long subcategoryId)
+        public async Task<ServiceResponse<IEnumerable<AdDTO>>> SimilarAd(long subcategoryId, int count = 8)
         {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdDTO>>();
-                var data = await adService.SimilarAd(subcategoryId/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+                var data = await adService.SimilarAd(subcategoryId,count, allowanonymous/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
                 response.Object = data;
                 return response;
             });
@@ -754,7 +760,45 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IServiceResponse<IEnumerable<State>>> GetStates()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<State>>();
+                var data = await adService.GetStates();
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IServiceResponse<IEnumerable<LGAData>>> GetLGAs()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<LGAData>>();
+                var data = await adService.GetLGAs();
+                response.Object = data;
+                return response;
+            });
+        }
+
         #region comments
+        //[AllowAnonymous]
+        //[HttpPost]
+        //[Route("[action]")]
+        //public async Task<ServiceResponse<bool>> AddLGA(List<LocalGovernmentArea> model)
+        //{
+        //    return await HandleApiOperationAsync(async () => {
+        //        var response = new ServiceResponse<bool>();
+        //        var data = await adService.AddLocalGovernmentAreaOnce(model);
+        //        response.Object = data;
+        //        return response;
+        //    });
+        //}
         //[HttpPost]
         //[Route("SendNotification")]
         //Task<string> SendNotification(string title, string body)

@@ -40,7 +40,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<JobApplication> JobApplication { get; set; }
         public DbSet<SubscriptionPackage> SubscriptionPackage { get; set; }
         public DbSet<NewsletterSubscriber> NewsletterSubscriber { get; set; }
-
+        public DbSet<LocalGovernmentArea> LocalGovernmentArea { get; set; }
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }
         //public DbSet<Employee> Employees { get; set; }

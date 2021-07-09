@@ -65,7 +65,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdProperty(AdPropertyDTO model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
-        Task<IEnumerable<AdDTO>> Trending(long count = 0, string username = null, bool allowanonymous = false);
+        Task<IEnumerable<AdDTO>> Trending(long count = 10, string username = null, bool allowanonymous = false);
         //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImageDTO model, string username);
@@ -73,8 +73,8 @@ namespace EkiHire.Business.Services
         Task<bool> SaveRequestQuote(RequestQuote model, string username);
         Task<bool> SaveReview(AdFeedback model, string username);
         Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
-        Task<IEnumerable<AdDTO>> TopAvailable();
-        Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId);
+        Task<IEnumerable<AdDTO>> TopAvailable(int count = 8, bool allowAnonymous = false);
+        Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false);
         Task<string> SendNotification(List<string> clientToken, string title, string body);
         Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
@@ -95,12 +95,14 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<NewsletterSubscriber>> GetNewsletterSubscriber(string username, int page = 1, int size = 25);
         Task<NewsletterSubscriber> GetNewsletterSubscriberById(long Id, string username);
         Task<Ad> GetAd(long Id, string username, bool allowAnonymous = false);
-        Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username);
+        Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username, bool allowanonymous = false);
         Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<bool> DeleteNewsletterSubscriber(long id, string username);
         Task<bool> ChangeUserType(UserType userType, long clientId, string username);
-
+        //Task<bool> AddLocalGovernmentAreaOnce(List<LocalGovernmentArea> model);
         //Task<IEnumerable<Ad>> GetAdsTest(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<IEnumerable<State>> GetStates();
+        Task<IEnumerable<LGAData>> GetLGAs();
     }
     public class AdService: IAdService
     {
@@ -133,10 +135,11 @@ namespace EkiHire.Business.Services
         private readonly IRepository<SubscriptionPackage> SubscriptionPackageRepository;
         private readonly IRepository<NewsletterSubscriber> NewsletterSubscriberRepository;
         private readonly IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository;
+        private readonly IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository, IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -165,6 +168,7 @@ namespace EkiHire.Business.Services
             this.SubscriptionPackageRepository = SubscriptionPackageRepository;
             this.NewsletterSubscriberRepository = NewsletterSubscriberRepository;
             this.PreviousWorkExperienceRepository = PreviousWorkExperienceRepository;
+            this.LocalGovernmentAreaRepository = LocalGovernmentAreaRepository;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
@@ -398,6 +402,7 @@ namespace EkiHire.Business.Services
                 {
                     throw await _serviceHelper.GetExceptionAsync("Invalid search entry!");
                 }
+                var userId = user?.Id;
                 #endregion
 
                 var query = (from ad in adRepository.GetAll().DefaultIfEmpty()
@@ -465,7 +470,7 @@ namespace EkiHire.Business.Services
                                  DeletionTime = ad.DeletionTime,
                                  Description = ad.Description,
                                  Id = ad.Id,
-                                 InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == user.Id && c.AdId == ad.Id && c.IsDeleted == false),
+                                 InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == userId && c.AdId == ad.Id && c.IsDeleted == false),
                                  IsActive = ad.IsActive,
                                  IsDeleted = ad.IsDeleted,
                                  Keywords = ad.Keywords,
@@ -578,10 +583,10 @@ namespace EkiHire.Business.Services
                                 Ad = null,
                                 //basic properties
                                 CreationTime = DateTime.Now,
-                                CreatorUserId = user.Id,
+                                CreatorUserId = user?.Id,
                                 IsDeleted = false,
                                 LastModificationTime = DateTime.Now,
-                                LastModifierUserId = user.Id,
+                                LastModifierUserId = user?.Id,
                                 DeleterUserId = null,
                                 DeletionTime = null,
                                 Id = 0,
@@ -1729,7 +1734,7 @@ namespace EkiHire.Business.Services
         //create new ad property, update ad prop, delete,
         #endregion
 
-        public async Task<IEnumerable<AdDTO>> Trending(long count = 0, string username = null, bool allowanonymous = false)
+        public async Task<IEnumerable<AdDTO>> Trending(long count = 10, string username = null, bool allowanonymous = false)
         {
             try
             {
@@ -1977,11 +1982,11 @@ namespace EkiHire.Business.Services
             }
         }
         
-        public async Task<IEnumerable<AdDTO>> TopAvailable()
+        public async Task<IEnumerable<AdDTO>> TopAvailable(int count = 8, bool allowAnonymous = false)
         {
             try
             {
-                return adRepository?.GetAll()?.Where(a => !a.IsDeleted).Take(8)?.ToList()?.ToDTO();
+                return adRepository?.GetAll()?.Where(a => !a.IsDeleted).Take(count)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -1990,11 +1995,11 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId)
+        public async Task<IEnumerable<AdDTO>> SimilarAd( long subcategoryId, int count = 8, bool allowAnonymous = false)
         {
             try
             {
-                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId && !a.IsDeleted)?.Take(8)?.ToList()?.ToDTO();
+                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId && !a.IsDeleted)?.Take(count)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -2388,7 +2393,7 @@ namespace EkiHire.Business.Services
                         throw await _serviceHelper.GetExceptionAsync("User does not exist");
                     }
                 }
-                
+                var loggedInUserId = loggedInUser?.Id;
                 #endregion
                 var ad = adRepository.FirstOrDefault(x => x.Id == Id);
                 if(ad == null)
@@ -2406,7 +2411,7 @@ namespace EkiHire.Business.Services
                 ad.Reviews = adFeedbackRepository.GetAll().DefaultIfEmpty().Where(a => ad.Id == a.Id && !a.IsDeleted && !string.IsNullOrWhiteSpace(a.Review)).DefaultIfEmpty().Count();
                 if (!allowAnonymous)
                 {
-                    ad.InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == loggedInUser.Id && c.AdId == ad.Id && c.IsDeleted == false);
+                    ad.InUserCart = CartItemRepository.GetAll().DefaultIfEmpty().Any(c => c.UserId == loggedInUserId && c.AdId == ad.Id && c.IsDeleted == false);
                 }
                 ad.User = UserRepository.FirstOrDefault(u => u.Id == ad.UserId);//owner
                 ad.Subcategory = _subcategoryRepo.FirstOrDefault(s => s.Id == ad.SubcategoryId);
@@ -2419,7 +2424,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username)
+        public async Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username, bool allowanonymous = false)
         {
             try
             {
@@ -2437,8 +2442,15 @@ namespace EkiHire.Business.Services
                 List<Ad> ads = new List<Ad>();
                 foreach (var id in Ids)
                 {
-                    var ad = await GetAd(id, username);
-                    ads.Add(ad);
+                    try
+                    {
+                        var ad = await GetAd(id, username, allowanonymous);
+                        ads.Add(ad);
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                    }
                 }
 
                 return ads;
@@ -2450,9 +2462,94 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
+        //public async Task<bool> AddLocalGovernmentAreaOnce(List<LocalGovernmentArea> model)
+        //{
+        //    try
+        //    {
+        //        var data = LocalGovernmentAreaRepository.FirstOrDefault(x => true);
+        //        if(data!= null)
+        //        {
+        //            throw new Exception("Already loaded!!");
+        //        }
+        //        _unitOfWork.BeginTransaction();
+        //        foreach(var row in model)
+        //        {
+        //            var line = new LocalGovernmentArea {
+        //                SerialNumber = row.SerialNumber,
+        //                Country = row.Country,
+        //                State = row.State,
+        //                LGA = row.LGA,
+        //                SenDistrict = row.SenDistrict,
+        //                SenDistrictCode = row.SenDistrictCode,
+        //                Shape_Length = row.Shape_Length,
+        //                Shape_Area = row.Shape_Area,
+        //                //basic properties
+        //                CreationTime = DateTime.Now,
+        //                CreatorUserId = null,
+        //                IsDeleted = false,
+        //                LastModificationTime = DateTime.Now,
+        //                LastModifierUserId = null,
+        //                DeleterUserId = null,
+        //                DeletionTime = null,
+        //                Id = 0,
+        //            };
+        //            LocalGovernmentAreaRepository.Insert(line);
+        //        }
+        //        _unitOfWork.Commit();
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        //return false;
+        //        throw ex;
+        //    }
+        //}
 
+        public async Task<IEnumerable<State>> GetStates()
+        {
+            try
+            {
+                List<State> states = new List<State>();
+                states = (from s in LocalGovernmentAreaRepository.GetAll()
+                           select new State { 
+                                Country = s.Country,
+                                Name = s.State
+                           }).DistinctBy(s => s.Name).ToList();
+                return states;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<LGAData>> GetLGAs()
+        {
+            try
+            {
+                List<LGAData> lgas = new List<LGAData>();
+                lgas = (from l in LocalGovernmentAreaRepository.GetAll()
+                       select new LGAData { 
+                            Country = l.Country,
+                            Id = l.Id,
+                            LGA = l.LGA,
+                            SenateDistrict = l.SenDistrict,
+                            SenateDistrictCode = l.SenDistrictCode,
+                            State = l.State,
+                       }).ToList();
+                return lgas;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
         #region test
-        
+
         #endregion
         #region comments
         //List<Ad> result = new List<Ad>();
