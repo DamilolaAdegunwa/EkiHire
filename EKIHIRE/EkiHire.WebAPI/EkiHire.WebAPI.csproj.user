@@ -4,7 +4,7 @@
     <Controller_SelectedScaffolderID>MvcControllerEmptyScaffolder</Controller_SelectedScaffolderID>
     <Controller_SelectedScaffolderCategoryPath>root/Common/MVC/Controller</Controller_SelectedScaffolderCategoryPath>
     <ShowAllFiles>false</ShowAllFiles>
-    <NameOfLastUsedPublishProfile>Default Settings</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>Default Settings1</NameOfLastUsedPublishProfile>
     <ActiveDebugProfile>IIS Express</ActiveDebugProfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
