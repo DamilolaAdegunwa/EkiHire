@@ -256,7 +256,7 @@ namespace EkiHire.Business.Services
 
                 var user = await FindByNameAsync(username);
 
-                await ValidateUser(user);
+                //await ValidateUser(user);
                 UserDTO userDto = new UserDTO();
                 if (user.IsConfirmed())
                 {
@@ -288,7 +288,8 @@ namespace EkiHire.Business.Services
                 }
                 else if (activationCode != user.AccountConfirmationCode)
                 {
-                    throw new EkiHireGenericException("Invalid OTP");
+                    //throw new EkiHireGenericException("Invalid OTP");
+                    throw new Exception("Invalid OTP");
                     //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
                 }
                 userDto = user;
@@ -308,7 +309,8 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return null;
+                //return null;
+                throw ex;
             }
         }
 
@@ -351,7 +353,7 @@ namespace EkiHire.Business.Services
 
             var user = await FindByNameAsync(username);
 
-            ValidateUser(user);
+            await ValidateUser(user);
 
             user.OTP = CommonHelper.RandomDigits(5);
             await _userManager.UpdateAsync(user);
@@ -609,28 +611,30 @@ namespace EkiHire.Business.Services
                     {
                         log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
                     }
+                    #region old code  snippet
+                    //try
+                    //{
+                    //    //first get the file
+                    //    var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
+                    //    if (File.Exists(filePath))
+                    //    {
+                    //        var fileString = File.ReadAllText(filePath);
+                    //        if (!string.IsNullOrWhiteSpace(fileString))
+                    //        {
+                    //            //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
+                    //            fileString = fileString.Replace("{{FirstName}}", $"{user.UserName}");
+                    //            fileString = fileString.Replace("{{Otp}}", $"{user.OTP}");
 
-                    try
-                    {
-                        //first get the file
-                        var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
-                        if (File.Exists(filePath))
-                        {
-                            var fileString = File.ReadAllText(filePath);
-                            if (!string.IsNullOrWhiteSpace(fileString))
-                            {
-                                //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
-                                fileString = fileString.Replace("{{FirstName}}", $"{user.UserName}");
-                                fileString = fileString.Replace("{{Otp}}", $"{user.OTP}");
+                    //            _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
+                    //        }
+                    //    }
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                    //}
+                    #endregion
 
-                                _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
-                    }
                     return true;
                 }
                 return false;

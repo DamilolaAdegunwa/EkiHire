@@ -165,7 +165,7 @@ namespace EkiHire.Business.Services
                             #endregion
 
                             //first get the file
-                            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.PasswordResetEmail);
+                            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail);
                             if (File.Exists(filePath))
                             {
                                 var fileString = File.ReadAllText(filePath);
@@ -173,7 +173,7 @@ namespace EkiHire.Business.Services
                                 {
                                     fileString = fileString.Replace("{{ActivationCode}}", $"{user.AccountConfirmationCode}");
 
-                                    _serviceHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Password Reset OTP");
+                                    _serviceHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Account Verification Code");
                                 }
                             }
                         }
