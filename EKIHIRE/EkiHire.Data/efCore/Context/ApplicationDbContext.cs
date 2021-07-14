@@ -41,6 +41,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<SubscriptionPackage> SubscriptionPackage { get; set; }
         public DbSet<NewsletterSubscriber> NewsletterSubscriber { get; set; }
         public DbSet<LocalGovernmentArea> LocalGovernmentArea { get; set; }
+        public DbSet<Message> Messages { get; set; }
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }
         //public DbSet<Employee> Employees { get; set; }
@@ -95,6 +96,15 @@ namespace EkiHire.Data.efCore.Context
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
+            //modelBuilder.Entity<Message>()
+            //    .HasOne(a => a.Sender)
+            //.WithMany(a => a.SentMessages)
+            //.HasForeignKey(a => a.SenderId);
+
+            //modelBuilder.Entity<Message>()
+            //    .HasOne(a => a.Recipient)
+            //    .WithMany(a => a.ReceivedMessages)
+            //    .HasForeignKey(a => a.RecipientId);
         }
     }
 

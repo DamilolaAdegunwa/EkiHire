@@ -786,6 +786,17 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [HttpGet]
+        [Route("[action]/{otherPersonId}")]
+        public async Task<IServiceResponse<IEnumerable<Message>>> GetMessages(long otherPersonId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<Message>>();
+                var data = await adService.GetMessages(otherPersonId, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
         #region comments
         //[AllowAnonymous]
         //[HttpPost]

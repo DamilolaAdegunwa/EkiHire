@@ -14,6 +14,7 @@
     <Compile Include="Services\AccountService.cs" />
     <Compile Include="Services\AdService.cs" />
     <Compile Include="Services\CategoryService.cs" />
+    <Compile Include="Services\ChatHub.cs" />
     <Compile Include="Services\ClaimsProvider.cs" />
     <Compile Include="Services\ErrorCodeService.cs" />
     <Compile Include="Services\RoleService.cs" />
@@ -28,6 +29,8 @@
     <PackageReference Include="FirebaseAdmin" Version="2.2.0" />
     <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="MailKit" Version="2.13.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.7" />
     <!-- <PackageReference Include="MimeKit" Version="2.12.0" /> -->
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="PagedList.Mvc" Version="4.5.0" />

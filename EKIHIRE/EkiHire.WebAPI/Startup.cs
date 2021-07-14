@@ -305,6 +305,7 @@ namespace EkiHire.WebAPI
                 {
                     options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
                 });
+            services.AddSignalR();
         }
 
         private static void SetupPolicies(Microsoft.AspNetCore.Authorization.AuthorizationOptions options)
@@ -343,6 +344,13 @@ namespace EkiHire.WebAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService, IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
+            loggerFactory.AddLog4Net();
+            #region seeding the db
+            //categoryService.SeedCategories();
+            //categoryService.SeedSubcategories();//108
+            #endregion end seeding the db
+
+            #region more comments
             //categoryService.TestMail();
             //var replacement = new StringDictionary
             //{
@@ -381,11 +389,6 @@ namespace EkiHire.WebAPI
             //categoryService.TestMailGmail();
             //categoryService.TestMailYahoo();
             //accountService.TestEHMail();
-            loggerFactory.AddLog4Net();
-            #region seeding the db
-            //categoryService.SeedCategories();
-            //categoryService.SeedSubcategories();//108
-            #endregion end seeding the db
             //if (env.IsDevelopment())
             //{
             //    app.UseDeveloperExceptionPage();
@@ -396,6 +399,7 @@ namespace EkiHire.WebAPI
             //{
             //    app.UseExceptionHandler("/Error");
             //}
+            #endregion
             app.UseDeveloperExceptionPage();
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
@@ -408,7 +412,8 @@ namespace EkiHire.WebAPI
                 //  .Split(",", StringSplitOptions.RemoveEmptyEntries)
                 //  .Select(o => o.RemovePostFix("/"))
                 //  .ToArray());
-                x.AllowAnyOrigin() .AllowAnyMethod() .AllowAnyHeader();
+                //x.AllowAnyOrigin() .AllowAnyMethod() .AllowAnyHeader();
+                x.SetIsOriginAllowed(y => y.Contains("")).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
             });
 
             app.UseAuthentication();
@@ -429,6 +434,7 @@ namespace EkiHire.WebAPI
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/ChatHub");
             });
         }
     }

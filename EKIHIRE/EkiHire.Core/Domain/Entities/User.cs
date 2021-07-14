@@ -54,7 +54,10 @@ namespace EkiHire.Core.Domain.Entities
         public long? CreatorUserId { get; set; }
         public long? LastModifierUserId { get; set; }
         public long? DeleterUserId { get; set; }
-
+        [NotMapped]
+        public virtual ICollection<Message> SentMessages { get; set; }
+        [NotMapped]
+        public virtual ICollection<Message> ReceivedMessages { get; set; }
         #endregion
         public bool IsTransient()
         {

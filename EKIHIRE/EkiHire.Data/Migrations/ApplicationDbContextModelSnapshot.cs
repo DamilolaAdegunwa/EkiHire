@@ -792,6 +792,31 @@ namespace EkiHire.Data.Migrations
                     b.ToTable("LocalGovernmentArea");
                 });
 
+            modelBuilder.Entity("EkiHire.Core.Domain.Entities.Message", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .UseIdentityColumn();
+
+                    b.Property<long>("RecipientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("SenderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTimeOffset>("When")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.NewsletterSubscriber", b =>
                 {
                     b.Property<long>("Id")

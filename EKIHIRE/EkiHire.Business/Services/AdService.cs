@@ -28,13 +28,14 @@ using log4net;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using PagedList;
-using FirebaseAdmin;
-using FirebaseAdmin.Messaging;
+//using FirebaseAdmin;
+//using FirebaseAdmin.Messaging;
 using System.Collections;
 using MoreLinq;
 using Microsoft.AspNetCore.Http;
 using System.Threading;
 using System.Collections.Concurrent;
+using EkiHire.Data.efCore.Context;
 
 namespace EkiHire.Business.Services
 {
@@ -75,7 +76,7 @@ namespace EkiHire.Business.Services
         Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
         Task<IEnumerable<AdDTO>> TopAvailable(int count = 8, bool allowAnonymous = false);
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false);
-        Task<string> SendNotification(List<string> clientToken, string title, string body);
+        //Task<string> SendNotification(List<string> clientToken, string title, string body);
         Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
@@ -103,6 +104,7 @@ namespace EkiHire.Business.Services
         //Task<IEnumerable<Ad>> GetAdsTest(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<IEnumerable<State>> GetStates();
         Task<IEnumerable<LGAData>> GetLGAs();
+        Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username);
     }
     public class AdService: IAdService
     {
@@ -136,10 +138,11 @@ namespace EkiHire.Business.Services
         private readonly IRepository<NewsletterSubscriber> NewsletterSubscriberRepository;
         private readonly IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository;
         private readonly IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository;
+        private readonly ApplicationDbContext _applicationDbContext;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository, IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository, IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository, ApplicationDbContext applicationDbContext)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -169,6 +172,7 @@ namespace EkiHire.Business.Services
             this.NewsletterSubscriberRepository = NewsletterSubscriberRepository;
             this.PreviousWorkExperienceRepository = PreviousWorkExperienceRepository;
             this.LocalGovernmentAreaRepository = LocalGovernmentAreaRepository;
+            _applicationDbContext = applicationDbContext;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
@@ -2008,21 +2012,21 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<string> SendNotification(List<string> clientToken, string title, string body)
-        {
-            var registrationTokens = clientToken;
-            var message = new MulticastMessage()
-            {
-                Tokens = registrationTokens,
-                Data = new Dictionary<string, string>()
-                 {
-                     {"title", title},
-                     {"body", body},
-                 },
-            };
-            var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message).ConfigureAwait(true);
-            return "";
-        }
+        //public async Task<string> SendNotification(List<string> clientToken, string title, string body)
+        //{
+        //    var registrationTokens = clientToken;
+        //    var message = new MulticastMessage()
+        //    {
+        //        Tokens = registrationTokens,
+        //        Data = new Dictionary<string, string>()
+        //         {
+        //             {"title", title},
+        //             {"body", body},
+        //         },
+        //    };
+        //    var response = await FirebaseMessaging.DefaultInstance.SendMulticastAsync(message).ConfigureAwait(true);
+        //    return "";
+        //}
         public async Task<bool> AddTransaction(Transaction model, string username)
         {
             try
@@ -2548,9 +2552,35 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        #region test
 
-        #endregion
+        public async Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username)
+        {
+            try
+            {
+                #region validate
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(loggedInUser == null)
+                {
+                    throw new Exception("please login and try again");
+                }
+                User otherPerson = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (otherPerson == null)
+                {
+                    throw new Exception("can't find the details of the other person");
+                }
+                #endregion
+                List<Message> messages = new List<Message>();
+                messages = await _applicationDbContext.Messages.Where(a => (a.SenderId == loggedInUser.Id && a.RecipientId == otherPerson.Id) || (a.SenderId == otherPerson.Id && a.RecipientId == loggedInUser.Id)).ToListAsync();
+                return messages;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
         #region comments
         //List<Ad> result = new List<Ad>();
         //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);
