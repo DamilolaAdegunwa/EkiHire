@@ -52,5 +52,9 @@ namespace EkiHire.Business.Services
             #endregion
             await Clients.All.SendAsync("receiveMessage", message);
         }
+        public async Task SendNotification()
+        {
+
+        }
     }
 }

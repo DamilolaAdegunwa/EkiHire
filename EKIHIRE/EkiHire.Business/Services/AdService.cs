@@ -36,6 +36,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading;
 using System.Collections.Concurrent;
 using EkiHire.Data.efCore.Context;
+using Newtonsoft.Json;
 
 namespace EkiHire.Business.Services
 {
@@ -384,7 +385,7 @@ namespace EkiHire.Business.Services
             catch (Exception ex)
             {
                 _unitOfWork.Rollback();
-                log.Error($"user ({username}) could not add a new ad {ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                log.Error($"user ({username}) could not add a new ad {ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} :: payload {JsonConvert.SerializeObject(model)}");
                 throw ex;
             }
         }
