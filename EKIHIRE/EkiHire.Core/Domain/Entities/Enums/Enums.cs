@@ -53,4 +53,11 @@ namespace EkiHire.Core.Domain.Entities.Enums
         Success = 1,
         Failed = 2
     }
+    public enum NotificationType
+    {
+        Welcome = 0,
+        AdApproval = 1,
+        AdDenial = 2,
+        Chat = 3
+    }
 }

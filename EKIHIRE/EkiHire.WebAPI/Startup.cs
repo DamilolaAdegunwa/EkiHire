@@ -128,6 +128,9 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<NewsletterSubscriber>, EfCoreRepository<DbContext, NewsletterSubscriber>>();
             services.AddScoped<IRepository<PreviousWorkExperience>, EfCoreRepository<DbContext, PreviousWorkExperience>>();
             services.AddScoped<IRepository<LocalGovernmentArea>, EfCoreRepository<DbContext, LocalGovernmentArea>>();
+            services.AddScoped<IRepository<Notification>, EfCoreRepository<DbContext, Notification>>();
+
+            services.AddScoped<IChatHub,ChatHub>();
 
             //services.AddScoped<IWalletService, WalletService>();
             //services.AddScoped<IOnboardingService, OnboardingService>();
@@ -344,6 +347,7 @@ namespace EkiHire.WebAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService, IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
+            
             loggerFactory.AddLog4Net();
             #region seeding the db
             //categoryService.SeedCategories();

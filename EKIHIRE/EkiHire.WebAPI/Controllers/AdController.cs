@@ -498,11 +498,12 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdImage/{AdId}")]
-        public async Task<ServiceResponse<bool>> AddAdImage(long AdId)
+        [Route("UploadFile/Bulk")]
+        public async Task<ServiceResponse<List<string>>> AddAdImage(long AdId = 0)
         {
             IFormFileCollection images = Request.Form.Files;
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<bool>();
+                var response = new ServiceResponse<List<string>>();
                 var data = await adService.AddAdImage(AdId, images, serviceHelper.GetCurrentUserEmail()/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
                 response.Object = data;
                 return response;

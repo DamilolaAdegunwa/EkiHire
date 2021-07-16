@@ -31,8 +31,9 @@ namespace EkiHire.WebAPI.Controllers
         //private readonly IRoleService _roleSvc;
         //private readonly IAccountService _accountService;
         //private readonly ICategoryService _categoryService;
+        private readonly IChatHub _chatHub;
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
-        public HomeController(
+        public HomeController(IChatHub chatHub
         //IUserService userSvc, IRoleService roleSvc
         //    , IAccountService accountService, ICategoryService categoryService
             )
@@ -41,11 +42,14 @@ namespace EkiHire.WebAPI.Controllers
             //_roleSvc = roleSvc;
             //_accountService = accountService;
             //_categoryService = categoryService;
+            _chatHub = chatHub;
         }
 
         [Route("Index"), HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
+            //await new EkiHire.Business.Services.RealTime.ChatClient().TestRealTimeFunc();
+            //await _chatHub.SendNotification(new Notification());
             log.Info("This app is working!");
             return Ok("EkiHire.Web Api is running");
         }

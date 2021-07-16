@@ -58,6 +58,8 @@ namespace EkiHire.Core.Domain.Entities
         public virtual ICollection<Message> SentMessages { get; set; }
         [NotMapped]
         public virtual ICollection<Message> ReceivedMessages { get; set; }
+        [NotMapped]
+        public virtual ICollection<Notification> Notifications { get; set; }
         #endregion
         public bool IsTransient()
         {

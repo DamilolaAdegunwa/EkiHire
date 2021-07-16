@@ -292,6 +292,7 @@ namespace EkiHire.Business.Services
                     throw new Exception("Invalid OTP");
                     //await _svcHelper.GetExceptionAsync(ErrorConstants.USER_ACCOUNT_INVALID_OTP);
                 }
+                
                 userDto = user;
                 return userDto;
                 //return user == null ? null : new UserDTO

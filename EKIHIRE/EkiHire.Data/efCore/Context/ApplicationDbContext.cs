@@ -42,6 +42,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<NewsletterSubscriber> NewsletterSubscriber { get; set; }
         public DbSet<LocalGovernmentArea> LocalGovernmentArea { get; set; }
         public DbSet<Message> Messages { get; set; }
+        public DbSet<Notification> Notification { get; set; }
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }
         //public DbSet<Employee> Employees { get; set; }
@@ -105,6 +106,11 @@ namespace EkiHire.Data.efCore.Context
             //    .HasOne(a => a.Recipient)
             //    .WithMany(a => a.ReceivedMessages)
             //    .HasForeignKey(a => a.RecipientId);
+
+            //modelBuilder.Entity<Notification>()
+            //    .HasOne(a => a.Recipient)
+            //    .WithMany(a => a.Notifications)
+            //    .HasForeignKey(a => a.UserId);
         }
     }
 

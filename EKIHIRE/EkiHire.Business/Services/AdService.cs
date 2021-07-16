@@ -79,7 +79,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false);
         //Task<string> SendNotification(List<string> clientToken, string title, string body);
         Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
-        Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username);
+        Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
         Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25);
         Task<Transaction> GetTransactionById(long Id, string username);
@@ -140,10 +140,11 @@ namespace EkiHire.Business.Services
         private readonly IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository;
         private readonly IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository;
         private readonly ApplicationDbContext _applicationDbContext;
+        private readonly IChatHub _chatHub;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
             IRepository<AdImage> _AdImageRepo, IOptions<AppConfig> _appConfig, IRepository<AdLookupLog> AdLookupLogRepository,
-            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository, IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository, ApplicationDbContext applicationDbContext)
+            IRepository<Category> CategoryRepository, IRepository<User> UserRepository, IRepository<RequestQuote> RequestQuoteRepository, IRepository<JobApplication> JobApplicationRepository, IOptions<SmtpConfig> settingSvc, IHostingEnvironment _hostingEnvironment, /*IMailService mailSvc,*/ IRepository<Transaction> TransactionRepository, IRepository<SubscriptionPackage> SubscriptionPackageRepository, IRepository<NewsletterSubscriber> NewsletterSubscriberRepository, IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository, IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository, ApplicationDbContext applicationDbContext, IChatHub chatHub)
         {
             this.adRepository = adRepository;
             this._serviceHelper = _serviceHelper;
@@ -174,6 +175,7 @@ namespace EkiHire.Business.Services
             this.PreviousWorkExperienceRepository = PreviousWorkExperienceRepository;
             this.LocalGovernmentAreaRepository = LocalGovernmentAreaRepository;
             _applicationDbContext = applicationDbContext;
+            _chatHub = chatHub;
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
@@ -239,8 +241,10 @@ namespace EkiHire.Business.Services
                 ad.Id = 0;
                 #endregion
 
-                #region first send images to cloudinary
+                #region first send images to cloudinary (old impl, just get the imagePath)
                 var images = model.AdImages?.ToList();
+
+                //single thread
                 //List<string> imgPaths = new List<string>();
                 //if (images != null && images.Count > 0)
                 //{
@@ -252,16 +256,17 @@ namespace EkiHire.Business.Services
                 //        imgPaths.Add(imgPath);
                 //    }
                 //}
-                ConcurrentBag<string> imgPaths = new ConcurrentBag<string>();
-                if (images != null && images.Count > 0)
-                {
-                    Parallel.ForEach(images, (i) => {
-                        var byteArray = Convert.FromBase64String(i.ImageString);
-                        var stream = new MemoryStream(byteArray);
-                        var imgPath = _serviceHelper.UploadPhoto(stream);
-                        imgPaths.Add(imgPath);
-                    });
-                }
+                //multi-thread
+                //ConcurrentBag<string> imgPaths = new ConcurrentBag<string>();
+                //if (images != null && images.Count > 0)
+                //{
+                //    Parallel.ForEach(images, (i) => {
+                //        var byteArray = Convert.FromBase64String(i.ImageString);
+                //        var stream = new MemoryStream(byteArray);
+                //        var imgPath = _serviceHelper.UploadPhoto(stream);
+                //        imgPaths.Add(imgPath);
+                //    });
+                //}
                 #endregion
 
                 #region first clear adimages before saving
@@ -312,7 +317,7 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region save the image
-                if (imgPaths != null && imgPaths.Count > 0)
+                if (images != null && images.Count > 0)
                 {
                     //_unitOfWork.BeginTransaction();
                     //_ = Parallel.ForEach(imgPaths, (p) =>
@@ -337,13 +342,13 @@ namespace EkiHire.Business.Services
                     //_unitOfWork.Commit();
 
                     _unitOfWork.BeginTransaction();
-                    foreach (var p in imgPaths)
+                    foreach (var p in images)
                     {
                         _AdImageRepo.InsertAsync(
                             new AdImage
                             {
                                 AdId = insertedData?.Id,
-                                ImagePath = p,
+                                ImagePath = p.ImagePath,
                                 //basic properties
                                 CreationTime = DateTime.Now,
                                 CreatorUserId = user.Id,
@@ -1816,6 +1821,32 @@ namespace EkiHire.Business.Services
                 ad.AdsStatus = adsStatus;
                 adRepository.Update(ad);
                 _unitOfWork.Commit();
+
+                #region send notification
+                //first compose Welcome notification
+                Notification adsStatusNotification = new Notification
+                {
+                    Delivered = false,
+                    IsBroadCast = false,
+                    Message = adsStatus == AdsStatus.ACTIVE ? 
+                    "This is to let you know that your ad has been accepted on this platform. feel free to leverage all of the exciting offer we have on this platform" : 
+                    "Sorry your ad has been declined, this is possibly because it failed to meet some of our criteria. you can read about our policy or contact us for clarification.",
+                    Title = adsStatus == AdsStatus.ACTIVE ? "EkiHire.com: Your Ad have been approved!" : "EkiHire.com: Ad declined",
+                    UserId = ad.UserId,
+                    NotificationType = adsStatus == AdsStatus.ACTIVE ? NotificationType.AdApproval : NotificationType.AdDenial,
+                    Recipient = null,
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = ad.UserId,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = ad.UserId,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0,
+                };
+                _chatHub.SendNotification(adsStatusNotification);
+                #endregion
                 return true;
             }
             catch (Exception ex)
@@ -1875,30 +1906,41 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> AddAdImage(long AdId, IFormFileCollection images, string username)
+        public async Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username)
         {
             try
             {
                 //images upload
+                List<string> imgList = new List<string>();
                 if (images.Count > 0)
                 {
                     _unitOfWork.BeginTransaction();
-                    List<AdImage> imgList = null;
                     foreach (var image in images)
                     {
-
-                        //byte[] byteArray = System.IO.File.ReadAllBytes(@"C:\images\cow.png");
-
-                        using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+                        try
                         {
-                            image.CopyTo(stream);
-                            var imgPath = _serviceHelper.UploadPhoto(stream);
-                            _AdImageRepo.Insert(new AdImage { AdId = AdId, ImagePath = imgPath });
+                            //byte[] byteArray = System.IO.File.ReadAllBytes(@"C:\images\cow.png");
+                            using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
+                            {
+                                image.CopyTo(stream);
+                                var imgPath = _serviceHelper.UploadPhoto(stream);
+                                imgList.Add(imgPath);
+                                if (AdId != 0)
+                                {
+                                    _AdImageRepo.Insert(new AdImage { AdId = AdId, ImagePath = imgPath });
+                                }
+
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"image {image.FileName} failed to upload for user {_serviceHelper.GetCurrentUserEmail()}");
+                            
                         }
                     }
                     _unitOfWork.Commit();
                 }
-                return true;
+                return imgList;
                 ////////////////////////////////////////
                 //var images = model.AdImages?.ToList();
                 //if(images != null && images.Count > 0)
@@ -1914,7 +1956,7 @@ namespace EkiHire.Business.Services
             {
                 _unitOfWork.Rollback();
                 log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                return false;
+                return null;
             }
         }
         public async Task<IEnumerable<CartItemDTO>> GetCartItems(string username)

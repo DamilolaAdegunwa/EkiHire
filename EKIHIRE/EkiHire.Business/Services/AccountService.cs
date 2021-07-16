@@ -61,7 +61,7 @@ namespace EkiHire.Business.Services
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType.Name);
         readonly SmtpConfig _smtpsettings;
         private readonly IRepository<User> _userRepo;
-
+        private readonly IChatHub _chatHub;
         public AccountService(IUnitOfWork unitOfWork,
             IRepository<Account> employeeRepo,
             IRepository<Wallet> walletRepo,
@@ -74,7 +74,9 @@ namespace EkiHire.Business.Services
             IGuidGenerator guidGenerator,
             IOptions<AppConfig> _appConfig
             , IOptions<SmtpConfig> settingSvc
-            , IRepository<User> _userRepo)
+            , IRepository<User> _userRepo
+            , IChatHub chatHub
+            )
         {
             _unitOfWork = unitOfWork;
             _repo = employeeRepo;
@@ -89,6 +91,7 @@ namespace EkiHire.Business.Services
             _roleSvc = roleSvc;
             _smtpsettings = settingSvc.Value;
             this._userRepo = _userRepo;
+            _chatHub = chatHub;
         }
         public async Task<bool> AccountExist(string username)
         {
@@ -147,6 +150,29 @@ namespace EkiHire.Business.Services
                     {
                         try
                         {
+                            #region send notification
+                            //first compose Welcome notification
+                            Notification welcomeNotification = new Notification
+                            {
+                                Delivered = false,
+                                IsBroadCast = false,
+                                Message = "Thank you for registering on our platform. You are one step away from getting amazing shopping deals.",
+                                Title = "Welcome To EkiHire.com",
+                                UserId = user.Id,
+                                NotificationType = NotificationType.Welcome,
+                                Recipient = null,
+                                //basic properties
+                                CreationTime = DateTime.Now,
+                                CreatorUserId = user.Id,
+                                IsDeleted = false,
+                                LastModificationTime = DateTime.Now,
+                                LastModifierUserId = user.Id,
+                                DeleterUserId = null,
+                                DeletionTime = null,
+                                Id = 0,
+                            };
+                            _chatHub.SendNotification(welcomeNotification);
+                            #endregion
                             #region old email implementation
                             //var replacement = new StringDictionary
                             //{
