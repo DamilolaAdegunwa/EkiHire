@@ -2606,12 +2606,13 @@ namespace EkiHire.Business.Services
                 {
                     throw new Exception("please login and try again");
                 }
-                User otherPerson = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                User otherPerson = _userRepo.FirstOrDefault(a => a.Id == otherPersonId && !a.IsDeleted);
                 if (otherPerson == null)
                 {
                     throw new Exception("can't find the details of the other person");
                 }
                 #endregion
+
                 List<Message> messages = new List<Message>();
                 messages = await _applicationDbContext.Messages.Where(a => (a.SenderId == loggedInUser.Id && a.RecipientId == otherPerson.Id) || (a.SenderId == otherPerson.Id && a.RecipientId == loggedInUser.Id)).ToListAsync();
                 return messages;
