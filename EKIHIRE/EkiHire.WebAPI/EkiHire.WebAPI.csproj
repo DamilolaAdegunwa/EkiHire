@@ -4,6 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <Nullable>annotations</Nullable>
     <UserSecretsId>088167e7-c40a-407f-8448-8ec78ff5d87e</UserSecretsId>
+	<AllowUntrustedCertificate>true</AllowUntrustedCertificate>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
