@@ -67,12 +67,12 @@ namespace EkiHire.Business.Services
             switch (notification.NotificationType)
             {
                 case NotificationType.Welcome:
-                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveNotification", notification);
-                    //await Clients.All.SendAsync($"ReceiveNotification{}", notification);
+                    //await Clients.Client(Context.ConnectionId).SendAsync("ReceiveNotification", notification);
+                    await Clients.All.SendAsync("ReceiveNotification", notification);
                     break;
                 case NotificationType.AdApproval:
                 case NotificationType.AdDenial:
-                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveNotification", notification);
+                    await Clients.All.SendAsync("ReceiveNotification", notification);
                     break;
                 case NotificationType.Chat:
 

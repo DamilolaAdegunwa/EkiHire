@@ -818,7 +818,7 @@ namespace EkiHire.Business.Services
                 {
                     throw new EkiHireGenericException("Your account has not been activated!");
                 }
-                user.Image = profileImageString;
+                user.ImagePath = profileImageString;
                 await UpdateAsync(user);
                 return true;
             }

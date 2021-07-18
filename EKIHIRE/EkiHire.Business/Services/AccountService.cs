@@ -158,7 +158,7 @@ namespace EkiHire.Business.Services
                                 IsBroadCast = false,
                                 Message = "Thank you for registering on our platform. You are one step away from getting amazing shopping deals.",
                                 Title = "Welcome To EkiHire.com",
-                                UserId = user.Id,
+                                RecipientId = user.Id,
                                 NotificationType = NotificationType.Welcome,
                                 Recipient = null,
                                 //basic properties
@@ -402,7 +402,8 @@ namespace EkiHire.Business.Services
                     //AccountCode = employee.AccountCode,
                 };
 
-            return employees.AsNoTracking().FirstOrDefaultAsync();
+            //return employees.AsNoTracking().FirstOrDefaultAsync();
+            return employees.FirstOrDefaultAsync();
         }
 
         public Task<IPagedList<AccountDTO>> GetAccounts(int pageNumber, int pageSize, string query)
@@ -446,7 +447,8 @@ namespace EkiHire.Business.Services
                     RoleName = string.Join(",", userRole)
                 };
 
-            return employees.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
+            //return employees.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
+            return employees.ToPagedListAsync(pageNumber, pageSize);
         }
 
         public async Task<AccountDTO> GetAccount(int id)

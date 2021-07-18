@@ -4,14 +4,16 @@ using EkiHire.Data.efCore.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace EkiHire.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210718023615_update1")]
+    partial class update1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -888,19 +890,21 @@ namespace EkiHire.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("Message")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("NotificationType")
                         .HasColumnType("int");
 
-                    b.Property<long>("RecipientId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Title")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Notification");
                 });
@@ -1642,6 +1646,15 @@ namespace EkiHire.Data.Migrations
                         .HasForeignKey("SubcategoryId");
 
                     b.Navigation("Subcategory");
+                });
+
+            modelBuilder.Entity("EkiHire.Core.Domain.Entities.Notification", b =>
+                {
+                    b.HasOne("EkiHire.Core.Domain.Entities.User", "Recipient")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("Recipient");
                 });
 
             modelBuilder.Entity("EkiHire.Core.Domain.Entities.PreviousWorkExperience", b =>

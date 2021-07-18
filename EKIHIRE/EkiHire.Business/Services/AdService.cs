@@ -37,7 +37,7 @@ using System.Threading;
 using System.Collections.Concurrent;
 using EkiHire.Data.efCore.Context;
 using Newtonsoft.Json;
-
+using EkiHire.Business.Payload;
 namespace EkiHire.Business.Services
 {
     public interface IAdService
@@ -105,7 +105,9 @@ namespace EkiHire.Business.Services
         //Task<IEnumerable<Ad>> GetAdsTest(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<IEnumerable<State>> GetStates();
         Task<IEnumerable<LGAData>> GetLGAs();
-        Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username);
+        //Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username);
+        Task<IEnumerable<GetMessagesResponse>> GetMessages(string username);
+        Task<IEnumerable<GetNotificationResponse>> GetNotifications(string username);
     }
     public class AdService: IAdService
     {
@@ -179,7 +181,8 @@ namespace EkiHire.Business.Services
         }
         public async Task<long?> AddAd(AdDTO model, string username)
         {
-            
+            int retry = 0; int retries = 2;
+            retry:
             try
             {
                 #region validate credential
@@ -187,11 +190,13 @@ namespace EkiHire.Business.Services
                 //check that the model carries data
                 if (model == null)
                 {
+                    retry = retries;//don't retry
                     throw await _serviceHelper.GetExceptionAsync("no input provided!");
                 }
                 //check for non-empty username 
                 if (string.IsNullOrWhiteSpace(username))
                 {
+                    retry = retries;//don't retry
                     throw await _serviceHelper.GetExceptionAsync("Please login and retry");
                 }
 
@@ -199,23 +204,27 @@ namespace EkiHire.Business.Services
                 var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
                 if (user == null)
                 {
+                    retry = retries;//don't retry
                     throw await _serviceHelper.GetExceptionAsync("User does not exist");
                 }
 
                 //check that the username is a valid email ( the password would be validate by the Identity builder)
                 if (!Regex.IsMatch(username, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase))
                 {
+                    retry = retries;//don't retry
                     throw await _serviceHelper.GetExceptionAsync("The username isn't a valid email");
                 }
 
                 //check for valid subcategory
                 if(model.SubcategoryId == null || model.SubcategoryId < 1)
                 {
+                    retry = retries;//don't retry
                     throw new Exception("Invalid SubcategoryId");
                 }
                 var subcategory = _subcategoryRepo.Get(model.SubcategoryId??0);
                 if(subcategory == null)
                 {
+                    retry = retries;//don't retry
                     throw new Exception("Cannot find Subcategory");
                 }
 
@@ -271,6 +280,10 @@ namespace EkiHire.Business.Services
 
                 #region first clear adimages before saving
                 ad.AdImages = null;
+                ad.Subcategory = null;
+                ad.User = null;
+                ad.AdFeedback = null;
+                ad.AdPropertyValue = null;
                 _unitOfWork.BeginTransaction();
                 var insertedData = await adRepository.InsertAsync(ad);
                 _unitOfWork.Commit();
@@ -291,8 +304,10 @@ namespace EkiHire.Business.Services
 
                     //concurrent
                     _unitOfWork.BeginTransaction();
-                    Parallel.ForEach(adpv, (p) => {
-                        _adPropertyValueRepo.InsertAsync(
+                    //Parallel.ForEach(adpv, (p) => {
+                    foreach(var p in adpv)
+                    {
+                        _ = _adPropertyValueRepo.InsertAsync(
                             new AdPropertyValue
                             {
                                 Ad = null,
@@ -311,7 +326,8 @@ namespace EkiHire.Business.Services
                                 Id = 0,
                             }
                         );
-                    });
+                    }  
+                    //});
                     _unitOfWork.Commit();
                 }
                 #endregion
@@ -344,7 +360,7 @@ namespace EkiHire.Business.Services
                     _unitOfWork.BeginTransaction();
                     foreach (var p in images)
                     {
-                        _AdImageRepo.InsertAsync(
+                        _ = _AdImageRepo.InsertAsync(
                             new AdImage
                             {
                                 AdId = insertedData?.Id,
@@ -391,6 +407,11 @@ namespace EkiHire.Business.Services
             {
                 _unitOfWork.Rollback();
                 log.Error($"user ({username}) could not add a new ad {ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} :: payload {JsonConvert.SerializeObject(model)}");
+                if(retry < retries)
+                {
+                    retry++;
+                    goto retry;
+                }
                 throw ex;
             }
         }
@@ -1832,7 +1853,7 @@ namespace EkiHire.Business.Services
                     "This is to let you know that your ad has been accepted on this platform. feel free to leverage all of the exciting offer we have on this platform" : 
                     "Sorry your ad has been declined, this is possibly because it failed to meet some of our criteria. you can read about our policy or contact us for clarification.",
                     Title = adsStatus == AdsStatus.ACTIVE ? "EkiHire.com: Your Ad have been approved!" : "EkiHire.com: Ad declined",
-                    UserId = ad.UserId,
+                    RecipientId = ad.UserId.GetValueOrDefault(),
                     NotificationType = adsStatus == AdsStatus.ACTIVE ? NotificationType.AdApproval : NotificationType.AdDenial,
                     Recipient = null,
                     //basic properties
@@ -2596,7 +2617,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username)
+        public async Task<IEnumerable<Message>> GetMessagesOLD(long otherPersonId, string username)
         {
             try
             {
@@ -2625,6 +2646,92 @@ namespace EkiHire.Business.Services
             }
         }
 
+        public async Task<IEnumerable<GetMessagesResponse>> GetMessages(string username)
+        {
+            try
+            {
+                #region validate
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (loggedInUser == null)
+                {
+                    throw new Exception("please login and try again");
+                }
+                #endregion
+                loggedInUser.Id = 10042;
+                var query = (from m in _applicationDbContext.Messages
+                             join s in _applicationDbContext.Users on m.SenderId equals s.Id
+                             join r in _applicationDbContext.Users on m.SenderId equals r.Id
+
+                             where m.SenderId == loggedInUser.Id || m.RecipientId == loggedInUser.Id
+                             select new GetMessagesResponse
+                             {
+                                 MessageId = m.Id,
+
+                                 SenderId = s.Id,
+                                 SenderFirstName = s.FirstName,
+                                 SenderLastName = s.LastName,
+                                 SenderImagePath = s.ImagePath,
+                                 SenderUserName = s.UserName,
+
+                                 RecipientId = r.Id,
+                                 RecipientFirstName = r.FirstName,
+                                 RecipientLastName = r.LastName,
+                                 RecipientImagePath = r.ImagePath,
+                                 RecipientUserName = r.UserName,
+
+                                 Text = m.Text,
+                                 When = m.When,
+                                 
+                             }).DistinctBy(a => a.MessageId);
+                return query.ToList();
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<IEnumerable<GetNotificationResponse>> GetNotifications(string username)
+        {
+            try
+            {
+                #region validate
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (loggedInUser == null)
+                {
+                    throw new Exception("please login and try again");
+                }
+                #endregion
+                var result = (from n in _applicationDbContext.Notification
+                              join r in _applicationDbContext.Users on n.RecipientId equals r.Id
+
+                              where !n.IsDeleted && n.RecipientId == loggedInUser.Id
+                              select new GetNotificationResponse
+                              {
+                                  Delivered = n.Delivered,
+                                  Id = n.Id,
+                                  IsBroadCast = n.IsBroadCast,
+                                  Message = n.Message,
+                                  NotificationType = n.NotificationType,
+                                  RecipientFirstName = r.FirstName,
+                                  RecipientId = r.Id,
+                                  RecipientImagePath = r.ImagePath,
+                                  RecipientLastName = r.LastName,
+                                  RecipientUserName = r.UserName,
+                                  Title = n.Title,
+                                  
+                              }).DistinctBy(a => a.Id);
+
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
         #region comments
         //List<Ad> result = new List<Ad>();
         //var ads = adRepository.GetAllIncluding(a => a.AdImages).Where(x => !x.IsDeleted);

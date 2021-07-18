@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using EkiHire.Core.Domain.Entities;
 using Microsoft.AspNetCore.Cors;
 using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Business.Payload;
 
 namespace EkiHire.WebAPI.Controllers
 {
@@ -499,6 +500,7 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost]
         [Route("AddAdImage/{AdId}")]
         [Route("UploadFile/Bulk")]
+        //[AllowAnonymous]
         public async Task<ServiceResponse<List<string>>> AddAdImage(long AdId = 0)
         {
             IFormFileCollection images = Request.Form.Files;
@@ -788,12 +790,23 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("[action]/{otherPersonId}")]
-        public async Task<IServiceResponse<IEnumerable<Message>>> GetMessages(long otherPersonId)
+        [Route("[action]")]
+        public async Task<IServiceResponse<IEnumerable<GetMessagesResponse>>> GetMessages()
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<Message>>();
-                var data = await adService.GetMessages(otherPersonId, serviceHelper.GetCurrentUserEmail());
+                var response = new ServiceResponse<IEnumerable<GetMessagesResponse>>();
+                var data = await adService.GetMessages(serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<IServiceResponse<IEnumerable<GetNotificationResponse>>> GetNotifications()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<IEnumerable<GetNotificationResponse>>();
+                var data = await adService.GetNotifications(serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

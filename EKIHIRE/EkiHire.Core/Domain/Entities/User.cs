@@ -20,7 +20,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsFirstTimeLogin { get; set; }
         public string OptionalPhoneNumber { get; set; }
         public UserType UserType { get; set; }
-        public string Image { get; set; }
+        public string ImagePath { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime? DeletionTime { get; set; }
         public bool IsDeleted { get; set; }
@@ -39,7 +39,6 @@ namespace EkiHire.Core.Domain.Entities
         public DateTime? DateOfBirth { get; set; }
         public DateTime? LastModificationTime { get; set; }
         public string AccountConfirmationCode { get; set; }
-        public string Photo { get; set; }
         public string OTP { get; set; }
         [NotMapped]
         public IEnumerable<UserRole> UserRoles { get; set; }
@@ -104,7 +103,7 @@ namespace EkiHire.Core.Domain.Entities
                     FirstName = user.FirstName,
                     Gender = user.Gender,
                     Id = user.Id,
-                    Image = user.Image,
+                    ImagePath = user.ImagePath,
                     IsDeleted = user.IsDeleted,
                     IsFirstTimeLogin = user.IsFirstTimeLogin,
                     LastModificationTime = user.LastModificationTime,
@@ -122,14 +121,12 @@ namespace EkiHire.Core.Domain.Entities
                     PasswordHash = user.PasswordHash,
                     PhoneNumber = user.PhoneNumber,
                     PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                    Photo = user.Photo,
                     ReferralCode = user.ReferralCode,
                     Referrer = user.Referrer,
                     RefreshToken = user.RefreshToken,
                     SecurityStamp = user.SecurityStamp,
                     Title = user.Title,
                     TwoFactorEnabled = user.TwoFactorEnabled,
-                    //UserId = user.UserId,
                     UserName = user.UserName,
                     UserRoles = user.UserRoles,
                     UserType = user.UserType,
