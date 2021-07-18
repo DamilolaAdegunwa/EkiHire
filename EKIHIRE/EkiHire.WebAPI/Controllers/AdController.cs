@@ -791,10 +791,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("[action]")]
-        public async Task<IServiceResponse<IEnumerable<GetMessagesResponse>>> GetMessages()
+        public async Task<IServiceResponse<IDictionary<long, IEnumerable<GetMessagesResponse>>>> GetMessages()
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<GetMessagesResponse>>();
+                var response = new ServiceResponse<IDictionary<long, IEnumerable<GetMessagesResponse>>>();
                 var data = await adService.GetMessages(serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;

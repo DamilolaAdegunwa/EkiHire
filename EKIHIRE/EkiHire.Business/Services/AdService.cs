@@ -106,7 +106,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<State>> GetStates();
         Task<IEnumerable<LGAData>> GetLGAs();
         //Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username);
-        Task<IEnumerable<GetMessagesResponse>> GetMessages(string username);
+        Task<IDictionary<long, IEnumerable<GetMessagesResponse>>> GetMessages(string username);
         Task<IEnumerable<GetNotificationResponse>> GetNotifications(string username);
     }
     public class AdService: IAdService
@@ -2646,7 +2646,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<GetMessagesResponse>> GetMessages(string username)
+        public async Task<IDictionary<long, IEnumerable<GetMessagesResponse>>>/*Task<IEnumerable<GetMessagesResponse>>*/ GetMessages(string username)
         {
             try
             {
@@ -2657,10 +2657,9 @@ namespace EkiHire.Business.Services
                     throw new Exception("please login and try again");
                 }
                 #endregion
-                loggedInUser.Id = 10042;
                 var query = (from m in _applicationDbContext.Messages
                              join s in _applicationDbContext.Users on m.SenderId equals s.Id
-                             join r in _applicationDbContext.Users on m.SenderId equals r.Id
+                             join r in _applicationDbContext.Users on m.RecipientId equals r.Id
 
                              where m.SenderId == loggedInUser.Id || m.RecipientId == loggedInUser.Id
                              select new GetMessagesResponse
@@ -2683,7 +2682,19 @@ namespace EkiHire.Business.Services
                                  When = m.When,
                                  
                              }).DistinctBy(a => a.MessageId);
-                return query.ToList();
+                var list = query.ToList();
+                var uniqueSenders = list.Select(a => a.SenderId).Distinct();
+                var uniqueRecipients = list.Select(a => a.RecipientId).Distinct();
+
+                var allOtherIds = uniqueSenders.Union(uniqueRecipients).Distinct().Where(a => a != loggedInUser.Id);
+                IDictionary<long, IEnumerable<GetMessagesResponse>> groups = new Dictionary<long, IEnumerable<GetMessagesResponse>>();
+                foreach(var id in allOtherIds)
+                {
+                    var subList = list.Where(a => a.SenderId == id || a.RecipientId == id);
+                    groups.Add(id, subList);
+                }
+                //return query.ToList();
+                return groups;
             }
             catch (Exception ex)
             {
