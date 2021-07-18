@@ -471,12 +471,12 @@ namespace EkiHire.WebAPI.Controllers
         [Route("TopAvailable")]
         [Route("TopAvailable/{count}")]
         [AllowAnonymous]
-        public async Task<ServiceResponse<IEnumerable<AdDTO>>> TopAvailable(int count = 8)
+        public async Task<ServiceResponse<IEnumerable<Ad>>> TopAvailable(int count = 8)
         {
             var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdDTO>>();
-                var data = await adService.TopAvailable(count,allowanonymous/*model, serviceHelper.GetCurrentUserEmail()*/);
+                var response = new ServiceResponse<IEnumerable<Ad>>();
+                var data = await adService.TopAvailable(count,allowanonymous, serviceHelper.GetCurrentUserEmail()/*model, serviceHelper.GetCurrentUserEmail()*/);
                 response.Object = data;
                 return response;
             });
@@ -486,12 +486,12 @@ namespace EkiHire.WebAPI.Controllers
         [Route("SimilarAd/{subcategoryId}")]
         [Route("SimilarAd/{subcategoryId}/{count}")]
         [AllowAnonymous]
-        public async Task<ServiceResponse<IEnumerable<AdDTO>>> SimilarAd(long subcategoryId, int count = 8)
+        public async Task<ServiceResponse<IEnumerable<Ad>>> SimilarAd(long subcategoryId, int count = 8)
         {
             var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdDTO>>();
-                var data = await adService.SimilarAd(subcategoryId,count, allowanonymous/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
+                var response = new ServiceResponse<IEnumerable<Ad>>();
+                var data = await adService.SimilarAd(subcategoryId,count, allowanonymous, serviceHelper.GetCurrentUserEmail()/*model, serviceHelper.GetCurrentUserEmail(), allowAnonymous*/);
                 response.Object = data;
                 return response;
             });

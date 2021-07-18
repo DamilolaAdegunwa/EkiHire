@@ -75,8 +75,8 @@ namespace EkiHire.Business.Services
         Task<bool> SaveRequestQuote(RequestQuote model, string username);
         Task<bool> SaveReview(AdFeedback model, string username);
         Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
-        Task<IEnumerable<AdDTO>> TopAvailable(int count = 8, bool allowAnonymous = false);
-        Task<IEnumerable<AdDTO>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false);
+        Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null);
+        Task<IEnumerable<Ad>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null);
         //Task<string> SendNotification(List<string> clientToken, string title, string body);
         Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username);
@@ -523,7 +523,7 @@ namespace EkiHire.Business.Services
                                  ContactForPrice = ad.ContactForPrice,
 
                              }).DistinctBy(x => x.Id);
-                var data = query.Skip((page - 1) * size).Take(size).ToList();
+                var data = query.OrderByDescending(a => a.CreationTime).Skip((page - 1) * size).Take(size).ToList();
                 var total = query.Count();
                 long pages = (long)Math.Ceiling(((double)total / (double)size));
                 //var returnVal = data;
@@ -2050,11 +2050,12 @@ namespace EkiHire.Business.Services
             }
         }
         
-        public async Task<IEnumerable<AdDTO>> TopAvailable(int count = 8, bool allowAnonymous = false)
+        public async Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null)
         {
             try
             {
-                return adRepository?.GetAll()?.Where(a => !a.IsDeleted).Take(count)?.ToList()?.ToDTO();
+                return (await GetAds(new AdFilter { SearchText = "" }, username, allowAnonymous, 1, count)).Ads;
+                //return adRepository?.GetAll()?.Where(a => !a.IsDeleted).Take(count)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
@@ -2063,11 +2064,12 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<IEnumerable<AdDTO>> SimilarAd( long subcategoryId, int count = 8, bool allowAnonymous = false)
+        public async Task<IEnumerable<Ad>> SimilarAd( long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null)
         {
             try
             {
-                return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId && !a.IsDeleted)?.Take(count)?.ToList()?.ToDTO();
+                return (await GetAds(new AdFilter { SubcategoryId = subcategoryId }, username, allowAnonymous, 1, count)).Ads;
+                //return adRepository?.GetAll().Where(a => a.SubcategoryId == subcategoryId && !a.IsDeleted)?.Take(count)?.ToList()?.ToDTO();
             }
             catch (Exception ex)
             {
