@@ -131,50 +131,6 @@ namespace EkiHire.WebAPI
             services.AddScoped<IRepository<Notification>, EfCoreRepository<DbContext, Notification>>();
 
             services.AddScoped<IChatHub,ChatHub>();
-
-            //services.AddScoped<IWalletService, WalletService>();
-            //services.AddScoped<IOnboardingService, OnboardingService>();
-            //services.AddScoped<IAccountService,AccountService>();
-            //services.AddScoped<IAttractionService, AttractionService>();
-            //services.AddScoped<IJobService, JobService>();
-            //services.AddScoped<IModuleService, ModuleService>();
-            //services.AddScoped<IRealEstateService, RealEstateService>();
-            //services.AddScoped<IRetailService, RetailService>();
-            //services.AddScoped<IWalletNumberService, WalletNumberService>();
-            //services.AddScoped<ICouponService, CouponService>();
-            //services.AddScoped<ICustomerService, CustomerService>();
-            //services.AddScoped<IReferralService, ReferralService>();
-            //services.AddScoped<IRouteService, RouteService>();
-            //services.AddScoped<IRegionService, RegionService>();
-            //services.AddScoped<IStateService, StateService>();
-            //services.AddScoped<ITerminalService, TerminalService>();
-            //services.AddScoped<IEmployeeService, EmployeeService>();
-            //services.AddScoped<IVehicleModelService, VehicleModelService>();
-            //services.AddScoped<IVehicleMakeService, VehicleMakeService>();
-            //services.AddScoped<IBookingService, BookingService>();
-            //services.AddScoped<IManifestService, ManifestService>();
-            //services.AddScoped<ISeatManagementService, SeatManagementService>();
-            //services.AddScoped<ITripService, TripService>();
-            //services.AddScoped<IDiscountService, DiscountService>();
-            //services.AddScoped<IDriverService, DriverService>();
-            //services.AddScoped<ICouponService, CouponService>();
-            //services.AddScoped<IMtuReports, MtuReportService>();
-            //services.AddScoped<ITripAvailabilityService, TripAvailabilityService>();
-            //services.AddScoped<IPickupPointService, PickupPointService>();
-            //services.AddScoped<IAccountTransactionService, AccountTransactionService>();
-            //services.AddScoped<IFareService, FareService>();
-            //services.AddScoped<IFareCalendarService, FareCalendarService>();
-            //services.AddScoped<IVehicleService, VehicleService>();
-            //services.AddScoped<IVehicleTripRegistrationService, VehicleTripRegistrationService>();
-            //services.AddScoped<IAccountSummaryService, AccountSummaryService>();
-            //services.AddScoped<IHireRequestService, HireRequestService>();
-            //services.AddScoped<IBookingReportService, BookingReportService>();
-            //services.AddScoped<IFeedbackService, FeedbackService>();
-            //services.AddScoped<ISubRouteService, SubRouteService>();
-            //services.AddScoped<IJourneyManagementService, JourneyManagementService>();
-            //services.AddScoped<IManifestService, ManifestService>();
-            //services.AddScoped<IFranchizeService, FranchizeService>();
-            //services.AddScoped<IPassportTypeService, PassportTypeService>();
             #endregion
 
             services.Configure<JwtConfig>(options =>

@@ -174,17 +174,4 @@ namespace EkiHire.Business.Services
             smtp.Disconnect(true);
         }
     }
-
-    public class EkiHireEqualityComparer : IEqualityComparer<long>
-    {
-        public new bool Equals(long x, long y)
-        {
-            return x == y;
-        }
-
-        public int GetHashCode(long obj)
-        {
-            return 10;
-        }
-    }
 }
