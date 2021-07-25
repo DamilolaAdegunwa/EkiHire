@@ -1,5 +1,4 @@
 ﻿using EkiHire.Business.Services;
-using EkiHire.Core.Domain.DataTransferObjects;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Model;
@@ -11,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using EkiHire.Core.Domain.Model;
 namespace EkiHire.WebAPI.Controllers
 {
     [Authorize]
@@ -20,16 +20,19 @@ namespace EkiHire.WebAPI.Controllers
     {
         #region main account endpoints
         private readonly IUserService _userSvc;
-        private readonly IRoleService _roleSvc;
-        private readonly IAccountService _accountService;
+        //private readonly IRoleService _roleSvc;
+        //private readonly IAccountService _accountService;
         private readonly IServiceHelper serviceHelper;
-        public AccountController(IUserService userSvc, IRoleService roleSvc
-            ,IAccountService accountService, IServiceHelper serviceHelper
+        public AccountController(
+            IUserService userSvc
+            //, IRoleService roleSvc
+            //,IAccountService accountService
+            , IServiceHelper serviceHelper
             )
         {
             _userSvc = userSvc;
-            _roleSvc = roleSvc;
-            _accountService = accountService;
+            //_roleSvc = roleSvc;
+            //_accountService = accountService;
             this.serviceHelper = serviceHelper;
         }
 
@@ -44,8 +47,8 @@ namespace EkiHire.WebAPI.Controllers
 
                 userClaims.Add(new Claim(JwtClaimTypes.Role, item));
 
-                var roleClaims = await _roleSvc.GetClaimsAsync(item);
-                userClaims.AddRange(roleClaims);
+                //var roleClaims = await _roleSvc.GetClaimsAsync(item);
+                //userClaims.AddRange(roleClaims);
             }
             //var userRow = await _employeeService.GetEmployeesByemailAsync(user.Email);
             var userRow = await _userSvc.FindByEmailAsync(user.Email);
@@ -76,11 +79,11 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetProfile")]
-        public async Task<IServiceResponse<UserDTO>> GetCurrentUserProfile()
+        public async Task<IServiceResponse<User>> GetCurrentUserProfile()
         {
             return await HandleApiOperationAsync(async () => {
 
-                var response = new ServiceResponse<UserDTO>();
+                var response = new ServiceResponse<User>();
 
                 var profile = await _userSvc.GetProfile(User.FindFirst(JwtClaimTypes.Name)?.Value);
                 response.Object = profile;
@@ -103,11 +106,11 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("Activate")]/*verify and activate/deny account - checked*/
-        public async Task<ServiceResponse<UserDTO>> Activate(string username, string activationCode)
+        public async Task<ServiceResponse<User>> Activate(string username, string activationCode)
         {
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.ActivateAccount(username, activationCode);
-                return new ServiceResponse<UserDTO>(result);
+                return new ServiceResponse<User>(result);
             });
         }
 
@@ -125,7 +128,7 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("ResetPassword")]/*remove old password and input new password - checked*/
-        public async Task<ServiceResponse<bool>> ResetPassword(PassordResetDTO model)
+        public async Task<ServiceResponse<bool>> ResetPassword(PassordReset model)
         {
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.ResetPassword(model);
@@ -135,7 +138,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangePassword")]/*create new password*/
-        public async Task<ServiceResponse<bool>> ChangePassword(ChangePassordDTO model)
+        public async Task<ServiceResponse<bool>> ChangePassword(ChangePassord model)
         {
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.ChangePassword(User.FindFirst(JwtClaimTypes.Name)?.Value, model);
@@ -149,7 +152,7 @@ namespace EkiHire.WebAPI.Controllers
         public async Task<IServiceResponse<bool>> SignUp(LoginViewModel loginModel)
         {
             return await HandleApiOperationAsync(async () => {
-                await _accountService.SignUp(loginModel);
+                await _userSvc.SignUp(loginModel);
                 return new ServiceResponse<bool>(true);
             });
         }
@@ -157,7 +160,7 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithFacebook")]/*Login via Facebook*/
-        public async Task<IServiceResponse<bool>> ContinueWithFacebook(UserDTO user)
+        public async Task<IServiceResponse<bool>> ContinueWithFacebook(User user)
         {
             return await HandleApiOperationAsync(async () => {
 
@@ -168,7 +171,7 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithGmail")]/*Login via Gmail*/
-        public async Task<IServiceResponse<bool>> ContinueWithGmail(UserDTO user)
+        public async Task<IServiceResponse<bool>> ContinueWithGmail(User user)
         {
             return await HandleApiOperationAsync(async () => {
 
@@ -179,7 +182,7 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("ContinueWithLinkedIn")]/*Login via LinkedIn*/
-        public async Task<IServiceResponse<bool>> ContinueWithLinkedIn(UserDTO user)
+        public async Task<IServiceResponse<bool>> ContinueWithLinkedIn(User user)
         {
             return await HandleApiOperationAsync(async () => {
 
@@ -225,7 +228,7 @@ namespace EkiHire.WebAPI.Controllers
         [AllowAnonymous]
         [HttpPost]
         [Route("ValidatePassordResetCode")] /*checked */
-        public async Task<IServiceResponse<bool>> ValidatePassordResetCode(PassordResetDTO model)
+        public async Task<IServiceResponse<bool>> ValidatePassordResetCode(PassordReset model)
 		{
 			return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.ValidatePassordResetCode(model);
@@ -277,11 +280,11 @@ namespace EkiHire.WebAPI.Controllers
         //[AllowAnonymous]/*TO-BE-REMOVED*/
         [HttpGet]
         [Route("GetProfile/{username}")]
-        public async Task<IServiceResponse<UserDTO>> GetProfile(string username)
+        public async Task<IServiceResponse<User>> GetProfile(string username)
         {
             return await HandleApiOperationAsync(async () => {
                 var result = await _userSvc.GetProfile(username);
-                var response = new ServiceResponse<UserDTO>(result);
+                var response = new ServiceResponse<User>(result);
                 return response;
             });
         }
@@ -365,7 +368,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("ChangeProfileImage")]
-        public async Task<IServiceResponse<bool>> ChangeProfileImage(ProfileImageDTO model)
+        public async Task<IServiceResponse<bool>> ChangeProfileImage(ProfileImage model)
         {
             return await HandleApiOperationAsync(async () => {
                 bool result = await _userSvc.ChangeProfileImage(model.profileImageString,User.FindFirst(JwtClaimTypes.Name)?.Value);

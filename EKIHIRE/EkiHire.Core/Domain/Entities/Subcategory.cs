@@ -1,10 +1,7 @@
 ﻿using EkiHire.Core.Domain.Entities.Auditing;
-using System;
-using EkiHire.Core.Domain.DataTransferObjects;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
 using System.Collections.Generic;
-using EkiHire.Core.Domain.Extensions;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
 {
@@ -30,23 +27,23 @@ namespace EkiHire.Core.Domain.Entities
         public virtual IEnumerable<AdProperty> AdProperties { get; set; }
         #endregion
 
-        public static implicit operator Subcategory(SubcategoryDTO model)
-        {
-            if (model != null)
-            {
-                var response = new Subcategory
-                {
-                    Id = model.Id,
-                    Name = model.Name,
-                    ImagePath = model.ImagePath,
-                    ImageString = model.ImageString,
-                    CategoryId = model.CategoryId,
-                    Category = model.Category,
-                    AdProperties = model.AdProperties.ToEntity()
-                };
-                return response;
-            }
-            return null;
-        }
+        //public static implicit operator Subcategory(SubcategoryDTO model)
+        //{
+        //    if (model != null)
+        //    {
+        //        var response = new Subcategory
+        //        {
+        //            Id = model.Id,
+        //            Name = model.Name,
+        //            ImagePath = model.ImagePath,
+        //            ImageString = model.ImageString,
+        //            CategoryId = model.CategoryId,
+        //            Category = model.Category,
+        //            AdProperties = model.AdProperties.ToEntity()
+        //        };
+        //        return response;
+        //    }
+        //    return null;
+        //}
     }
 }

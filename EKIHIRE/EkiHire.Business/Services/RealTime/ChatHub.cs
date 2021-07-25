@@ -26,6 +26,7 @@ namespace EkiHire.Business.Services
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly UserManager<User> _userManager;
         private readonly IHttpContextAccessor _httpContext;
+        
         //private readonly IUserService _userSvc;
         public ChatHub(ILogger<ChatHub> logger,
             ApplicationDbContext applicationDbContext,

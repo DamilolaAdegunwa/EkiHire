@@ -17,7 +17,7 @@ namespace EkiHire.Data.efCore.Context
             
             
         }
-        public DbSet<Account> Account { get; set; }
+        //public DbSet<Account> Account { get; set; }
         public DbSet<Ad> Ad { get; set; }
         public DbSet<AdFeedback> AdFeedback { get; set; }
         public DbSet<AdImage> AdImage { get; set; }

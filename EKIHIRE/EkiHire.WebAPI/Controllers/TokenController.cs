@@ -1,28 +1,30 @@
-﻿using IdentityModel;
-using EkiHire.Business.Services;
-using EkiHire.Core.Domain.DataTransferObjects;
+﻿using EkiHire.Business.Services;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.WebAPI.Infrastructure.Services;
 using EkiHire.WebAPI.Utils;
 using EkiHire.WebAPI.ViewModels;
+using IdentityModel;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using System.Threading.Tasks;
-
+using EkiHire.Core.Domain.Model;
 namespace EkiHire.WebAPI.Controllers
 {
     public class TokenController : BaseController
     {
         private readonly IUserService _userSvc;
-        private readonly IRoleService _roleSvc;
+        //private readonly IRoleService _roleSvc;
         private readonly ITokenService _tokenSvc;
 
-        public TokenController(IUserService usersvc,
-            ITokenService tokenSvc, IRoleService rolesvc)
+        public TokenController(
+            IUserService usersvc,
+            ITokenService tokenSvc
+            //, IRoleService rolesvc
+            )
         {
             _userSvc = usersvc;
             _tokenSvc = tokenSvc;
-            _roleSvc = rolesvc;
+          //  _roleSvc = rolesvc;
         }
 
         [HttpPost]/*Sign In - checked*/

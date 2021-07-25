@@ -1,14 +1,7 @@
 ﻿using EkiHire.Core.Domain.Entities.Auditing;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Domain.DataTransferObjects;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using EkiHire.Core.Domain.Extensions;
-using Microsoft.AspNetCore.Http;
 using System.IO;
 
 namespace EkiHire.Core.Domain.Entities
@@ -84,46 +77,46 @@ namespace EkiHire.Core.Domain.Entities
             }
             return fileBytes;
         }
-        #region implicit casting between entity & dto 
-        public static implicit operator JobApplication(JobApplicationDTO model)
-        {
-            try
-            {
-                if (model == null)
-                {
-                    return null;
-                }
-                //var resume = new JobApplication().ConvertIFormFileToByteArray(model.Resume);
-                JobApplication response = new JobApplication {
-                    ResumePath = model.ResumePath,
-                    JobTitle = model.JobTitle,
-                    ContactPhoneNumber = model.ContactPhoneNumber,
-                    Address = model.Address,
-                    Place = model.Place,
-                    Region = model.Region,
-                    Age = model.Age,
-                    Certification = model.Certification,
-                    EducationDetails = model.EducationDetails,
-                    EmploymentStatus = model.EmploymentStatus,
-                    ExpectedSalary = model.ExpectedSalary,
-                    Gender = model.Gender,
-                    HighestLevelOfEducation = model.HighestLevelOfEducation,
-                    Id = model.Id,
-                    JobType = model.JobType,
-                    Skills = model.Skills, 
-                    SaveMyData = model.SaveMyData,
-                    PreviousWorkExperiences = null,
-                    CompanyEmail = model.CompanyEmail,
-                    FullName = model.FullName,
-                };
-                return response;
-            }
-            catch (Exception ex)
-            {
-                return null;
-                //throw;
-            }
-        }
-        #endregion
+        //#region implicit casting between entity & dto 
+        //public static implicit operator JobApplication(JobApplicationDTO model)
+        //{
+        //    try
+        //    {
+        //        if (model == null)
+        //        {
+        //            return null;
+        //        }
+        //        //var resume = new JobApplication().ConvertIFormFileToByteArray(model.Resume);
+        //        JobApplication response = new JobApplication {
+        //            ResumePath = model.ResumePath,
+        //            JobTitle = model.JobTitle,
+        //            ContactPhoneNumber = model.ContactPhoneNumber,
+        //            Address = model.Address,
+        //            Place = model.Place,
+        //            Region = model.Region,
+        //            Age = model.Age,
+        //            Certification = model.Certification,
+        //            EducationDetails = model.EducationDetails,
+        //            EmploymentStatus = model.EmploymentStatus,
+        //            ExpectedSalary = model.ExpectedSalary,
+        //            Gender = model.Gender,
+        //            HighestLevelOfEducation = model.HighestLevelOfEducation,
+        //            Id = model.Id,
+        //            JobType = model.JobType,
+        //            Skills = model.Skills, 
+        //            SaveMyData = model.SaveMyData,
+        //            PreviousWorkExperiences = null,
+        //            CompanyEmail = model.CompanyEmail,
+        //            FullName = model.FullName,
+        //        };
+        //        return response;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //        //throw;
+        //    }
+        //}
+        //#endregion
     }
 }

@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EkiHire.Core.Domain.Entities.Auditing;
-using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Domain.DataTransferObjects;
+﻿using EkiHire.Core.Domain.Entities.Auditing;
+using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Core.Domain.Entities
 {
     public class RequestQuote : FullAuditedEntity
@@ -31,35 +24,35 @@ namespace EkiHire.Core.Domain.Entities
 
         #endregion
 
-        #region implicit & explicit conversion between entity & dto
-        public static implicit operator RequestQuote(RequestQuoteDTO model)
-        {
-            try
-            {
-                if (model == null)
-                {
-                    return null;
-                }
-                RequestQuote response = new RequestQuote() {
-                ContactForPrice = model.ContactForPrice,
-                Name = model.Name,
-                Need = model.Need,
-                Region = model.Region,
-                RequestDate = model.RequestDate,
-                PriceRangeLower = model.PriceRangeLower,
-                PriceRangeUpper =model.PriceRangeUpper,
-                Requester = model.Requester,
-                RequesterId = model.RequesterId,
-                UpForNegotiation = model.UpForNegotiation,
-                Id = model.Id,
-                };
-                return response;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
-        #endregion
+        //#region implicit & explicit conversion between entity & dto
+        //public static implicit operator RequestQuote(RequestQuoteDTO model)
+        //{
+        //    try
+        //    {
+        //        if (model == null)
+        //        {
+        //            return null;
+        //        }
+        //        RequestQuote response = new RequestQuote() {
+        //        ContactForPrice = model.ContactForPrice,
+        //        Name = model.Name,
+        //        Need = model.Need,
+        //        Region = model.Region,
+        //        RequestDate = model.RequestDate,
+        //        PriceRangeLower = model.PriceRangeLower,
+        //        PriceRangeUpper =model.PriceRangeUpper,
+        //        Requester = model.Requester,
+        //        RequesterId = model.RequesterId,
+        //        UpForNegotiation = model.UpForNegotiation,
+        //        Id = model.Id,
+        //        };
+        //        return response;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
+        //#endregion
     }
 }

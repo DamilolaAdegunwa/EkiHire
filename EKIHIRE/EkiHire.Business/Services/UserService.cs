@@ -1,59 +1,60 @@
 ﻿using EkiHire.Core.Configuration;
-using EkiHire.Core.Domain.DataTransferObjects;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.Entities.Enums;
+using EkiHire.Core.Domain.Model;
 using EkiHire.Core.Exceptions;
 using EkiHire.Core.Messaging.Email;
 using EkiHire.Core.Model;
 using EkiHire.Core.Utils;
 using EkiHire.Data.Repository;
+using EkiHire.Data.UnitOfWork;
+using log4net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
-using log4net;
 using System.Reflection;
-using EkiHire.Data.UnitOfWork;
+using System.Threading.Tasks;
+using EkiHire.Core.Messaging.Sms;
+using System.Text.RegularExpressions;
 
 namespace EkiHire.Business.Services
 {
     public interface IUserService
     {
+        Task SignUp(LoginViewModel model);
         Task<User> FindByNameAsync(string username);
         Task<User> FindByEmailAsync(string email);
         Task<bool> CheckPasswordAsync(User user, string password);
         Task UpdateAsync(User user);
         Task<IList<string>> GetUserRoles(User user);
         Task<IdentityResult> CreateAsync(User user);
-        public Task<IdentityResult> CreateAsync(UserDTO user);
+        //public Task<IdentityResult> CreateAsync(User user);
         Task<User> FindFirstAsync(Expression<Func<User, bool>> predicate);
         Task<bool> ExistAsync(Expression<Func<User, bool>> predicate);
         Task<IdentityResult> CreateAsync(User user, string password);
-        public Task<IdentityResult> CreateAsync(UserDTO user, string password);
+        //public Task<IdentityResult> CreateAsync(User user, string password);
         Task<IdentityResult> AddToRoleAsync(User user, string role);
         string HashPassword(User user, string password);
         Task<IList<User>> GetUsersInRoleAsync(string role);
         Task<string> GenerateEmailConfirmationTokenAsync(User user);
-        Task<UserDTO> ActivateAccount(string username, string activationCode);
-        Task<UserDTO> GetProfile(string username);
+        Task<User> ActivateAccount(string username, string activationCode);
+        Task<User> GetProfile(string username);
         Task<bool> ForgotPassword(string username);
-        Task<bool> ResetPassword(PassordResetDTO model);
-        Task<bool> ChangePassword(string userName, ChangePassordDTO model);
+        Task<bool> ResetPassword(PassordReset model);
+        Task<bool> ChangePassword(string userName, ChangePassord model);
         Task<IList<string>> GetUserRolesAsync(string username);
         Task<bool> UpdateProfile(string userName, UserProfileDTO model);
         Task<bool> IsInRoleAsync(User user, string role);
         Task<IdentityResult> RemoveFromRolesAsync(User user, IEnumerable<string> roles);
         Task<bool> ResendVerificationCode(string username);
         //Task<bool> TestEmail();
-        Task<bool> ValidatePassordResetCode(PassordResetDTO model);
+        Task<bool> ValidatePassordResetCode(PassordReset model);
         Task<bool> ChangeName(Name name, string username);
         Task<bool> ChangeGender(Gender gender, string username);
         Task<bool> ChangeBirthday(DateTime birthdate, string username);
@@ -77,6 +78,7 @@ namespace EkiHire.Business.Services
         private readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().Name);
         private readonly IUnitOfWork _unitOfWork;
         readonly SmtpConfig _smtpsettings;
+        private readonly IChatHub _chatHub;
         public UserService(
             UserManager<User> userManager, 
             IServiceHelper svcHelper,
@@ -86,6 +88,7 @@ namespace EkiHire.Business.Services
             IOptions<AppConfig> _appConfig,
             IUnitOfWork unitOfWork
             , IOptions<SmtpConfig> settingSvc
+            , IChatHub chatHub
             )
         {
             _userManager = userManager;
@@ -96,8 +99,173 @@ namespace EkiHire.Business.Services
             _userRepository = userRepository;
             _unitOfWork = unitOfWork;
             _smtpsettings = settingSvc.Value;
+            _chatHub = chatHub;
         }
+        public async Task SignUp(LoginViewModel model)
+        {
+            # region validate credential
 
+            //check that the model carries data
+            if (model == null)
+            {
+                throw await _svcHelper.GetExceptionAsync("Invalid parameter");
+            }
+            //check that the model carries a password 
+            if (string.IsNullOrWhiteSpace(model.Password))
+            {
+                throw await _svcHelper.GetExceptionAsync("Please input a password");
+            }
+
+            //check that the user does not already exist
+            var user = await FindFirstAsync(x => x.UserName == model.UserName);
+            if (user != null)
+            {
+                throw await _svcHelper.GetExceptionAsync("User already exist");
+            }
+
+            //check that the username is a valid email ( the password would be validate by the Identity builder)
+            if (!Regex.IsMatch(model.UserName, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase))
+            {
+                throw await _svcHelper.GetExceptionAsync("The UserName isn't Invalid Email");
+            }
+
+            //check for validate usertype
+            #endregion
+
+            #region sign up a new user
+            if (model.UserType == UserType.Customer)
+            {
+                try
+                {
+                    _unitOfWork.BeginTransaction();
+                    user = new User
+                    {
+                        UserName = model.UserName,
+                        Email = model.UserName,
+                        AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
+                        EmailConfirmed = false,
+                        PhoneNumberConfirmed = false,
+                        UserType = UserType.Customer,//model.UserType,
+                        IsActive = true,
+                    };
+                    var creationStatus = await CreateAsync(user, model.Password);
+
+                    if (creationStatus.Succeeded)
+                    {
+                        try
+                        {
+                            #region send notification
+                            //first compose Welcome notification
+                            Notification welcomeNotification = new Notification
+                            {
+                                Delivered = false,
+                                IsBroadCast = false,
+                                Message = "Thank you for registering on our platform. You are one step away from getting amazing shopping deals.",
+                                Title = "Welcome To EkiHire.com",
+                                RecipientId = user.Id,
+                                NotificationType = NotificationType.Welcome,
+                                Recipient = null,
+                                //basic properties
+                                CreationTime = DateTime.Now,
+                                CreatorUserId = user.Id,
+                                IsDeleted = false,
+                                LastModificationTime = DateTime.Now,
+                                LastModifierUserId = user.Id,
+                                DeleterUserId = null,
+                                DeletionTime = null,
+                                Id = 0,
+                            };
+                            try
+                            {
+                                await _chatHub.SendNotification(welcomeNotification);
+                            }
+                            catch (Exception)
+                            {
+
+                            }
+
+                            #endregion
+                            #region old email implementation
+                            //var replacement = new StringDictionary
+                            //{
+                            //    //["FirstName"] = user.FirstName,
+                            //    ["ActivationCode"] = user.AccountConfirmationCode
+                            //};
+
+                            //var mail = new Mail(_smtpsettings.UserName, "EkiHire.com: Account Verification Code", user.Email)
+                            //{
+                            //    BodyIsFile = true,
+                            //    BodyPath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail),
+                            //    SenderDisplayName = _smtpsettings.SenderDisplayName,
+
+                            //};
+                            //await _mailSvc.SendMailAsync(mail, replacement);
+                            #endregion
+
+                            //first get the file
+                            var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail);
+                            if (File.Exists(filePath))
+                            {
+                                var fileString = File.ReadAllText(filePath);
+                                if (!string.IsNullOrWhiteSpace(fileString))
+                                {
+                                    fileString = fileString.Replace("{{ActivationCode}}", $"{user.AccountConfirmationCode}");
+
+                                    _svcHelper.SendEMail(user.UserName, fileString, "EkiHire.com: Account Verification Code");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace}");
+                        }
+                        //SendAccountCredentials(user, model.Password);
+                        //the email needs to be worked on and be further simplified in it's process flow
+                        //#region send emnail
+                        //try
+                        //{
+                        //    //first file
+                        //    if (File.Exists(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail)))
+                        //    {
+                        //        var fileString = File.ReadAllText(Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ActivationCodeEmail));
+                        //        if (!string.IsNullOrWhiteSpace(fileString))
+                        //        {
+                        //            //fileString = fileString.Replace("{{FirstName}}", user.FirstName);
+                        //            fileString = fileString.Replace("{{ActivationCode}}", user.AccountConfirmationCode);
+
+                        //            _mailSvc.SendMailAsync(user.UserName, "EkiHire.com: Account Verification Code", fileString);
+                        //        }
+                        //    }
+                        //}
+                        //catch (Exception ex)
+                        //{
+
+                        //    //throw;
+                        //}
+
+                        //#endregion
+                    }
+                    else
+                    {
+                        _unitOfWork.Rollback();
+
+                        throw await _svcHelper.GetExceptionAsync(creationStatus.Errors.FirstOrDefault()?.Description);
+                    }
+                    _unitOfWork.Commit();
+                }
+                catch (Exception ex)
+                {
+                    _unitOfWork.Rollback();
+                    var errMsg = $"an error occured while trying to signup. Please try again!";
+                    log.Error($"{errMsg} :: stack trace - {ex.StackTrace} :: exception message - {ex.Message}", ex);
+                    throw new Exception(errMsg);
+                    //throw await _svcHelper.GetExceptionAsync("an error occured!"); ;
+                }
+            }
+
+            //the sign up will be adapted for different users types
+            #endregion
+        }
         protected virtual Task<IdentityResult> CreateAsync(User user)
         {
             return _userManager.CreateAsync(user);
@@ -197,10 +365,10 @@ namespace EkiHire.Business.Services
         {
             return CreateAsync(user);
         }
-        public Task<IdentityResult> CreateAsync(UserDTO user)
-        {
-            return _userManager.CreateAsync(user);
-        }
+        //public Task<IdentityResult> CreateAsync(User user)
+        //{
+        //    return _userManager.CreateAsync(user);
+        //}
         Task<User> IUserService.FindFirstAsync(Expression<Func<User, bool>> filter)
         {
             return FindFirstAsync(filter);
@@ -215,10 +383,10 @@ namespace EkiHire.Business.Services
         {
             return CreateAsync(user, password);
         }
-        public Task<IdentityResult> CreateAsync(UserDTO user, string password)
-        {
-            return _userManager.CreateAsync(user);
-        }
+        //public Task<IdentityResult> CreateAsync(User user, string password)
+        //{
+        //    return _userManager.CreateAsync(user);
+        //}
         Task<IdentityResult> IUserService.AddToRoleAsync(User user, string role)
         {
             return AddToRoleAsync(user, role);
@@ -245,7 +413,7 @@ namespace EkiHire.Business.Services
         /// <param name="username"></param>
         /// <param name="activationCode"></param>
         /// <returns></returns> /*checked*/
-        public async Task<UserDTO> ActivateAccount(string username, string activationCode)
+        public async Task<User> ActivateAccount(string username, string activationCode)
         {
             try
             {
@@ -257,7 +425,7 @@ namespace EkiHire.Business.Services
                 var user = await FindByNameAsync(username);
 
                 //await ValidateUser(user);
-                UserDTO userDto = new UserDTO();
+                User userDto = new User();
                 if (user.IsConfirmed())
                 {
                     userDto = user;
@@ -315,7 +483,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<UserDTO> GetProfile(string username)
+        public async Task<User> GetProfile(string username)
         {
             if (string.IsNullOrEmpty(username))
             {
@@ -400,7 +568,7 @@ namespace EkiHire.Business.Services
             return await Task.FromResult(true);
         }
 
-        public async Task<bool> ValidatePassordResetCode(PassordResetDTO model)
+        public async Task<bool> ValidatePassordResetCode(PassordReset model)
         {
             if (string.IsNullOrEmpty(model.UserName))
             {
@@ -418,7 +586,7 @@ namespace EkiHire.Business.Services
             return true;
         }
 
-        public async Task<bool> ResetPassword(PassordResetDTO model)
+        public async Task<bool> ResetPassword(PassordReset model)
         {
             if (string.IsNullOrEmpty(model.UserName))
             {
@@ -450,7 +618,7 @@ namespace EkiHire.Business.Services
             return true;
         }
 
-        public async Task<bool> ChangePassword(string username, ChangePassordDTO model)
+        public async Task<bool> ChangePassword(string username, ChangePassord model)
         {
             if (string.IsNullOrEmpty(username))
             {

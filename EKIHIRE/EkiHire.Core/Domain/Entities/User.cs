@@ -1,13 +1,11 @@
-﻿using EkiHire.Core.Domain.Entities.Enums;
+﻿using EkiHire.Core.Domain.Entities.Auditing;
+using EkiHire.Core.Domain.Entities.Common;
+using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Utils;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
-using EkiHire.Core.Domain.Entities.Auditing;
-using EkiHire.Core.Domain.Entities.Common;
-using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
-using EkiHire.Core.Domain.Extensions;
 namespace EkiHire.Core.Domain.Entities
 {
     public class User : IdentityUser<long>, IFullAudited, IAudited, ICreationAudited, IHasCreationTime, IHasDeletionTime, ISoftDelete, IHasModificationTime, IEntity
@@ -82,64 +80,64 @@ namespace EkiHire.Core.Domain.Entities
         }
 
         //implicit conversion
-        public static implicit operator User(UserDTO user)
-        {
-            if (user != null)
-            {
-                var userDto = new User
-                {
-                    AccessFailedCount = user.AccessFailedCount,
-                    AccountConfirmationCode = user.AccountConfirmationCode,
-                    AccountIsDeleted = user.AccountIsDeleted,
-                    Address = user.Address,
-                    ConcurrencyStamp = user.ConcurrencyStamp,
-                    CreationTime = user.CreationTime,
-                    DateOfBirth = user.DateOfBirth,
-                    DeletionTime = user.DeletionTime,
-                    DeviceToken = user.DeviceToken,
-                    Email = user.Email,
-                    IsActive = user.IsActive,
-                    EmailConfirmed = user.EmailConfirmed,
-                    FirstName = user.FirstName,
-                    Gender = user.Gender,
-                    Id = user.Id,
-                    ImagePath = user.ImagePath,
-                    IsDeleted = user.IsDeleted,
-                    IsFirstTimeLogin = user.IsFirstTimeLogin,
-                    LastModificationTime = user.LastModificationTime,
-                    LastName = user.LastName,
-                    LockoutEnabled = user.LockoutEnabled,
-                    LockoutEnd = user.LockoutEnd,
-                    LoginDeviceType = user.LoginDeviceType,
-                    MiddleName = user.MiddleName,
-                    NextOfKinName = user.NextOfKinName,
-                    NextOfKinPhone = user.NextOfKinPhone,
-                    NormalizedEmail = user.NormalizedEmail,
-                    NormalizedUserName = user.NormalizedUserName,
-                    OptionalPhoneNumber = user.OptionalPhoneNumber,
-                    OTP = user.OTP,
-                    PasswordHash = user.PasswordHash,
-                    PhoneNumber = user.PhoneNumber,
-                    PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                    ReferralCode = user.ReferralCode,
-                    Referrer = user.Referrer,
-                    RefreshToken = user.RefreshToken,
-                    SecurityStamp = user.SecurityStamp,
-                    Title = user.Title,
-                    TwoFactorEnabled = user.TwoFactorEnabled,
-                    UserName = user.UserName,
-                    UserRoles = user.UserRoles,
-                    UserType = user.UserType,
-                    Wallet = user.Wallet,
-                    //WalletId = user.WalletId,
-                    CartItems = user.CartItems.ToEntity(),
-                    SubscriptionPlan = user.SubscriptionPlan,
+        //public static implicit operator User(UserDTO user)
+        //{
+        //    if (user != null)
+        //    {
+        //        var userDto = new User
+        //        {
+        //            AccessFailedCount = user.AccessFailedCount,
+        //            AccountConfirmationCode = user.AccountConfirmationCode,
+        //            AccountIsDeleted = user.AccountIsDeleted,
+        //            Address = user.Address,
+        //            ConcurrencyStamp = user.ConcurrencyStamp,
+        //            CreationTime = user.CreationTime,
+        //            DateOfBirth = user.DateOfBirth,
+        //            DeletionTime = user.DeletionTime,
+        //            DeviceToken = user.DeviceToken,
+        //            Email = user.Email,
+        //            IsActive = user.IsActive,
+        //            EmailConfirmed = user.EmailConfirmed,
+        //            FirstName = user.FirstName,
+        //            Gender = user.Gender,
+        //            Id = user.Id,
+        //            ImagePath = user.ImagePath,
+        //            IsDeleted = user.IsDeleted,
+        //            IsFirstTimeLogin = user.IsFirstTimeLogin,
+        //            LastModificationTime = user.LastModificationTime,
+        //            LastName = user.LastName,
+        //            LockoutEnabled = user.LockoutEnabled,
+        //            LockoutEnd = user.LockoutEnd,
+        //            LoginDeviceType = user.LoginDeviceType,
+        //            MiddleName = user.MiddleName,
+        //            NextOfKinName = user.NextOfKinName,
+        //            NextOfKinPhone = user.NextOfKinPhone,
+        //            NormalizedEmail = user.NormalizedEmail,
+        //            NormalizedUserName = user.NormalizedUserName,
+        //            OptionalPhoneNumber = user.OptionalPhoneNumber,
+        //            OTP = user.OTP,
+        //            PasswordHash = user.PasswordHash,
+        //            PhoneNumber = user.PhoneNumber,
+        //            PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+        //            ReferralCode = user.ReferralCode,
+        //            Referrer = user.Referrer,
+        //            RefreshToken = user.RefreshToken,
+        //            SecurityStamp = user.SecurityStamp,
+        //            Title = user.Title,
+        //            TwoFactorEnabled = user.TwoFactorEnabled,
+        //            UserName = user.UserName,
+        //            UserRoles = user.UserRoles,
+        //            UserType = user.UserType,
+        //            Wallet = user.Wallet,
+        //            //WalletId = user.WalletId,
+        //            CartItems = user.CartItems.ToEntity(),
+        //            SubscriptionPlan = user.SubscriptionPlan,
                     
-                };
-                return userDto;
-            }
-            return null;
-        }
+        //        };
+        //        return userDto;
+        //    }
+        //    return null;
+        //}
     }
 
     public static class UserExtensions

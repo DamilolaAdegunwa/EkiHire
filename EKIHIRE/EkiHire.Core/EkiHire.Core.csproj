@@ -1,12 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Domain\DataTransferObjects\**" />
     <Compile Remove="Messaging\PushNotification\**" />
+    <EmbeddedResource Remove="Domain\DataTransferObjects\**" />
     <EmbeddedResource Remove="Messaging\PushNotification\**" />
+    <None Remove="Domain\DataTransferObjects\**" />
     <None Remove="Messaging\PushNotification\**" />
   </ItemGroup>
 

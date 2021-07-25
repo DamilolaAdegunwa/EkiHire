@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.DataTransferObjects;
+//using EkiHire.Core.Domain.DataTransferObjects;
 using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -25,21 +25,22 @@ namespace EkiHire.Core.Domain.Entities
         [NotMapped]
         public IEnumerable<Subcategory> Subcategories { get; set; }
         #endregion
-        public static implicit operator Category(CategoryDTO categoryDto)
-        {
-            if (categoryDto != null)
-            {
-                var category = new Category
-                {
-                    Name = categoryDto.Name,
-                    ImagePath = categoryDto.ImagePath,
-                    ImageString = categoryDto.ImageString,
-                    Subcategories = categoryDto.Subcategories.ToEntity(),
-                    Id = categoryDto.Id,
-                };
-                return category;
-            }
-            return null;
-        }
+
+        //public static implicit operator Category(CategoryDTO categoryDto)
+        //{
+        //    if (categoryDto != null)
+        //    {
+        //        var category = new Category
+        //        {
+        //            Name = categoryDto.Name,
+        //            ImagePath = categoryDto.ImagePath,
+        //            ImageString = categoryDto.ImageString,
+        //            Subcategories = categoryDto.Subcategories.ToEntity(),
+        //            Id = categoryDto.Id,
+        //        };
+        //        return category;
+        //    }
+        //    return null;
+        //}
     }
 }

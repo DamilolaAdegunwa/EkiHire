@@ -1,61 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using EkiHire.Business.Payload;
 using EkiHire.Core.Configuration;
-using EkiHire.Core.Domain.DataTransferObjects;
+//using EkiHire.Core.Domain.DataTransferObjects;
 using EkiHire.Core.Domain.Entities;
-using EkiHire.Core.Exceptions;
+using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Messaging.Email;
-using EkiHire.Core.Messaging.Sms;
 using EkiHire.Core.Model;
 using EkiHire.Core.Utils;
+using EkiHire.Data.efCore.Context;
 using EkiHire.Data.Repository;
 using EkiHire.Data.UnitOfWork;
-using IPagedList;
+using log4net;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using System.Collections.Specialized;
+using MoreLinq;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Collections.Extensions;
-using EkiHire.Core.Domain.Extensions;
-using log4net;
 using System.Reflection;
-using Microsoft.Extensions.Configuration;
-using PagedList;
-//using FirebaseAdmin;
-//using FirebaseAdmin.Messaging;
-using System.Collections;
-using MoreLinq;
-using Microsoft.AspNetCore.Http;
-using System.Threading;
-using System.Collections.Concurrent;
-using EkiHire.Data.efCore.Context;
-using Newtonsoft.Json;
-using EkiHire.Business.Payload;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 namespace EkiHire.Business.Services
 {
     public interface IAdService
     {
-        Task<long?> AddAd(AdDTO model, /*IFormFileCollection images,*/ string username);
+        Task<long?> AddAd(Ad model, /*IFormFileCollection images,*/ string username);
         Task<bool> CloseAd(long model, string username);
-        Task<bool> EditAd(AdDTO adDto, long model, string username);
+        Task<bool> EditAd(Ad adDto, long model, string username);
         Task<bool> PromoteAd(long model, string username);
-        Task<bool> CreateItem(ItemDTO model, string username);
+        Task<bool> CreateItem(Item model, string username);
         Task<bool> EditItemKeywords(List<string> keywords, long ItemId, string username);
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
         //Task<IEnumerable<AdDTO>> GetAd(AdFilter model, string username, bool allowanonymous = false);
         //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
+        Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
         //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
-        Task<IEnumerable<AdFeedbackDTO>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/);
+        Task<IEnumerable<AdFeedback>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
         Task<bool> AddKeywords(List<string> keywords, long subid, string username);
@@ -64,17 +49,17 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<Keyword>> GetKeywords(string username, long[] kwIds = null, long? subid = null);
         Task<IEnumerable<AdProperty>> GetAdPropertiesBySubcategory(long subId, string username);
         Task<IEnumerable<AdPropertyValue>> GetAdPropertiesWithValue(long adid, string username);
-        Task<bool> AddAdProperty(AdPropertyDTO model, string username);
+        Task<bool> AddAdProperty(AdProperty model, string username);
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
-        Task<IEnumerable<AdDTO>> Trending(long count = 10, string username = null, bool allowanonymous = false);
+        Task<IEnumerable<Ad>> Trending(long count = 10, string username = null, bool allowanonymous = false);
         //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
-        Task<bool> AddAdImage(AdImageDTO model, string username);
-        Task<IEnumerable<CartItemDTO>> GetCartItems(string username);
+        Task<bool> AddAdImage(AdImage model, string username);
+        Task<IEnumerable<CartItem>> GetCartItems(string username);
         Task<bool> SaveRequestQuote(RequestQuote model, string username);
         Task<bool> SaveReview(AdFeedback model, string username);
-        Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false);
+        Task<bool> ApplyForJob(JobApplication model, string username, bool allowAnonymous = false);
         Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null);
         Task<IEnumerable<Ad>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null);
         //Task<string> SendNotification(List<string> clientToken, string title, string body);
@@ -179,7 +164,7 @@ namespace EkiHire.Business.Services
             _applicationDbContext = applicationDbContext;
             _chatHub = chatHub;
         }
-        public async Task<long?> AddAd(AdDTO model, string username)
+        public async Task<long?> AddAd(Ad model, string username)
         {
             int retry = 0; int retries = 2;
             retry:
@@ -641,7 +626,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> ApplyForJob(JobApplicationDTO model, string username, bool allowAnonymous = false)
+        public async Task<bool> ApplyForJob(JobApplication model, string username, bool allowAnonymous = false)
         {
             try
             {
@@ -800,7 +785,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> EditAd(AdDTO adDto, long adid, string username)
+        public async Task<bool> EditAd(Ad adDto, long adid, string username)
         {
             try
             {
@@ -968,7 +953,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> CreateItem(ItemDTO model, string username)
+        public async Task<bool> CreateItem(Item model, string username)
         {//admin function
             try
             {
@@ -1172,7 +1157,7 @@ namespace EkiHire.Business.Services
         }
         #region reviews
         
-        public async Task<IEnumerable<AdFeedbackDTO>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
+        public async Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -1191,7 +1176,7 @@ namespace EkiHire.Business.Services
                 result = await adFeedbackRepository.GetAll()?.Where(a => a.UserId == user.Id && a.IsDeleted == false
                 //&& (adIds.Contains(a.AdId) || adIds == null)
                 )?.ToListAsync();
-                return result?.ToDTO();
+                return result;
             }
             catch (Exception ex)
             {
@@ -1200,7 +1185,7 @@ namespace EkiHire.Business.Services
             }
         }
         
-        public async Task<IEnumerable<AdFeedbackDTO>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/)
+        public async Task<IEnumerable<AdFeedback>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -1223,7 +1208,7 @@ namespace EkiHire.Business.Services
                 //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
                 ////&& (adIds.Contains(a.AdId) || adIds == null)
                 //).ToList();
-                return result?.ToDTO();
+                return result;
             }
             catch (Exception ex)
             {
@@ -1575,7 +1560,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> AddAdProperty(AdPropertyDTO model, string username)
+        public async Task<bool> AddAdProperty(AdProperty model, string username)
         {
             try
             {
@@ -1765,11 +1750,11 @@ namespace EkiHire.Business.Services
         //create new ad property, update ad prop, delete,
         #endregion
 
-        public async Task<IEnumerable<AdDTO>> Trending(long count = 10, string username = null, bool allowanonymous = false)
+        public async Task<IEnumerable<Ad>> Trending(long count = 10, string username = null, bool allowanonymous = false)
         {
             try
             {
-                List<AdDTO> result = new List<AdDTO>();
+                List<Ad> result = new List<Ad>();
                 //result = adRepository.GetAll().Where(a => TrendingRank(a, out a) > 0).OrderByDescending(ax => ax.Rank).Take((int)count).ToDTO().ToList();
                 //_ = "inter-commission";
                 //result = adRepository.GetAll().Select(model => TrendingRank(model)).AsEnumerable().OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
@@ -1785,7 +1770,7 @@ namespace EkiHire.Business.Services
                 //    var data = TrendingRank(a);
                 //    ar.Add(data);
                 //}
-                result = ar.OrderByDescending(ab => ab.Rank).Take((int)count).ToDTO().ToList();
+                result = ar.OrderByDescending(ab => ab.Rank).Take((int)count).ToList();
                 return result;
             }
             catch (Exception ex)
@@ -1866,7 +1851,14 @@ namespace EkiHire.Business.Services
                     DeletionTime = null,
                     Id = 0,
                 };
-                _chatHub.SendNotification(adsStatusNotification);
+                try
+                {
+                    await _chatHub.SendNotification(adsStatusNotification);
+                }
+                catch (Exception)
+                {
+
+                }
                 #endregion
                 return true;
             }
@@ -1877,7 +1869,7 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<bool> AddAdImage(AdImageDTO model, string username)
+        public async Task<bool> AddAdImage(AdImage model, string username)
         {
             try
             {
@@ -1980,7 +1972,7 @@ namespace EkiHire.Business.Services
                 return null;
             }
         }
-        public async Task<IEnumerable<CartItemDTO>> GetCartItems(string username)
+        public async Task<IEnumerable<CartItem>> GetCartItems(string username)
         {
             try
             {
@@ -1995,7 +1987,7 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
-                var cartItems = CartItemRepository.GetAll().Where(uc => uc.UserId == user.Id && uc.IsDeleted == false).ToDTO();
+                var cartItems = CartItemRepository.GetAll().Where(uc => uc.UserId == user.Id && uc.IsDeleted == false);
                 return cartItems;
             }
             catch (Exception ex)

@@ -1,10 +1,5 @@
 ﻿using EkiHire.Core.Domain.Entities.Auditing;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
@@ -20,27 +15,27 @@ namespace EkiHire.Core.Domain.Entities
         public virtual User Following { get; set; }//receipient
         #endregion
 
-        public static implicit operator Follow(FollowDTO model)
-        {
-            try
-            {
-                if(model != null)
-                {
-                    Follow response = new Follow
-                    {
-                        FollowerId = model.FollowerId,
-                        Follower = model.Follower,
-                        FollowingId = model.FollowingId,
-                        Following = model.Following,
-                    };
-                    return response;
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
+        //public static implicit operator Follow(FollowDTO model)
+        //{
+        //    try
+        //    {
+        //        if(model != null)
+        //        {
+        //            Follow response = new Follow
+        //            {
+        //                FollowerId = model.FollowerId,
+        //                Follower = model.Follower,
+        //                FollowingId = model.FollowingId,
+        //                Following = model.Following,
+        //            };
+        //            return response;
+        //        }
+        //        return null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
     }
 }

@@ -1,50 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using EkiHire.Core.Configuration;
-using EkiHire.Core.Domain.DataTransferObjects;
+﻿using EkiHire.Core.Configuration;
 using EkiHire.Core.Domain.Entities;
-using EkiHire.Core.Exceptions;
 using EkiHire.Core.Messaging.Email;
 using EkiHire.Core.Messaging.Sms;
-using EkiHire.Core.Model;
 using EkiHire.Core.Utils;
 using EkiHire.Data.Repository;
 using EkiHire.Data.UnitOfWork;
-using IPagedList;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Text.RegularExpressions;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Domain.Extensions;
-using Microsoft.Extensions.Logging;
 using log4net;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Options;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net.Mail;
 using System.Reflection;
-using Newtonsoft.Json;
-using System.Net.Mail;
-using System.Net;
+using System.Text;
+using System.Threading.Tasks;
 //using MailKit.Net.Smtp;
-using MimeKit;
-using System.IO;
-using System.Net;
-using System.Net.Mail;
 namespace EkiHire.Business.Services
 {
     public interface ICategoryService
     {
-        Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null, bool withOtherData = false);//IEnumerable<Category>
-        Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null);
+        Task<IEnumerable<Category>> GetCategories(long[] catIds = null, bool withOtherData = false);//IEnumerable<Category>
+        Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null);
         Task<bool> SeedCategories();
         Task<bool> SeedSubcategories();
-        Task<CategoryDTO> GetCategory(long Id, bool withOtherData = false);
-        Task<bool> AddCategory(CategoryDTO model, string username);
-        Task<bool> AddSubcategory(SubcategoryDTO model, string username);
+        Task<Category> GetCategory(long Id, bool withOtherData = false);
+        Task<bool> AddCategory(Category model, string username);
+        Task<bool> AddSubcategory(Subcategory model, string username);
         Task<List<List<Item>>> GetAllItemGroupsForSubcategory(long subId, string username);
         Task testemail();
         Task TestMail();
@@ -55,12 +37,12 @@ namespace EkiHire.Business.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IServiceHelper _serviceHelper;
-        private readonly IRepository<Account> _repo;
+        //private readonly IRepository<Account> _repo;
         //private readonly IRepository<Terminal> _terminalRepo;
         private readonly IRepository<Wallet> _walletRepo;
         //private readonly IRepository<Department> _departmentRepo;
         private readonly IUserService _userSvc;
-        private readonly IRoleService _roleSvc;
+        //private readonly IRoleService _roleSvc;
         //private readonly IReferralService _referralSvc;
         private readonly ISMSService _smsSvc;
         private readonly IMailService _mailSvc;
@@ -73,13 +55,13 @@ namespace EkiHire.Business.Services
         private readonly IRepository<Item> _itemRepository;
         private readonly IRepository<AdProperty> _adPropertyRepo;
         public CategoryService(IUnitOfWork unitOfWork,
-            IRepository<Account> employeeRepo,
+            //IRepository<Account> employeeRepo,
             //IRepository<Terminal> terminalRepo,
             IRepository<Wallet> walletRepo,
             //IRepository<Department> departmentRepo,
             IServiceHelper serviceHelper,
             IUserService userSvc,
-            IRoleService roleSvc,
+            //IRoleService roleSvc,
             //IReferralService referralSvc,
             ISMSService smsSvc,
             IMailService mailSvc,
@@ -94,7 +76,7 @@ namespace EkiHire.Business.Services
             )
         {
             _unitOfWork = unitOfWork;
-            _repo = employeeRepo;
+            //_repo = employeeRepo;
             //_terminalRepo = terminalRepo;
             _walletRepo = walletRepo;
             //_departmentRepo = departmentRepo;
@@ -106,26 +88,26 @@ namespace EkiHire.Business.Services
             appConfig = _appConfig.Value;
             _hostingEnvironment = hostingEnvironment;
             _guidGenerator = guidGenerator;
-            _roleSvc = roleSvc;
+            //_roleSvc = roleSvc;
             _categoryRepo = categoryRepo;
             _subcategoryRepo = subcategoryRepo;
             this._itemRepository = _itemRepository;
             this._adPropertyRepo = _adPropertyRepo;
         }
 
-        public async Task<IEnumerable<CategoryDTO>> GetCategories(long[] catIds = null, bool withOtherData = false)//Task<IEnumerable<Category>>
+        public async Task<IEnumerable<Category>> GetCategories(long[] catIds = null, bool withOtherData = false)//Task<IEnumerable<Category>>
         {
             try
             {
-                var result =  _categoryRepo.GetAll().ToDTO().ToList();
+                var result =  _categoryRepo.GetAll().ToList();
                 //var json = JsonConvert.SerializeObject(result, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
                 if(withOtherData)
                 {
                     foreach (var r in result)
                     {
-                        List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == r.Id && !s.IsDeleted).ToDTO().ToList();
+                        List<Subcategory> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == r.Id && !s.IsDeleted).ToList();
                         subcategories.ForEach(x => {
-                            var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToDTO().ToList();
+                            var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToList();
                             x.AdProperties = _adProperties;
                         });
                         r.Subcategories = subcategories;
@@ -138,16 +120,16 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }
-        public async Task<CategoryDTO> GetCategory(long Id, bool withOtherData = false)
+        public async Task<Category> GetCategory(long Id, bool withOtherData = false)
         {
             try
             {
-                CategoryDTO result = _categoryRepo.Get(Id);
+                Category result = _categoryRepo.Get(Id);
                 if(withOtherData)
                 {
-                    List<SubcategoryDTO> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == result.Id && !s.IsDeleted).ToDTO().ToList();
+                    List<Subcategory> subcategories = _subcategoryRepo.GetAll().Where(s => s.CategoryId == result.Id && !s.IsDeleted).ToList();
                     subcategories.ForEach(x => {
-                        var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToDTO().ToList();
+                        var _adProperties = _adPropertyRepo.GetAll().Where(a => a.SubcategoryId == x.Id && !a.IsDeleted).ToList();
                         x.AdProperties = _adProperties;
                     });
                     result.Subcategories = subcategories;
@@ -160,7 +142,7 @@ namespace EkiHire.Business.Services
                 throw await _serviceHelper.GetExceptionAsync($"could not get category :: {ex}");
             }
         }
-        public async Task<IEnumerable<SubcategoryDTO>> GetSubcategoriesByCategoryId(long? CategoryId = null)
+        public async Task<IEnumerable<Subcategory>> GetSubcategoriesByCategoryId(long? CategoryId = null)
         {
             try
             {
@@ -216,7 +198,7 @@ namespace EkiHire.Business.Services
                 //throw await _serviceHelper.GetExceptionAsync($"could not get categories :: {ex}");
             }
         }
-        public async Task<bool> AddCategory(CategoryDTO model, string username)
+        public async Task<bool> AddCategory(Category model, string username)
         {
             try
             {
@@ -273,7 +255,7 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
-        public async Task<bool> AddSubcategory(SubcategoryDTO model, string username)
+        public async Task<bool> AddSubcategory(Subcategory model, string username)
         {
             try
             {

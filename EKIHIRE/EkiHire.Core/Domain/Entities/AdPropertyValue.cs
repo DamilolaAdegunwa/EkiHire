@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.DataTransferObjects;
+//using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EkiHire.Core.Domain.Entities
@@ -22,28 +22,28 @@ namespace EkiHire.Core.Domain.Entities
         public virtual AdProperty AdProperty { get; set; }
         #endregion
 
-        public static implicit operator AdPropertyValue(AdPropertyValueDTO model)
-        {
-            try
-            {
-                if(model != null)
-                {
-                    AdPropertyValue response = new AdPropertyValue { 
-                        Id = model.Id,
-                        Value = model.Value,
-                        Ad = model.Ad,
-                        AdId = model.AdId,
-                        AdProperty = model.AdProperty,
-                        AdPropertyId = model.AdPropertyId,
-                    };
-                    return response;
-                }
-                return null;
-            }
-            catch (Exception ex)
-            {
-                return null;
-            }
-        }
+        //public static implicit operator AdPropertyValue(AdPropertyValueDTO model)
+        //{
+        //    try
+        //    {
+        //        if(model != null)
+        //        {
+        //            AdPropertyValue response = new AdPropertyValue { 
+        //                Id = model.Id,
+        //                Value = model.Value,
+        //                Ad = model.Ad,
+        //                AdId = model.AdId,
+        //                AdProperty = model.AdProperty,
+        //                AdPropertyId = model.AdPropertyId,
+        //            };
+        //            return response;
+        //        }
+        //        return null;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return null;
+        //    }
+        //}
     }
 }

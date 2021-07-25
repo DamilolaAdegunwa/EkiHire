@@ -1,6 +1,6 @@
-﻿using System;
+﻿using EkiHire.Core.Domain.Entities.Auditing;
+using System;
 using System.ComponentModel.DataAnnotations;
-using EkiHire.Core.Domain.Entities.Auditing;
 
 namespace EkiHire.Core.Domain.Entities
 {

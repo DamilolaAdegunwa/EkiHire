@@ -1,5 +1,4 @@
-﻿using EkiHire.Core.Domain.DataTransferObjects;
-using EkiHire.Core.Timing;
+﻿using EkiHire.Core.Timing;
 using EkiHire.WebAPI.Models;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
+using EkiHire.Core.Domain.Model;
 namespace EkiHire.WebAPI.Infrastructure.Services
 {
     public interface ITokenService

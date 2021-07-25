@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EkiHire.Core.Domain.DataTransferObjects
+namespace EkiHire.Core.Domain.Model
 {
     public class TokenDTO
     {

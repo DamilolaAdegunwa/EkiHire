@@ -1,18 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using EkiHire.Business.Payload;
 using EkiHire.Business.Services;
-using EkiHire.Core.Domain.DataTransferObjects;
-using Microsoft.AspNetCore.Http;
-using EkiHire.WebAPI.ViewModels;
+using EkiHire.Core.Domain.Entities;
+using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Model;
 using Microsoft.AspNetCore.Authorization;
-using EkiHire.Core.Domain.Entities;
-using Microsoft.AspNetCore.Cors;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Business.Payload;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace EkiHire.WebAPI.Controllers
 {
@@ -34,7 +29,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost, Route("AddAd")]
-        public async Task<IServiceResponse<long?>> AddAd(AdDTO model)
+        public async Task<IServiceResponse<long?>> AddAd(Ad model)
         {
             return await HandleApiOperationAsync(async () =>
             {
@@ -56,7 +51,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost, Route("EditAd/{adId}")]
-        public async Task<IServiceResponse<bool>> EditAd(AdDTO dto, long adId)
+        public async Task<IServiceResponse<bool>> EditAd(Ad dto, long adId)
         {//working
             return await HandleApiOperationAsync(async () =>
             {
@@ -78,7 +73,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost, Route("CreateItem")]
-        public async Task<IServiceResponse<bool>> CreateItem(ItemDTO model)
+        public async Task<IServiceResponse<bool>> CreateItem(Item model)
         {
             return await HandleApiOperationAsync(async () =>
             {
@@ -147,10 +142,10 @@ namespace EkiHire.WebAPI.Controllers
         [HttpGet]
         [Route("GetCategories")]
         [Route("GetCategories/{withOtherData:bool}")]
-        public async Task<IServiceResponse<IEnumerable<CategoryDTO>>> GetCategories(bool withOtherData = false)
+        public async Task<IServiceResponse<IEnumerable<Category>>> GetCategories(bool withOtherData = false)
         {//IEnumerable<Category>
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<CategoryDTO>>();//
+                var response = new ServiceResponse<IEnumerable<Category>>();//
                 var data = await categoryService.GetCategories(null,withOtherData);
                 response.Object = data;
                 return response;
@@ -160,10 +155,10 @@ namespace EkiHire.WebAPI.Controllers
         [HttpGet]
         [Route("GetCategory/{id}")]
         [Route("GetCategory/{id}/{withOtherData:bool}")]
-        public async Task<IServiceResponse<CategoryDTO>> GetCategory(long id, bool withOtherData = false)
+        public async Task<IServiceResponse<Category>> GetCategory(long id, bool withOtherData = false)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<CategoryDTO>();
+                var response = new ServiceResponse<Category>();
                 var data = await categoryService.GetCategory(id, withOtherData);
                 response.Object = data;
                 return response;
@@ -172,10 +167,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpGet]
         [Route("GetSubcategoriesByCategoryId/{categoryId}")]
-        public async Task<IServiceResponse<IEnumerable<SubcategoryDTO>>> GetSubcategoriesByCategoryId(long categoryId)
+        public async Task<IServiceResponse<IEnumerable<Subcategory>>> GetSubcategoriesByCategoryId(long categoryId)
         {//working
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<SubcategoryDTO>>();
+                var response = new ServiceResponse<IEnumerable<Subcategory>>();
                 var data = await categoryService.GetSubcategoriesByCategoryId(categoryId);
                 response.Object = data;
                 return response;
@@ -184,11 +179,11 @@ namespace EkiHire.WebAPI.Controllers
         //review
         [HttpPost]
         [Route("ReviewsGivenByUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedbackDTO>>> ReviewsGivenByUser(string username = null/*long[] adIds = null*/)
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsGivenByUser(string username = null/*long[] adIds = null*/)
         {//working - no data
             var urn = username ?? serviceHelper.GetCurrentUserEmail();
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedbackDTO>>();
+                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
                 var data = await adService.ReviewsGivenByUser(urn/*, adIds*/);
                 response.Object = data;
                 return response;
@@ -196,10 +191,10 @@ namespace EkiHire.WebAPI.Controllers
         }
         [HttpPost]
         [Route("ReviewsForAd/{adId}")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedbackDTO>>> ReviewsForAd(long adId/*long[] adIds = null*/)
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsForAd(long adId/*long[] adIds = null*/)
         {//working - no data
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedbackDTO>>();
+                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
                 var data = await adService.ReviewsForAd(adId, serviceHelper.GetCurrentUserEmail()/*, adIds*/);
                 response.Object = data;
                 return response;
@@ -232,7 +227,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddCategory")]
-        public async Task<IServiceResponse<bool>> AddCategory(CategoryDTO model)
+        public async Task<IServiceResponse<bool>> AddCategory(Category model)
         {//tested!
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -244,7 +239,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddSubcategory")]
-        public async Task<IServiceResponse<bool>> AddSubcategory(SubcategoryDTO model)
+        public async Task<IServiceResponse<bool>> AddSubcategory(Subcategory model)
         {//tested - working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -340,7 +335,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdProperty")]
-        public async Task<IServiceResponse<bool>> AddAdProperty(AdPropertyDTO model)
+        public async Task<IServiceResponse<bool>> AddAdProperty(AdProperty model)
         {//working
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -352,7 +347,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddOrUpdateAdPropertyValue")]
-        public async Task<IServiceResponse<bool>> AddOrUpdateAdPropertyValue(AdPropertyValueDTO model)
+        public async Task<IServiceResponse<bool>> AddOrUpdateAdPropertyValue(AdPropertyValue model)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -366,11 +361,11 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost]
         [Route("Trending")]
         [Route("Trending/{count}")]
-        public async Task<IServiceResponse<IEnumerable<AdDTO>>> Trending(long count = 10)
+        public async Task<IServiceResponse<IEnumerable<Ad>>> Trending(long count = 10)
         {
             var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdDTO>>();
+                var response = new ServiceResponse<IEnumerable<Ad>>();
                 var data = await adService.Trending(count, serviceHelper.GetCurrentUserEmail(), allowanonymous);
                 response.Object = data;
                 return response;
@@ -421,10 +416,10 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("GetUserCart")]
-        public async Task<ServiceResponse<IEnumerable<CartItemDTO>>> GetUserCart()
+        public async Task<ServiceResponse<IEnumerable<CartItem>>> GetUserCart()
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<CartItemDTO>>();
+                var response = new ServiceResponse<IEnumerable<CartItem>>();
                 var data = await adService.GetCartItems(serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
@@ -457,7 +452,7 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost]
         [Route("ApplyForJob")]
         
-        public async Task<ServiceResponse<bool>> ApplyForJob(JobApplicationDTO model, bool allowAnonymous = false)
+        public async Task<ServiceResponse<bool>> ApplyForJob(JobApplication model, bool allowAnonymous = false)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
@@ -665,7 +660,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("AddAdImage")]
-        public async Task<ServiceResponse<bool>> AddAdImage(AdImageDTO model)
+        public async Task<ServiceResponse<bool>> AddAdImage(AdImage model)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();

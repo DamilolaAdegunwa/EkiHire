@@ -1,7 +1,4 @@
 ﻿using EkiHire.Core.Domain.Entities.Auditing;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using EkiHire.Core.Domain.Entities.Enums;
 using System.ComponentModel.DataAnnotations.Schema;
 

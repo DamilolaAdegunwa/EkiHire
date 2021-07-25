@@ -1,46 +1,34 @@
 using EkiHire.Business.Services;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using EkiHire.Core.Caching;
 using EkiHire.Core.Configuration;
 using EkiHire.Core.Domain.Entities;
-using EkiHire.Core.Domain.Extensions;
+using EkiHire.Core.Messaging.Email;
+using EkiHire.Core.Messaging.Sms;
 using EkiHire.Core.Utils;
 using EkiHire.Data.efCore;
 using EkiHire.Data.efCore.Context;
+using EkiHire.Data.Repository;
 using EkiHire.Data.UnitOfWork;
-using EkiHire.Core.Messaging.Email;
-using EkiHire.Core.Messaging.Sms;
 using EkiHire.WebAPI.Infrastructure.Services;
 using EkiHire.WebAPI.Models;
 using EkiHire.WebAPI.Utils;
 using EkiHire.WebAPI.Utils.Extentions;
-using EkiHire.Core.Collections.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using Swashbuckle.AspNetCore.Swagger;
+using System;
+using System.Collections.Generic;
 using System.Text;
-using EkiHire.Data.Repository;
-using log4net;
-using Microsoft.AspNetCore.Mvc.NewtonsoftJson;
-using Newtonsoft.Json.Linq;
-using System.IO;
-using System.Collections.Specialized;
+using System.Threading.Tasks;
 
 namespace EkiHire.WebAPI
 {
@@ -100,8 +88,8 @@ namespace EkiHire.WebAPI
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRepository<User>, EfCoreRepository<DbContext, User>>();
 
-            services.AddScoped<IAccountService, AccountService>();
-            services.AddScoped<IRepository<Account>, EfCoreRepository<DbContext, Account>>();
+            //services.AddScoped<IAccountService, AccountService>();
+            //services.AddScoped<IRepository<Account>, EfCoreRepository<DbContext, Account>>();
 
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IRepository<Wallet>, EfCoreRepository<DbContext, Wallet>>();
@@ -213,7 +201,7 @@ namespace EkiHire.WebAPI
             services.AddSingleton<ITokenService, TokenService>();
             services.AddSingleton<ICacheManager, MemoryCacheManager>();
             services.AddTransient<IUserService, UserService>();
-            services.AddTransient<IRoleService, RoleService>();
+            //services.AddTransient<IRoleService, RoleService>();
             services.AddTransient<IMailService, SmtpEmailService>();
             services.AddTransient<ISMSService, SMSService>();
             services.AddTransient<IWebClient, WebClient>();
@@ -301,7 +289,7 @@ namespace EkiHire.WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, IAccountService accountService, IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ICategoryService categoryService, ILoggerFactory loggerFactory, IAdService adService, /*IAccountService accountService,*/ IMailService _mailSvc/*, IRepository<Search> s, IUnitOfWork _unitOfWork*/)
         {
             
             loggerFactory.AddLog4Net();

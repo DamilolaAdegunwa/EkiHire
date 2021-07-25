@@ -1,9 +1,5 @@
-﻿using EkiHire.Core.Domain.DataTransferObjects;
-using EkiHire.Core.Domain.Entities.Enums;
-using System;
+﻿using EkiHire.Core.Domain.Entities.Enums;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EkiHire.Core.Model
 {

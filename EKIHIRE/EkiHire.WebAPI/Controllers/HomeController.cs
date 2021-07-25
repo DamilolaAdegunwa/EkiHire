@@ -1,24 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using EkiHire.Business.Services;
-using EkiHire.Core.Domain.DataTransferObjects;
-using EkiHire.Core.Domain.Entities;
-using EkiHire.Core.Domain.Entities.Enums;
-using EkiHire.Core.Model;
-using EkiHire.WebAPI.Utils;
-using IdentityModel;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using EkiHire.Business.Services;
 using log4net;
+using Microsoft.AspNetCore.Mvc;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace EkiHire.WebAPI.Controllers
 {
