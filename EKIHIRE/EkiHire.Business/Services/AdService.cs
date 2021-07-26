@@ -1,6 +1,4 @@
-﻿using EkiHire.Business.Payload;
-using EkiHire.Core.Configuration;
-//using EkiHire.Core.Domain.DataTransferObjects;
+﻿using EkiHire.Core.Configuration;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Messaging.Email;
@@ -27,7 +25,7 @@ namespace EkiHire.Business.Services
 {
     public interface IAdService
     {
-        Task<long?> AddAd(Ad model, /*IFormFileCollection images,*/ string username);
+        Task<long?> AddAd(AddAdRequest model, /*IFormFileCollection images,*/ string username);
         Task<bool> CloseAd(long model, string username);
         Task<bool> EditAd(Ad adDto, long model, string username);
         Task<bool> PromoteAd(long model, string username);
@@ -36,10 +34,7 @@ namespace EkiHire.Business.Services
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
-        //Task<IEnumerable<AdDTO>> GetAd(AdFilter model, string username, bool allowanonymous = false);
-        //Task<IEnumerable<AdFeedback>> AdFeedbackByUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
-        //Task<IEnumerable<AdFeedback>> AdFeedbackForUser(string username, long adId = 0);
         Task<IEnumerable<AdFeedback>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
@@ -53,7 +48,6 @@ namespace EkiHire.Business.Services
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
         Task<IEnumerable<Ad>> Trending(long count = 10, string username = null, bool allowanonymous = false);
-        //Task<AdDTO> GetAd(long Id);
         Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
         Task<bool> AddAdImage(AdImage model, string username);
         Task<IEnumerable<CartItem>> GetCartItems(string username);
@@ -62,7 +56,6 @@ namespace EkiHire.Business.Services
         Task<bool> ApplyForJob(JobApplication model, string username, bool allowAnonymous = false);
         Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null);
         Task<IEnumerable<Ad>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null);
-        //Task<string> SendNotification(List<string> clientToken, string title, string body);
         Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
@@ -86,11 +79,8 @@ namespace EkiHire.Business.Services
         Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<bool> DeleteNewsletterSubscriber(long id, string username);
         Task<bool> ChangeUserType(UserType userType, long clientId, string username);
-        //Task<bool> AddLocalGovernmentAreaOnce(List<LocalGovernmentArea> model);
-        //Task<IEnumerable<Ad>> GetAdsTest(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<IEnumerable<State>> GetStates();
         Task<IEnumerable<LGAData>> GetLGAs();
-        //Task<IEnumerable<Message>> GetMessages(long otherPersonId, string username);
         Task<IDictionary<long, IEnumerable<GetMessagesResponse>>> GetMessages(string username);
         Task<IEnumerable<GetNotificationResponse>> GetNotifications(string username);
     }
@@ -164,7 +154,7 @@ namespace EkiHire.Business.Services
             _applicationDbContext = applicationDbContext;
             _chatHub = chatHub;
         }
-        public async Task<long?> AddAd(Ad model, string username)
+        public async Task<long?> AddAd(AddAdRequest model, string username)
         {
             int retry = 0; int retries = 2;
             retry:
@@ -217,9 +207,48 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 #region prepare data
-                Ad ad = new Ad();
-                ad = model;
-                
+                //
+                Ad ad = new Ad
+                {
+                    Name = model.Name,
+                    AdClass = model.AdClass,
+                    Address = model.Address,
+                    Amount = model.Amount,
+                    Keywords = model.Keywords,
+                    Location = model.Location,
+                    PhoneNumber = model.PhoneNumber,
+                    //Subcategory = model.Subcategory,
+                    SubcategoryId = model.SubcategoryId,
+                    VideoPath = model.VideoPath,
+                    //User = model.User,
+                    UserId = model.UserId,
+                    Description = model.Description,
+                    AdReference = model.AdReference,
+                    //Id = model.Id,
+                    //InUserCart = model.InUserCart,
+                    IsActive = model.IsActive,
+                    AdImages = model.AdImages.Select(a => new AdImage { 
+                      ImagePath = a.ImagePath,
+                      AdId = a.AdId
+                    }),
+                    AdPropertyValue = model.AdPropertyValue.Select(a => new AdPropertyValue { 
+                        Value = a.Value,
+                        AdId = a.AdId,
+                        AdPropertyId = a.AdPropertyId
+                    }),
+                    //AdFeedback = model.AdFeedback.ToEntity(),
+                    //Rank = model.Rank,
+                    AdsStatus = model.AdsStatus,
+                    //Promotion = model.Promotion,
+                    //Reviews = model.Reviews,
+                    //Rating = model.Rating,
+                    //Likes = model.Likes,
+                    Negotiable = model.Negotiable,
+                    ContactForPrice = model.ContactForPrice,
+                    
+                };
+                //
+
                 ad.AdsStatus = AdsStatus.INREVIEW;
                 ad.UserId = user.Id;
                 ad.AdReference = $"EH{new Random().Next(1_000_000_000, int.MaxValue)}{new Random().Next(1_000_000_000, int.MaxValue)}";

@@ -11,7 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Services\AccountService.cs" />
     <Compile Include="Services\AdService.cs" />
     <Compile Include="Services\CategoryService.cs" />
     <Compile Include="Services\RealTime\ChatHub.cs" />

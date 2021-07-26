@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EkiHire.Business.Payload
+namespace EkiHire.Core.Model
 {
     public class GetMessagesResponse
     {

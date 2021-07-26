@@ -1,5 +1,4 @@
-﻿using EkiHire.Business.Payload;
-using EkiHire.Business.Services;
+﻿using EkiHire.Business.Services;
 using EkiHire.Core.Domain.Entities;
 using EkiHire.Core.Domain.Entities.Enums;
 using EkiHire.Core.Model;
@@ -29,7 +28,7 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost, Route("AddAd")]
-        public async Task<IServiceResponse<long?>> AddAd(Ad model)
+        public async Task<IServiceResponse<long?>> AddAd(AddAdRequest model)
         {
             return await HandleApiOperationAsync(async () =>
             {

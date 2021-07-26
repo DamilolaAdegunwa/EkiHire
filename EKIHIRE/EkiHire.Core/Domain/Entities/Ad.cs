@@ -2,7 +2,6 @@
 using EkiHire.Core.Domain.Entities.Enums;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-//using EkiHire.Core.Domain.DataTransferObjects;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace EkiHire.Core.Domain.Entities
 {
@@ -19,7 +18,7 @@ namespace EkiHire.Core.Domain.Entities
         [DataType(DataType.Text)] [MaxLength(150)] public virtual string Location { get; set; }//coordinates
         [DataType(DataType.Text)] [MaxLength(150)] public virtual string AdReference { get; set; }
         
-        [DataType(DataType.Text)] [MaxLength(150)] public virtual string Description { get; set; }
+        [DataType(DataType.Text)] [MaxLength(400)] public virtual string Description { get; set; }
         [DataType(DataType.Text)] [MaxLength(150)] public virtual string VideoPath { get; set; }
         [DataType(DataType.Text)] [MaxLength(150)] public virtual string Keywords { get; set; }
         public virtual bool? IsActive { get; set; }
