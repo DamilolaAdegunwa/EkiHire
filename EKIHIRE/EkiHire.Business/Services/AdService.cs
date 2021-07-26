@@ -56,7 +56,7 @@ namespace EkiHire.Business.Services
         Task<bool> ApplyForJob(JobApplication model, string username, bool allowAnonymous = false);
         Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null);
         Task<IEnumerable<Ad>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null);
-        Task<AdResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<GetAdsResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
         Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25);
@@ -429,7 +429,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<AdResponse> /*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
+        public async Task<GetAdsResponse> /*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25)
         {
             try
             {
@@ -646,7 +646,7 @@ namespace EkiHire.Business.Services
                     }
                     _unitOfWork.Commit();
                 }
-                return new AdResponse { Ads = data, Total = total, Pages = pages, Page = page, Size = size};
+                return new GetAdsResponse { Ads = data, Total = total, Pages = pages, Page = page, Size = size};
             }
             catch (Exception ex)
             {

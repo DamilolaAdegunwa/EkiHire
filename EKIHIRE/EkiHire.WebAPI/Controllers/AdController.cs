@@ -127,13 +127,13 @@ namespace EkiHire.WebAPI.Controllers
         //filter, search and scan ads
         [AllowAnonymous]
         [HttpPost, Route("Search"), Route("Search/{page}"), Route("Search/{page}/{size}")]
-        public async Task<IServiceResponse<AdResponse>> Search(AdFilter model, int page = 1, int size = 25)
+        public async Task<IServiceResponse<GetAdsResponse>> Search(AdFilter model, int page = 1, int size = 25)
         {
             var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
             return await HandleApiOperationAsync(async () =>
             {
-                AdResponse result = (await adService.GetAds(model, serviceHelper.GetCurrentUserEmail(), allowanonymous, page:page,size:size));
-                var response = new ServiceResponse<AdResponse>(result);
+                GetAdsResponse result = (await adService.GetAds(model, serviceHelper.GetCurrentUserEmail(), allowanonymous, page:page,size:size));
+                var response = new ServiceResponse<GetAdsResponse>(result);
                 return response;
             });
         }
