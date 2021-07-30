@@ -17,6 +17,7 @@
     <Compile Include="Services\ClaimsProvider.cs" />
     <Compile Include="Services\ErrorCodeService.cs" />
     <Compile Include="Services\RealTime\Client.cs" />
+    <Compile Include="Services\RealTime\ConnectionMapping.cs" />
     <Compile Include="Services\RoleService.cs" />
     <Compile Include="Services\ServiceHelper.cs" />
     <Compile Include="Services\ServiceResponse.cs" />

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
-namespace EkiHire.Business.Services.RealTime
+namespace EkiHire.Business.Services
 {
     public class ChatClient
     {

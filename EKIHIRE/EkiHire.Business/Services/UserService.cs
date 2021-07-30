@@ -174,6 +174,7 @@ namespace EkiHire.Business.Services
                                 DeleterUserId = null,
                                 DeletionTime = null,
                                 Id = 0,
+                                RecipientUserName = user.UserName
                             };
                             try
                             {

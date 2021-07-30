@@ -17,5 +17,7 @@ namespace EkiHire.Core.Domain.Entities
         public long RecipientId { get; set; }
         public bool? Delivered { get; set; }
         public bool? IsBroadCast { get; set; }
+        [NotMapped]
+        public string RecipientUserName { get; set; }
     }
 }

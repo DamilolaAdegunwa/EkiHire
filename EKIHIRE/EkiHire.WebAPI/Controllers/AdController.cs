@@ -523,10 +523,10 @@ namespace EkiHire.WebAPI.Controllers
         [Route("GetTransactions")]
         [Route("GetTransactions/{page}")]
         [Route("GetTransactions/{page}/{size}")]
-        public async Task<ServiceResponse<IEnumerable<Transaction>>> GetTransactions(int page = 1, int size = 25)
+        public async Task<ServiceResponse<GetTransactionResponse>> GetTransactions(int page = 1, int size = 25)
         {
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<Transaction>>();
+                var response = new ServiceResponse<GetTransactionResponse>();
                 var data = await adService.GetTransactions(serviceHelper.GetCurrentUserEmail(), page, size);
                 response.Object = data;
                 return response;

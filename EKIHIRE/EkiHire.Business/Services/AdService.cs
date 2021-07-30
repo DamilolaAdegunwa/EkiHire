@@ -59,7 +59,7 @@ namespace EkiHire.Business.Services
         Task<GetAdsResponse>/*Task<IEnumerable<Ad>>*/ GetAds(AdFilter model, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<List<string>> AddAdImage(long AdId, IFormFileCollection images, string username);
         Task<string> UploadFile(IFormFile file, string username);
-        Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25);
+        Task<GetTransactionResponse> GetTransactions(string username, int page = 1, int size = 25);
         Task<Transaction> GetTransactionById(long Id, string username);
         Task<IEnumerable<User>> GetUsers(string username, int page = 1, int size = 25);
         Task<User> GetUserById(long Id, string username);
@@ -1872,13 +1872,14 @@ namespace EkiHire.Business.Services
                     Recipient = null,
                     //basic properties
                     CreationTime = DateTime.Now,
-                    CreatorUserId = ad.UserId,
+                    CreatorUserId = _serviceHelper.GetCurrentUserId(),//ad.UserId,
                     IsDeleted = false,
                     LastModificationTime = DateTime.Now,
-                    LastModifierUserId = ad.UserId,
+                    LastModifierUserId = _serviceHelper.GetCurrentUserId(),//ad.UserId,
                     DeleterUserId = null,
                     DeletionTime = null,
                     Id = 0,
+                    RecipientUserName = _userRepo.Get((long)ad.UserId)?.UserName,
                 };
                 try
                 {
@@ -2151,11 +2152,18 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<IEnumerable<Transaction>> GetTransactions(string username, int page = 1, int size = 25)
+        public async Task<GetTransactionResponse/*IEnumerable<Transaction>*/> GetTransactions(string username, int page = 1, int size = 25)
         {
             try
             {
-                return TransactionRepository.GetAll().Skip((page - 1) * size).Take(size);
+                GetTransactionResponse result = new GetTransactionResponse();
+                var query = (from t in TransactionRepository.GetAll().DefaultIfEmpty()
+                            select t).DistinctBy(a => a.Id);
+                var data = query.OrderByDescending(a => a.CreationTime).Skip((page - 1) * size).Take(size).ToList();
+                var total = query.Count();
+                long pages = (long)Math.Ceiling(((double)total / (double)size));
+                return new GetTransactionResponse { Transactions = data, Total = total, Pages = pages, Page = page, Size = size };
+                //return TransactionRepository.GetAll().Skip((page - 1) * size).Take(size);
             }
             catch (Exception ex)
             {
