@@ -121,6 +121,7 @@ namespace EkiHire.Business.Services
         private readonly IRepository<PreviousWorkExperience> PreviousWorkExperienceRepository;
         private readonly IRepository<LocalGovernmentArea> LocalGovernmentAreaRepository;
         private readonly ApplicationDbContext _applicationDbContext;
+        static readonly object _object = new object();
         private readonly IChatHub _chatHub;
         #endregion
         public AdService(IRepository<Ad> adRepository, IServiceHelper _serviceHelper, IUserService _userSvc, IUnitOfWork unitOfWork, IRepository<Item> itemRepository, IRepository<CartItem> CartItemRepository, IRepository<AdFeedback> adFeedbackRepository, IRepository<Follow> followRepository, IRepository<Subcategory> _subcategoryRepo, IRepository<Keyword> _keywordRepo, IRepository<AdProperty> _adPropertyRepo, IRepository<AdPropertyValue> _adPropertyValueRepo, IRepository<User> _userRepo,
@@ -2661,7 +2662,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<IEnumerable<Message>> GetMessagesOLD(long otherPersonId, string username)
+        public async Task<IEnumerable<Message>> GetMessages1(long otherPersonId, string username)
         {
             try
             {
@@ -2689,7 +2690,147 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
+        public async Task<IDictionary<long, IEnumerable<GetMessagesResponse>>>/*Task<IEnumerable<GetMessagesResponse>>*/ GetMessages2(string username)
+        {
+            try
+            {
+                #region validate
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (loggedInUser == null)
+                {
+                    throw new Exception("please login and try again");
+                }
+                #endregion
 
+                #region old query
+                //var query = (from m in _applicationDbContext.Messages.DefaultIfEmpty()
+                //             join sen in _applicationDbContext.Users.DefaultIfEmpty() on m.SenderId equals sen.Id into sender
+
+                //             from s in sender.DefaultIfEmpty()
+                //             join recei in _applicationDbContext.Users.DefaultIfEmpty() on m.RecipientId equals recei.Id into receipient
+
+                //             from r in receipient.DefaultIfEmpty()
+                //             where m.SenderId == loggedInUser.Id || m.RecipientId == loggedInUser.Id
+                //             select new GetMessagesResponse
+                //             {
+                //                 MessageId = m.Id,
+
+                //                 SenderId = s.Id,
+                //                 SenderFirstName = s.FirstName,
+                //                 SenderLastName = s.LastName,
+                //                 SenderImagePath = s.ImagePath,
+                //                 SenderUserName = s.UserName,
+
+                //                 RecipientId = r.Id,
+                //                 RecipientFirstName = r.FirstName,
+                //                 RecipientLastName = r.LastName,
+                //                 RecipientImagePath = r.ImagePath,
+                //                 RecipientUserName = r.UserName,
+
+                //                 Text = m.Text,
+                //                 When = m.When,
+
+                //             }).DistinctBy(a => a.MessageId);
+                #endregion
+
+                var query = (from m in _applicationDbContext.Messages
+                             where m.SenderId == loggedInUser.Id || m.RecipientId == loggedInUser.Id
+                             select new GetMessagesResponse
+                             {
+                                 MessageId = m.Id,
+                                 Text = m.Text,
+                                 When = m.When,
+                                 SenderId = m.SenderId,
+                                 RecipientId = m.RecipientId
+                             });
+                var list2 = query.ToList();
+
+                #region parallel
+                System.Collections.Concurrent.ConcurrentBag<GetMessagesResponse> list =
+                    new System.Collections.Concurrent.ConcurrentBag<GetMessagesResponse>();
+                Parallel.ForEach(list2, (row) =>
+                {
+                    User s = null;
+                    User r = null;
+                    lock (_object)
+                    {
+                        s = UserRepository.FirstOrDefault(a => a.Id == row.SenderId);
+                        r = UserRepository.FirstOrDefault(a => a.Id == row.RecipientId);
+                    }
+
+                    list.Add(new GetMessagesResponse
+                    {
+                        MessageId = row?.MessageId ?? 0,
+
+                        SenderId = s?.Id ?? 0,
+                        SenderFirstName = s?.FirstName,
+                        SenderLastName = s?.LastName,
+                        SenderImagePath = s?.ImagePath,
+                        SenderUserName = s?.UserName,
+
+                        RecipientId = r?.Id ?? 0,
+                        RecipientFirstName = r?.FirstName,
+                        RecipientLastName = r?.LastName,
+                        RecipientImagePath = r?.ImagePath,
+                        RecipientUserName = r?.UserName,
+
+                        Text = row?.Text,
+                        When = row?.When ?? new DateTimeOffset(),
+                    }
+                    );
+                });
+                #endregion
+
+                #region single thread
+                //var list = new List<GetMessagesResponse>();
+                //foreach (var row in list2)
+                //{
+                //    var s = UserRepository.FirstOrDefault(a => a.Id == row.SenderId);
+                //    var r = UserRepository.FirstOrDefault(a => a.Id == row.RecipientId);
+                //    list.Add(new GetMessagesResponse
+                //        {
+                //            MessageId = row?.MessageId??0,
+
+                //            SenderId = s?.Id??0,
+                //            SenderFirstName = s?.FirstName,
+                //            SenderLastName = s?.LastName,
+                //            SenderImagePath = s?.ImagePath,
+                //            SenderUserName = s?.UserName,
+
+                //            RecipientId = r?.Id??0,
+                //            RecipientFirstName = r?.FirstName,
+                //            RecipientLastName = r?.LastName,
+                //            RecipientImagePath = r?.ImagePath,
+                //            RecipientUserName = r?.UserName,
+
+                //            Text = row?.Text,
+                //            When = row?.When??new DateTimeOffset(),
+
+                //        }
+                //    );
+                //}
+                #endregion
+
+                List<long> ids = new List<long>();
+                ids.AddRange(list.Select(a => a.SenderId));
+                ids.AddRange(list.Select(a => a.RecipientId));
+
+                var uniqueIds = ids.Where(a => a != loggedInUser.Id).Distinct();
+                IDictionary<long, IEnumerable<GetMessagesResponse>> groups = new Dictionary<long, IEnumerable<GetMessagesResponse>>();
+                foreach (var id in uniqueIds)
+                {
+                    var subList = list.Where(a => a.SenderId == id || a.RecipientId == id);
+                    groups.Add(id, subList);
+                }
+                return groups;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
         public async Task<IDictionary<long, IEnumerable<GetMessagesResponse>>>/*Task<IEnumerable<GetMessagesResponse>>*/ GetMessages(string username)
         {
             try
