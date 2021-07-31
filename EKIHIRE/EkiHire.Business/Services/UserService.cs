@@ -1098,9 +1098,10 @@ namespace EkiHire.Business.Services
                         var fileString = File.ReadAllText(filePath);
                         if (!string.IsNullOrWhiteSpace(fileString))
                         {
+                            var addUserMsg = $"<br/><span>You have been added to the admin page of Ekihire with {model.UserType.ToString()} Role</span>";
                             //fileString = fileString.Replace("{{FirstName}}", $"{model.FirstName}");
                             fileString = fileString.Replace("{{UserName}}", $"{model.UserName}");
-                            fileString = fileString.Replace("{{DefaultPassword}}", $"{password}");
+                            fileString = fileString.Replace("{{DefaultPassword}}", $"{password}{addUserMsg}");
 
                             _svcHelper.SendEMail(model.UserName, fileString, "Ekihire.com: You are welcome on board!");
                         }

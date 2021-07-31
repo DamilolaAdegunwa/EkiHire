@@ -407,7 +407,7 @@ namespace EkiHire.WebAPI.Controllers
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.UpdateAdStatus(AdId, adsStatus);
+                var data = await adService.UpdateAdStatus(AdId, adsStatus, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

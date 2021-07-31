@@ -48,7 +48,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddOrUpdateAdPropertyValue(AdPropertyValue model, string username);
         Task<bool> UpdateAdProperty(AdProperty model, string username);
         Task<IEnumerable<Ad>> Trending(long count = 10, string username = null, bool allowanonymous = false);
-        Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus);
+        Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus, string username);
         Task<bool> AddAdImage(AdImage model, string username);
         Task<IEnumerable<CartItem>> GetCartItems(string username);
         Task<bool> SaveRequestQuote(RequestQuote model, string username);
@@ -1839,7 +1839,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus)
+        public async Task<bool> UpdateAdStatus(long AdId, AdsStatus adsStatus, string username)
         {
             try
             {
@@ -1850,7 +1850,16 @@ namespace EkiHire.Business.Services
                     throw new Exception("Ad not found!");
                 }
 
-                //check that the person is an admin
+                //check that the person is a not a cutomer
+                var loggedInUser = UserRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(loggedInUser == null)
+                {
+                    throw new Exception("please login and try again");
+                }
+                if(loggedInUser.UserType == UserType.Customer)
+                {
+                    throw new Exception("you are not authorized to approve/decline an ad");
+                }
                 #endregion
                 _unitOfWork.BeginTransaction();
                 ad.AdsStatus = adsStatus;

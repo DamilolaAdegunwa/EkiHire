@@ -12,3 +12,5 @@ still not sure what basket or market is!
 ranking = (numberOfReviews * ReviewsWeight + numberOfLikes * likesWeight + numberofSearches * searchWeight) / (daysSincePost * daysSincePostWeight)
 
 https://nigeriastateandlocalgovtarea.herokuapp.com/lgalists
+
+git push upstream main -f https://github.com/Ekihire/Asp.net

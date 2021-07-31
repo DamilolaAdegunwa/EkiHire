@@ -228,7 +228,7 @@ namespace EkiHire.Business.Services
                 {
                     Name = model.Name,
                     ImagePath = model.ImagePath,
-                    ImageString = model.ImageString,
+                    //ImageString = model.ImageString,
                     //Subcategories = model.Subcategories,
 
                     //basic properties
@@ -292,7 +292,7 @@ namespace EkiHire.Business.Services
                 {
                     Name = model.Name,
                     ImagePath = model.ImagePath,
-                    ImageString = model.ImageString,
+                    //ImageString = model.ImageString,
                     CategoryId = cat.Id,
 
                     //basic properties

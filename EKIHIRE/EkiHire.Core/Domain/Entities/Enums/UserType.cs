@@ -7,6 +7,7 @@
         //Employee = 2,
         //Partner = 3,
         SuperAdministrator = 2,
+        User = 3,
         //Business = 5,
         //CraftsPerson = 6,
         //Advertiser = -7

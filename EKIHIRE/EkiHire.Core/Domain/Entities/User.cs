@@ -5,6 +5,7 @@ using EkiHire.Core.Utils;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 namespace EkiHire.Core.Domain.Entities
 {
@@ -18,7 +19,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsFirstTimeLogin { get; set; }
         public string OptionalPhoneNumber { get; set; }
         public UserType UserType { get; set; }
-        public string ImagePath { get; set; }
+        [DataType(DataType.Text)] [MaxLength(400)] public string ImagePath { get; set; }
         public DateTime CreationTime { get; set; }
         public DateTime? DeletionTime { get; set; }
         public bool IsDeleted { get; set; }
@@ -45,7 +46,7 @@ namespace EkiHire.Core.Domain.Entities
         public bool IsActive { get; set; }
         //public long UserId { get; set; }
         public bool AccountIsDeleted { get; set; }
-        public Enums.SubscriptionPlan SubscriptionPlan { get; set; }
+        public SubscriptionPlan SubscriptionPlan { get; set; }
         [NotMapped]
         public IEnumerable<CartItem> CartItems { get; set; }
         public long? CreatorUserId { get; set; }
