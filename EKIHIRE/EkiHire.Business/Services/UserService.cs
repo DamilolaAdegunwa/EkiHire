@@ -63,7 +63,9 @@ namespace EkiHire.Business.Services
         //Task<IDictionary<DateTime, List<PostDTO>>> PostTimeGraph();
         Task<bool> ChangeProfileImage(string profileImageString, string username);
         Task<bool> ChangeIsActive(bool isActive, string username);
+        Task<bool> ChangeUserType(UserType userType, long receipientId, string username);
         Task<bool> AddUser(LoginViewModel model, string username);
+        Task<bool> DeleteUser(long receipientId, string username);
     }
 
     public class UserService : IUserService
@@ -1049,8 +1051,19 @@ namespace EkiHire.Business.Services
                 {
                     throw new Exception("User does not exist");
                 }
-                //check that the person is an administrator
-                if (user.UserType != UserType.Administrator)
+                //check that the privilege of the user
+                if(user.UserType == UserType.SuperAdministrator)
+                {
+                    //fine
+                }
+                else if (user.UserType == UserType.Administrator)
+                {
+                    if(model.UserType == UserType.SuperAdministrator)
+                    {
+                        throw new Exception("you are not authorized to add user with this role");
+                    }
+                }
+                else
                 {
                     throw new Exception("you are not authorized to add user");
                 }
@@ -1106,6 +1119,113 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-
+        
+        public async Task<bool> ChangeUserType(UserType userType, long receipientId, string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    throw new Exception("Could not identify user");
+                }
+                var loggedInUser = _userRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                await ValidateUser(loggedInUser);
+                if (!loggedInUser.IsConfirmed())
+                {
+                    throw new Exception("Your account has not been activated!");
+                }
+                //if(loggedInUser.UserType != UserType.SuperAdministrator)
+                //{
+                //    throw new Exception("Only a user  with Super Admin role is allowed to change user type");
+                //}
+                if (loggedInUser.UserType == UserType.SuperAdministrator)
+                {
+                    //fine
+                }
+                else if (loggedInUser.UserType == UserType.Administrator)
+                {
+                    if (userType == UserType.SuperAdministrator)
+                    {
+                        throw new Exception("you are not authorized to change user to this role");
+                    }
+                }
+                else
+                {
+                    throw new Exception("you are not authorized to change user role");
+                }
+                var receipient = _userRepository.FirstOrDefault(a => a.Id == receipientId && !a.IsDeleted);
+                if(receipient == null)
+                {
+                    throw new Exception("the user you want to edit does not exist!");
+                }
+                receipient.UserType = userType;
+                receipient.LastModificationTime = DateTime.Now;
+                receipient.LastModifierUserId = loggedInUser.Id;
+                _unitOfWork.BeginTransaction();
+                await UpdateAsync(receipient);
+                _unitOfWork.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
+        public async Task<bool> DeleteUser(long receipientId, string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                {
+                    throw new Exception("Could not identify user");
+                }
+                var loggedInUser = _userRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                await ValidateUser(loggedInUser);
+                if (!loggedInUser.IsConfirmed())
+                {
+                    throw new Exception("Your account has not been activated!");
+                }
+                var receipient = _userRepository.FirstOrDefault(a => a.Id == receipientId && !a.IsDeleted);
+                if (receipient == null)
+                {
+                    throw new Exception("the user you want to edit does not exist!");
+                }
+                //if (loggedInUser.UserType != UserType.SuperAdministrator)
+                //{
+                //    throw new Exception("Only a user  with Super Admin role is allowed to change user type");
+                //}
+                if (loggedInUser.UserType == UserType.SuperAdministrator)
+                {
+                    //fine
+                }
+                else if (loggedInUser.UserType == UserType.Administrator)
+                {
+                    if (receipient.UserType == UserType.SuperAdministrator)
+                    {
+                        throw new Exception("you are not authorized to delete user with this role");
+                    }
+                }
+                else
+                {
+                    throw new Exception("you are not authorized to delete user");
+                }
+                
+                receipient.IsDeleted = true;
+                receipient.DeleterUserId = loggedInUser.Id;
+                receipient.DeletionTime = DateTime.Now;
+                receipient.LastModificationTime = DateTime.Now;
+                receipient.LastModifierUserId = loggedInUser.Id;
+                await UpdateAsync(receipient);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                return false;
+            }
+        }
     }
 }

@@ -78,7 +78,7 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<Ad>> GetAdBulk(long[] Ids, string username, bool allowanonymous = false);
         Task<bool> UpdateNewsletterSubscriber(NewsletterSubscriber model, string username);
         Task<bool> DeleteNewsletterSubscriber(long id, string username);
-        Task<bool> ChangeUserType(UserType userType, long clientId, string username);
+        //Task<bool> ChangeUserType(UserType userType, long clientId, string username);
         Task<IEnumerable<State>> GetStates();
         Task<IEnumerable<LGAData>> GetLGAs();
         Task<IDictionary<long, IEnumerable<GetMessagesResponse>>> GetMessages(string username);
@@ -834,7 +834,7 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
                 }
                 //check that it is the owner of the ad that is editing it
-                if (loggedInUser.Id != adDto.UserId && loggedInUser.UserType != UserType.Administrator)
+                if (loggedInUser.Id != adDto.UserId || loggedInUser.UserType != UserType.Administrator || loggedInUser.UserType != UserType.SuperAdministrator)
                 {
                     throw await _serviceHelper.GetExceptionAsync("you are not authorized to edit this ad!");
                 }
@@ -2437,45 +2437,45 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> ChangeUserType(UserType userType, long clientId, string username)
-        {
-            try
-            {
-                #region validate
-                //check that the user exist
-                var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
-                if (user == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("User does not exist");
-                }
-                //check that the person is an administrator
-                if (user.UserType != UserType.Administrator)
-                {
-                    throw new Exception("you are not authorized to add user");
-                }
+        //public async Task<bool> ChangeUserType(UserType userType, long clientId, string username)
+        //{
+        //    try
+        //    {
+        //        #region validate
+        //        //check that the user exist
+        //        var user = await _userSvc.FindFirstAsync(x => x.UserName == username);
+        //        if (user == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("User does not exist");
+        //        }
+        //        //check that the person is an administrator
+        //        if (user.UserType != UserType.Administrator)
+        //        {
+        //            throw new Exception("you are not authorized to change user type");
+        //        }
 
-                //check that  the client exist
-                var client = _userRepo.FirstOrDefault(x => x.Id == clientId);
-                if (client == null)
-                {
-                    throw await _serviceHelper.GetExceptionAsync("Client does not exist");
-                }
-                #endregion
+        //        //check that  the client exist
+        //        var client = _userRepo.FirstOrDefault(x => x.Id == clientId);
+        //        if (client == null)
+        //        {
+        //            throw await _serviceHelper.GetExceptionAsync("Client does not exist");
+        //        }
+        //        #endregion
 
-                client.UserType = userType;
-                _unitOfWork.BeginTransaction();
-                _userRepo.Update(client);
-                _unitOfWork.Commit();
+        //        client.UserType = userType;
+        //        _unitOfWork.BeginTransaction();
+        //        _userRepo.Update(client);
+        //        _unitOfWork.Commit();
 
-                return true;
-            }
-            catch (Exception ex)
-            {
-                log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
-                //return false;
-                throw ex;
-            }
-        }
+        //        return true;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        log.Error($"{ex.Message} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+        //        //return false;
+        //        throw ex;
+        //    }
+        //}
         public async Task<Ad> GetAd(long Id, string username, bool allowAnonymous = false)
         {
             try

@@ -83,6 +83,10 @@ namespace EkiHire.Business.Services
         [AllowAnonymous]
         public async Task SendNotification(Notification notification)
         {
+            #region save notification
+            _ = await _applicationDbContext.Notification.AddAsync(notification);
+            _ = await _applicationDbContext.SaveChangesAsync();
+            #endregion
             foreach (var connectionId in _connections.GetConnections(notification.RecipientUserName ?? "nothing"))
             {
                 await Clients.Client(connectionId).SendAsync("ReceiveNotification", notification);

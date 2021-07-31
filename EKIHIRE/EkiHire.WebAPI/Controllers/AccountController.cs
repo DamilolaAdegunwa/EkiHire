@@ -399,6 +399,28 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ServiceResponse<bool>> ChangeUserType(UserType userType, long receipientId, string username)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await _userSvc.ChangeUserType(userType,receipientId, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ServiceResponse<bool>> DeleteUser(long receipientId, string username)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await _userSvc.DeleteUser(receipientId, serviceHelper.GetCurrentUserEmail());
+                response.Object = data;
+                return response;
+            });
+        }
         #endregion
         //Authentication, Roles and Permissions....
         #region default from boilerplate

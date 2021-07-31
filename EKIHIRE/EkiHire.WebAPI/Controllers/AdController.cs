@@ -745,17 +745,17 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost]
-        [Route("ChangeUserType/{userType}/{clientId}")]
-        public async Task<ServiceResponse<bool>> ChangeUserType(UserType userType, long clientId)
-        {
-            return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<bool>();
-                var data = await adService.ChangeUserType(userType, clientId, serviceHelper.GetCurrentUserEmail());
-                response.Object = data;
-                return response;
-            });
-        }
+        //[HttpPost]
+        //[Route("ChangeUserType/{userType}/{clientId}")]
+        //public async Task<ServiceResponse<bool>> ChangeUserType(UserType userType, long clientId)
+        //{
+        //    return await HandleApiOperationAsync(async () => {
+        //        var response = new ServiceResponse<bool>();
+        //        var data = await adService.ChangeUserType(userType, clientId, serviceHelper.GetCurrentUserEmail());
+        //        response.Object = data;
+        //        return response;
+        //    });
+        //}
 
         [AllowAnonymous]
         [HttpGet]
