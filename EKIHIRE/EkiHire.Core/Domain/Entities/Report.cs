@@ -9,6 +9,9 @@ namespace EkiHire.Core.Domain.Entities
     public class Report : FullAuditedEntity
     {
         public string Title { get; set; }
+        [Required]
         public string Body { get; set; }
+        [Required]
+        public long AdId { get; set; }
     }
 }

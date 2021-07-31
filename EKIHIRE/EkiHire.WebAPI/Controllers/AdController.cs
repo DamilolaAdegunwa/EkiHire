@@ -805,6 +805,61 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ServiceResponse<bool>> ReportAd(ReportAdPayload model)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.ReportAd(model, serviceHelper.GetCurrentUserEmail(), allowanonymous);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]/{adId}")]
+        [Route("[action]/{adId}/{page}")]
+        [Route("[action]/{adId}/{page}/{size}")]
+        public async Task<ServiceResponse<GetReportsResponse>> GetReportsByAdId(long adId, int page = 1, int size = 25)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<GetReportsResponse>();
+                var data = await adService.GetReportsByAdId(adId, serviceHelper.GetCurrentUserEmail(), allowanonymous, page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]/{id}")]
+        public async Task<ServiceResponse<ReportAdPayload>> GetReportById(long id)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<ReportAdPayload>();
+                var data = await adService.GetReportById(id, serviceHelper.GetCurrentUserEmail(), allowanonymous);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        [Route("[action]/{page}")]
+        [Route("[action]/{page}/{size}")]
+        public async Task<ServiceResponse<GetReportsResponse>> GetReports(int page = 1, int size = 25)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<GetReportsResponse>();
+                var data = await adService.GetReports(serviceHelper.GetCurrentUserEmail(), allowanonymous,page,size);
+                response.Object = data;
+                return response;
+            });
+        }
         #region comments
         //[AllowAnonymous]
         //[HttpPost]

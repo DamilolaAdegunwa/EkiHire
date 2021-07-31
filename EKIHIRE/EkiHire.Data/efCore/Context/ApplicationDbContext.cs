@@ -43,6 +43,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<LocalGovernmentArea> LocalGovernmentArea { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notification { get; set; }
+        public DbSet<Report> Report{ get; set; }
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }
         //public DbSet<Employee> Employees { get; set; }

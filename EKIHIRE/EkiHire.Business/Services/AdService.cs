@@ -83,6 +83,10 @@ namespace EkiHire.Business.Services
         Task<IEnumerable<LGAData>> GetLGAs();
         Task<IDictionary<long, IEnumerable<GetMessagesResponse>>> GetMessages(string username);
         Task<IEnumerable<GetNotificationResponse>> GetNotifications(string username);
+        Task<bool> ReportAd(ReportAdPayload model, string username, bool allowanonymous = false);
+        Task<GetReportsResponse> GetReportsByAdId(long adId, string username, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<ReportAdPayload> GetReportById(long id, string username, bool allowanonymous = false);
+        Task<GetReportsResponse> GetReports(string username, bool allowanonymous = false, int page = 1, int size = 25);
     }
     public class AdService: IAdService
     {
@@ -2775,6 +2779,172 @@ namespace EkiHire.Business.Services
                               }).DistinctBy(a => a.Id);
 
                 return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<bool> ReportAd(ReportAdPayload model, string username, bool allowanonymous = false)
+        {
+            try
+            {
+                #region validate
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(!allowanonymous)
+                {
+                    if(loggedInUser ==null)
+                    {
+                        throw new Exception("please login and try again!");
+                    }
+                }
+                if(model == null)
+                {
+                    throw new Exception("Invalid payload");
+                }
+                if(model.AdId < 0 || string.IsNullOrWhiteSpace(model.Body))
+                {
+                    throw new Exception("Invlaid data given!!");
+                }
+                Ad ad = adRepository.FirstOrDefault(a => a.Id == model.AdId);
+                if(ad == null)
+                {
+                    throw new Exception("Invalid ad id given!!");
+                }
+                var loggedInUserId = loggedInUser?.Id;
+                #endregion
+
+                #region save report
+                var data = new Report
+                {
+                    Title = model.Title,
+                    Body = model.Body,
+                    AdId = model.AdId,
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = loggedInUserId,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = loggedInUserId,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                    Id = 0,
+                    
+                };
+                _ =  await _applicationDbContext.Report.AddAsync(data);
+                _ =  await _applicationDbContext.SaveChangesAsync();
+                #endregion
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<GetReportsResponse> GetReportsByAdId(long adId, string username, bool allowanonymous = false, int page = 1, int size = 25)
+        {
+            try
+            {
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(!allowanonymous)
+                {
+                    if(loggedInUser == null)
+                    {
+                        throw new Exception("you need to login before accessing this endpoint!");
+                    }
+                }
+                Ad ad = adRepository.FirstOrDefault(a => a.Id == adId);
+                if(ad == null)
+                {
+                    throw new Exception("invalid ad");
+                }
+                var query = (from r in _applicationDbContext.Report
+                            where r.AdId == adId && !r.IsDeleted
+                            select new ReportAdPayload
+                            {
+                                Id = r.Id,
+                                AdId = r.AdId,
+                                Title = r.Title,
+                                Body = r.Body,
+                                When = r.CreationTime
+                            }).DistinctBy(a => a.Id);
+                var data = query.OrderByDescending(a => a.When).Skip((page - 1) * size).Take(size).ToList();
+                var total = query.Count();
+                long pages = (long)Math.Ceiling(((double)total / (double)size));
+                return new GetReportsResponse { Reports = data, Total = total, Pages = pages, Page = page, Size = size };
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<ReportAdPayload> GetReportById(long id, string username, bool allowanonymous = false)
+        {
+            try
+            {
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (!allowanonymous)
+                {
+                    if (loggedInUser == null)
+                    {
+                        throw new Exception("you need to login before accessing this endpoint!");
+                    }
+                }
+                var report = _applicationDbContext.Report.FirstOrDefault(a => a.Id == id);
+                if (report == null)
+                {
+                    throw new Exception("invalid id");
+                }
+                return new ReportAdPayload
+                {
+                    AdId = report.AdId,
+                    Id = report.Id,
+                    Body = report.Body,
+                    Title = report.Title,
+                    When = report.CreationTime,
+                };
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<GetReportsResponse> GetReports(string username, bool allowanonymous = false, int page = 1, int size = 25)
+        {
+            try
+            {
+                User loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (!allowanonymous)
+                {
+                    if (loggedInUser == null)
+                    {
+                        throw new Exception("you need to login before accessing this endpoint!");
+                    }
+                }
+                var query = (from r in _applicationDbContext.Report
+                             where !r.IsDeleted
+                             select new ReportAdPayload
+                             {
+                                 Id = r.Id,
+                                 AdId = r.AdId,
+                                 Title = r.Title,
+                                 Body = r.Body,
+                                 When = r.CreationTime
+                             }).DistinctBy(a => a.Id);
+                var data = query.OrderByDescending(a => a.When).Skip((page - 1) * size).Take(size).ToList();
+                var total = query.Count();
+                long pages = (long)Math.Ceiling(((double)total / (double)size));
+                return new GetReportsResponse { Reports = data, Total = total, Pages = pages, Page = page, Size = size };
             }
             catch (Exception ex)
             {
