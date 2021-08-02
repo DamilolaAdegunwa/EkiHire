@@ -52,7 +52,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdImage(AdImage model, string username);
         Task<IEnumerable<CartItem>> GetCartItems(string username);
         Task<bool> SaveRequestQuote(RequestQuote model, string username);
-        Task<bool> SaveReview(AdFeedback model, string username);
+        Task<bool> SaveReview(AdFeedbackRequest model, string username);
         Task<bool> ApplyForJob(JobApplication model, string username, bool allowAnonymous = false);
         Task<IEnumerable<Ad>> TopAvailable(int count = 8, bool allowAnonymous = false, string username = null);
         Task<IEnumerable<Ad>> SimilarAd(long subcategoryId, int count = 8, bool allowAnonymous = false, string username = null);
@@ -1251,7 +1251,7 @@ namespace EkiHire.Business.Services
             }
         }
 
-        public async Task<bool> SaveReview(AdFeedback model, string username)
+        public async Task<bool> SaveReview(AdFeedbackRequest model, string username)
         {
             try
             {
@@ -1284,9 +1284,13 @@ namespace EkiHire.Business.Services
                 #endregion
 
                 //first check if the user has a row in the db for feedback (that is not deleted)
-                AdFeedback data = model;
-                data.AdId = model.AdId;
-                data.UserId = loggedInUser.Id;
+                AdFeedback data = new AdFeedback {
+                    UserId = loggedInUser.Id,
+                    AdId = model.AdId,
+                    Like = model.Like,
+                    Review = model.Review,
+                    Rating = model.Rating
+                };
 
                 //basic properties
                 data.CreationTime = DateTime.Now;

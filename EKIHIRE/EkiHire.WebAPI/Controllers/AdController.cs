@@ -438,7 +438,7 @@ namespace EkiHire.WebAPI.Controllers
 
         [HttpPost]
         [Route("SaveReview")]
-        public async Task<ServiceResponse<bool>> SaveReview(AdFeedback model/*, string username*/)
+        public async Task<ServiceResponse<bool>> SaveReview(AdFeedbackRequest model/*, string username*/)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
