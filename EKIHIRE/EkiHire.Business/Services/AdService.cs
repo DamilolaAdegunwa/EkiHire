@@ -2175,12 +2175,13 @@ namespace EkiHire.Business.Services
             try
             {
                 GetTransactionResponse result = new GetTransactionResponse();
-                var query = (from t in TransactionRepository.GetAll().DefaultIfEmpty()
-                            select t).DistinctBy(a => a.Id);
+                var query = (from t in TransactionRepository.GetAll()
+                            select t)?.DistinctBy(a => a?.Id);
+                var total = query?.Count();
+                if(query == null || total == null || total == 0) { return new GetTransactionResponse { Transactions = new List<Transaction>(), Total = (long)total, Pages = 0, Page = page, Size = size }; }
                 var data = query.OrderByDescending(a => a.CreationTime).Skip((page - 1) * size).Take(size).ToList();
-                var total = query.Count();
                 long pages = (long)Math.Ceiling(((double)total / (double)size));
-                return new GetTransactionResponse { Transactions = data, Total = total, Pages = pages, Page = page, Size = size };
+                return new GetTransactionResponse { Transactions = data, Total = (long)total, Pages = pages, Page = page, Size = size };
                 //return TransactionRepository.GetAll().Skip((page - 1) * size).Take(size);
             }
             catch (Exception ex)
