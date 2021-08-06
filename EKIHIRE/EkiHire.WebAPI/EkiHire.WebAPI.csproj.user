@@ -4,7 +4,7 @@
     <Controller_SelectedScaffolderID>MvcControllerEmptyScaffolder</Controller_SelectedScaffolderID>
     <Controller_SelectedScaffolderCategoryPath>root/Common/MVC/Controller</Controller_SelectedScaffolderCategoryPath>
     <ShowAllFiles>false</ShowAllFiles>
-    <NameOfLastUsedPublishProfile>C:\Users\damil\source\repos\EkiHire\EKIHIRE\EkiHire.WebAPI\Properties\PublishProfiles\Default Settings2.pubxml</NameOfLastUsedPublishProfile>
+    <NameOfLastUsedPublishProfile>C:\Users\damil\source\repos\EkiHire\EKIHIRE\EkiHire.WebAPI\Properties\PublishProfiles\Default Settings1.pubxml</NameOfLastUsedPublishProfile>
     <ActiveDebugProfile>IIS Express</ActiveDebugProfile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

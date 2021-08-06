@@ -151,6 +151,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("GetCategory/{id}")]
         [Route("GetCategory/{id}/{withOtherData:bool}")]
