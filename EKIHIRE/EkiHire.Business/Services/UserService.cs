@@ -140,8 +140,14 @@ namespace EkiHire.Business.Services
                 try
                 {
                     _unitOfWork.BeginTransaction();
+                    string fn = null;
+                    try { fn = model.FullName.Split(' ')[0]; } catch { }
+                    string ln = null;
+                    try { ln = model.FullName.Split(' ')[1]; } catch { }
                     user = new User
                     {
+                        FirstName = fn,
+                        LastName = ln,
                         UserName = model.UserName,
                         Email = model.UserName,
                         AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),
@@ -1070,8 +1076,14 @@ namespace EkiHire.Business.Services
 
                 //check for valid usertype, validate the adtype if premium whether user can put premium ad
                 #endregion
+                string fn = null;
+                try { fn = model.FullName.Split(' ')[0]; } catch { }
+                string ln = null;
+                try { ln = model.FullName.Split(' ')[1]; } catch { }
                 user = new User
                 {
+                    FirstName = fn,
+                    LastName = ln,
                     UserName = model.UserName,
                     Email = model.UserName,
                     AccountConfirmationCode = CommonHelper.GenerateRandonAlphaNumeric(),

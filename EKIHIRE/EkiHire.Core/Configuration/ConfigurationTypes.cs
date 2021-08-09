@@ -15,6 +15,7 @@ namespace EkiHire.Core.Configuration
         public string CLOUDINARY_API_KEY { get; set; }
         public string CLOUDINARY_API_SECRET { get; set; }
         public string CLOUDINARY_API_ENVIRONMENT_VARIABLE { get; set; }
+        public string DeclinedReason { get; set; }
     }
 
     //public class BookingConfig : ISettings

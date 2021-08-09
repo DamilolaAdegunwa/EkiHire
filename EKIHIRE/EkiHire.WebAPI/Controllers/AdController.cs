@@ -861,6 +861,30 @@ namespace EkiHire.WebAPI.Controllers
                 return response;
             });
         }
+
+        [HttpPost]
+        [Route("[action]/{adId}")]
+        public async Task<ServiceResponse<bool>> DeleteAd(long adId)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeleteAd(adId);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<ServiceResponse<List<string>>> DeclinedReason()
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<List<string>>();
+                var data = await adService.DeclinedReason();
+                response.Object = data;
+                return response;
+            });
+        }
         #region comments
         //[AllowAnonymous]
         //[HttpPost]

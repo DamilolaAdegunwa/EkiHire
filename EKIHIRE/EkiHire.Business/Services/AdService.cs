@@ -87,6 +87,8 @@ namespace EkiHire.Business.Services
         Task<GetReportsResponse> GetReportsByAdId(long adId, string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<ReportAdPayload> GetReportById(long id, string username, bool allowanonymous = false);
         Task<GetReportsResponse> GetReports(string username, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<bool> DeleteAd(long AdId);
+        Task<List<string>> DeclinedReason();
     }
     public class AdService: IAdService
     {
@@ -3091,6 +3093,67 @@ namespace EkiHire.Business.Services
                 var total = query.Count();
                 long pages = (long)Math.Ceiling(((double)total / (double)size));
                 return new GetReportsResponse { Reports = data, Total = total, Pages = pages, Page = page, Size = size };
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> DeleteAd(long adId)
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate
+                var loggedInUser = UserRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (loggedInUser == null)
+                {
+                    throw new Exception("unauthorized access!");
+                }
+                var ad = adRepository.FirstOrDefault(a => a.Id == adId && !a.IsDeleted);
+                if(ad == null)
+                {
+                    throw new Exception("the ad does not exist!");
+                }
+                #endregion
+
+                #region delete ad
+                _unitOfWork.BeginTransaction();
+                ad.DeleterUserId = loggedInUser.Id;
+                ad.DeletionTime = DateTime.Now;
+                ad.IsDeleted = true;
+                ad.LastModificationTime = DateTime.Now;
+                ad.LastModifierUserId = loggedInUser.Id;
+                adRepository.Update(ad);
+                _unitOfWork.Commit();
+                return true;
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<List<string>> DeclinedReason()
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate
+                var loggedInUser = UserRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if (loggedInUser == null)
+                {
+                    throw new Exception("unauthorized access!");
+                }
+                #endregion
+                List<string> result = new List<string>();
+                result = appConfig.DeclinedReason.Split(',').ToList();
+                return result;
             }
             catch (Exception ex)
             {
