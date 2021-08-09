@@ -573,12 +573,12 @@ namespace EkiHire.WebAPI.Controllers
         }
 
         [HttpPost]
-        [Route("DeletetUser/{Id}")]
-        public async Task<ServiceResponse<bool>> DeletetUserById(long Id)
+        [Route("[action]/{Id}")]
+        public async Task<ServiceResponse<bool>> DeleteUserById(long Id)
         {
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<bool>();
-                var data = await adService.DeletetUserById(Id, serviceHelper.GetCurrentUserEmail());
+                var data = await adService.DeleteUserById(Id, serviceHelper.GetCurrentUserEmail());
                 response.Object = data;
                 return response;
             });

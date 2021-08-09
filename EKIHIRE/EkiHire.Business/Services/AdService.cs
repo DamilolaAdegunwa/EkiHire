@@ -63,7 +63,7 @@ namespace EkiHire.Business.Services
         Task<Transaction> GetTransactionById(long Id, string username);
         Task<IEnumerable<User>> GetUsers(string username, int page = 1, int size = 25);
         Task<User> GetUserById(long Id, string username);
-        Task<bool> DeletetUserById(long Id, string username);
+        Task<bool> DeleteUserById(long Id, string username);
         Task<IEnumerable<SubscriptionPackage>> GetSubscriptionPackages(string username, int page = 1, int size = 25);
         Task<SubscriptionPackage> GetSubscriptionPackageById(long Id, string username);
         Task<bool> UpdateSubscriptionPackage(SubscriptionPackage model, string username);
@@ -2233,7 +2233,7 @@ namespace EkiHire.Business.Services
                 throw ex;
             }
         }
-        public async Task<bool> DeletetUserById(long Id, string username)
+        public async Task<bool> DeleteUserById(long Id, string username)
         {
             try
             {
