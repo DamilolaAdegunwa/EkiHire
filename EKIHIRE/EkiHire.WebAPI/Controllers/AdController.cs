@@ -190,12 +190,13 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
         [HttpPost]
+        [Route("ReviewsForAd")]
         [Route("ReviewsForAd/{adId}")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsForAd(long adId/*long[] adIds = null*/)
+        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsForAd(long? adId = null/*long[] adIds = null*/)
         {//working - no data
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<IEnumerable<AdFeedback>>();
-                var data = await adService.ReviewsForAd(adId, serviceHelper.GetCurrentUserEmail()/*, adIds*/);
+                var data = await adService.ReviewsForAd(adId/*, adIds*/);
                 response.Object = data;
                 return response;
             });

@@ -35,7 +35,7 @@ namespace EkiHire.Business.Services
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
         Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
-        Task<IEnumerable<AdFeedback>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/);
+        Task<IEnumerable<AdFeedback>> ReviewsForAd(long? AdId = null/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
         Task<bool> AddKeywords(List<string> keywords, long subid, string username);
@@ -1221,8 +1221,9 @@ namespace EkiHire.Business.Services
             }
         }
         
-        public async Task<IEnumerable<AdFeedback>> ReviewsForAd(long AdId, string username/*, long[] adIds = null*/)
+        public async Task<IEnumerable<AdFeedback>> ReviewsForAd(long? adId = null/*, long[] adIds = null*/)
         {
+            var username = _serviceHelper.GetCurrentUserEmail();
             try
             {
                 #region validation
@@ -1240,7 +1241,7 @@ namespace EkiHire.Business.Services
                 //        join ad in adRepository.GetAll() on af.AdId equals ad.Id
                 //        where ad.UserId == user.Id && af.IsDeleted == false
                 //        select af).ToList();
-                var result = adFeedbackRepository.GetAll()?.Where(r => r.AdId == AdId)?.ToList();
+                var result = adFeedbackRepository.GetAll()?.Where(r => r.AdId == adId || adId == null)?.ToList();
                 //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
                 ////&& (adIds.Contains(a.AdId) || adIds == null)
                 //).ToList();
