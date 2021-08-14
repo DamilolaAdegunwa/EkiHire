@@ -34,8 +34,8 @@ namespace EkiHire.Business.Services
         Task<bool> GroupAdItems(long[] ItemIds, string groupname, string username);
         Task<bool> AddAdToCart(long Id, string username);
         Task<bool> RemoveAdFromCart(long Id, string username);
-        Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
-        Task<IEnumerable<AdFeedback>> ReviewsForAd(long? AdId = null/*, long[] adIds = null*/);
+        Task<IEnumerable<ReviewResponse>> ReviewsGivenByUser(string username/*, long[] adIds = null*/);
+        Task<IEnumerable<ReviewResponse>> ReviewsForAd(long? AdId = null/*, long[] adIds = null*/);
         Task<IEnumerable<Follow>> GetFollowers(string username);
         Task<IEnumerable<Follow>> GetFollowing(string username);
         Task<bool> AddKeywords(List<string> keywords, long subid, string username);
@@ -89,6 +89,10 @@ namespace EkiHire.Business.Services
         Task<GetReportsResponse> GetReports(string username, bool allowanonymous = false, int page = 1, int size = 25);
         Task<bool> DeleteAd(long AdId);
         Task<List<string>> DeclinedReason();
+        Task<bool> SaveContactUsDetails(ContactUsRequest contactUsRequest);
+        Task<ContactUsResponseList> GetContactUs(string name = null, string email = null, string message = null, long? id = null, bool allowanonymous = false, int page = 1, int size = 25);
+        Task<ContactUsResponse> GetContactUsById(long id, bool allowanonymous = false);
+        Task<bool> DeleteContactUsDetail(long id);
     }
     public class AdService: IAdService
     {
@@ -1193,7 +1197,7 @@ namespace EkiHire.Business.Services
         }
         #region reviews
         
-        public async Task<IEnumerable<AdFeedback>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
+        public async Task<IEnumerable<ReviewResponse>> ReviewsGivenByUser(string username/*, long[] adIds = null*/)
         {
             try
             {
@@ -1208,10 +1212,19 @@ namespace EkiHire.Business.Services
                     throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
                 }
                 #endregion
-                var result = new List<AdFeedback>();
+                var result = new List<ReviewResponse>();
                 result = await adFeedbackRepository.GetAll()?.Where(a => a.UserId == user.Id && a.IsDeleted == false
                 //&& (adIds.Contains(a.AdId) || adIds == null)
-                )?.ToListAsync();
+                )?.Select(a => new ReviewResponse { 
+                    AdId= a.Id,
+                    ImagePath = user.ImagePath,
+                    Like = a.Like,
+                    Name = $"{user.FirstName} {user.LastName}",
+                    Rating = a.Rating,
+                    Review = a.Review,
+                    UserId = a.UserId,
+                    
+                }).ToListAsync();
                 return result;
             }
             catch (Exception ex)
@@ -1221,7 +1234,7 @@ namespace EkiHire.Business.Services
             }
         }
         
-        public async Task<IEnumerable<AdFeedback>> ReviewsForAd(long? adId = null/*, long[] adIds = null*/)
+        public async Task<IEnumerable<ReviewResponse>> ReviewsForAd(long? adId = null/*, long[] adIds = null*/)
         {
             var username = _serviceHelper.GetCurrentUserEmail();
             try
@@ -1241,7 +1254,17 @@ namespace EkiHire.Business.Services
                 //        join ad in adRepository.GetAll() on af.AdId equals ad.Id
                 //        where ad.UserId == user.Id && af.IsDeleted == false
                 //        select af).ToList();
-                var result = adFeedbackRepository.GetAll()?.Where(r => r.AdId == adId || adId == null)?.ToList();
+                var result = adFeedbackRepository.GetAllIncluding(a => a.User)?.Where(r => r.AdId == adId || adId == null)?.Select(a => new ReviewResponse
+                {
+                    AdId = a.Id,
+                    ImagePath = a.User.ImagePath,//user.ImagePath,
+                    Like = a.Like,
+                    Name = $"{user.FirstName} {user.LastName}",
+                    Rating = a.Rating,
+                    Review = a.Review,
+                    UserId = a.UserId,
+
+                }).ToList();
                 //var result = adFeedbackRepository.GetAll().AsEnumerable().Where(a => getUserFromAd(a.AdId) == user.Id
                 ////&& (adIds.Contains(a.AdId) || adIds == null)
                 //).ToList();
@@ -3021,6 +3044,7 @@ namespace EkiHire.Business.Services
                                 AdId = r.AdId,
                                 Title = r.Title,
                                 Body = r.Body,
+                                ReporterId = r.CreatorUserId,
                                 When = r.CreationTime
                             }).DistinctBy(a => a.Id);
                 var data = query.OrderByDescending(a => a.When).Skip((page - 1) * size).Take(size).ToList();
@@ -3058,6 +3082,7 @@ namespace EkiHire.Business.Services
                     Id = report.Id,
                     Body = report.Body,
                     Title = report.Title,
+                    ReporterId = report.CreatorUserId,
                     When = report.CreationTime,
                 };
             }
@@ -3088,6 +3113,7 @@ namespace EkiHire.Business.Services
                                  AdId = r.AdId,
                                  Title = r.Title,
                                  Body = r.Body,
+                                 ReporterId = r.CreatorUserId,
                                  When = r.CreationTime
                              }).DistinctBy(a => a.Id);
                 var data = query.OrderByDescending(a => a.When).Skip((page - 1) * size).Take(size).ToList();
@@ -3155,6 +3181,176 @@ namespace EkiHire.Business.Services
                 List<string> result = new List<string>();
                 result = appConfig.DeclinedReason.Split(',').ToList();
                 return result;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<bool> SaveContactUsDetails(ContactUsRequest contactUsRequest)
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate
+                var loggedInUser = UserRepository.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(contactUsRequest == null || string.IsNullOrWhiteSpace(contactUsRequest.Name) || string.IsNullOrWhiteSpace(contactUsRequest.Email) || string.IsNullOrWhiteSpace(contactUsRequest.Message))
+                {
+                    throw new Exception("Invalid data given");
+                }
+                #endregion
+
+                #region save contact details
+                ContactUs data = new ContactUs
+                {
+                    Name = contactUsRequest.Name,
+                    Email = contactUsRequest.Email,
+                    Message = contactUsRequest.Message,
+                    //basic properties
+                    CreationTime = DateTime.Now,
+                    CreatorUserId = loggedInUser?.Id,
+                    IsDeleted = false,
+                    LastModificationTime = DateTime.Now,
+                    LastModifierUserId = loggedInUser?.Id,
+                    DeleterUserId = null,
+                    DeletionTime = null,
+                   Id = 0,
+                };
+                _ = _applicationDbContext.ContactUs.Add(data);
+                _ = _applicationDbContext.SaveChanges();
+
+                //send email
+                try
+                {
+                    _ = Task.Run(() => {
+                        var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.ContactEmail);
+                        if (File.Exists(filePath))
+                        {
+                            var fileString = File.ReadAllText(filePath);
+                            if (!string.IsNullOrWhiteSpace(fileString))
+                            {
+                                fileString = fileString.Replace("{{Name}}", $"{contactUsRequest.Name}");
+                                fileString = fileString.Replace("{{Message}}", $"{contactUsRequest.Message}");
+
+                                _serviceHelper.SendEMail(appConfig.AppEmail, fileString, $"EkiHire.com: Message from {contactUsRequest.Name}");
+                                _serviceHelper.SendEMail("damee1993@gmail.com", fileString, $"EkiHire.com: Message from {contactUsRequest.Name}");
+                            }
+                        }
+                    });
+                    
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"{ex.Message} (error sending email to ekihire contact email) :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                }
+                
+                #endregion
+                return true;
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<ContactUsResponseList> GetContactUs(string name = null, string email = null, string message = null, long? id = null, bool allowanonymous = false, int page = 1, int size = 25)
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate
+                var loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username && !a.IsDeleted);
+                if(!allowanonymous)
+                {
+                    if(loggedInUser == null)
+                    {
+                        throw new Exception("unauthorized access!");
+                    }
+                }
+                #endregion
+
+                #region return contact us details
+                var query = _applicationDbContext.ContactUs.Where(a => !a.IsDeleted 
+                && (a.Email == email || string.IsNullOrWhiteSpace(email)) 
+                && (a.Name.Contains(name) || string.IsNullOrWhiteSpace(name)) 
+                && (a.Message.Contains(message) || string.IsNullOrWhiteSpace(message))
+                && (a.Id == id || id == null || id < 1)
+                );
+                var data = await query.Skip((page - 1)*size).Take(size).Select(a => new ContactUsResponse { 
+                    Email = a.Email,
+                    Id = a.Id,
+                    Message= a.Message,
+                    Name= a.Name,
+                    When = a.CreationTime,
+
+                }).ToListAsync();
+                var total = query.Count();
+                long pages = (long)Math.Ceiling(((double)total / (double)size));
+                return new ContactUsResponseList
+                {
+                    ContactUsDetails = data,
+                    Page = page,
+                    Pages= pages,
+                    Size = size,
+                    Total= total
+                };
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+
+        public async Task<ContactUsResponse> GetContactUsById(long id,bool allowanonymous = false)
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                return (await GetContactUs(id: id,size:1,allowanonymous: allowanonymous)).ContactUsDetails.FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                log.Error($"{ex.Message} :: username {username} :: {MethodBase.GetCurrentMethod().Name} :: {ex.StackTrace} ");
+                //return false;
+                throw ex;
+            }
+        }
+        public async Task<bool> DeleteContactUsDetail(long id)
+        {
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate
+                var loggedInUser = _userRepo.FirstOrDefault(a => a.UserName == username);
+                if(loggedInUser == null)
+                {
+                    throw new Exception("unauthorized access");
+                }
+                if(loggedInUser.UserType == UserType.Customer)
+                {
+                    throw new Exception("Sorry, you are not authorized to take this action");
+                }
+                var contactUs = _applicationDbContext.ContactUs.FirstOrDefault(a => a.Id == id && !a.IsDeleted);
+                if(contactUs == null)
+                {
+                    throw new Exception("could not find this entity (invalid id)");
+                }
+                #endregion
+                contactUs.IsDeleted = true;
+                contactUs.DeleterUserId = loggedInUser.Id;
+                contactUs.DeletionTime = DateTime.Now;
+                contactUs.LastModifierUserId = loggedInUser.Id;
+                contactUs.LastModificationTime = DateTime.Now;
+                _applicationDbContext.ContactUs.Update(contactUs);
+                _applicationDbContext.SaveChanges();
+                return true;
             }
             catch (Exception ex)
             {

@@ -12,6 +12,7 @@ namespace EkiHire.Core.Model
 
         public long AdId { get; set; }
         public long Id { get; set; }
+        public long? ReporterId { get; set; }
         public DateTimeOffset When { get; set; }
     }
 

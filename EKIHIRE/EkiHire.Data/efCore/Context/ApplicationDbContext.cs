@@ -44,6 +44,7 @@ namespace EkiHire.Data.efCore.Context
         public DbSet<Message> Messages { get; set; }
         public DbSet<Notification> Notification { get; set; }
         public DbSet<Report> Report{ get; set; }
+        public DbSet<ContactUs> ContactUs { get; set; }
         #region commented dbset
         //public DbSet<RealEstate> RealEstate { get; set; }
         //public DbSet<Employee> Employees { get; set; }

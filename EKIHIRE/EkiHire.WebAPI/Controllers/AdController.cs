@@ -179,11 +179,11 @@ namespace EkiHire.WebAPI.Controllers
         //review
         [HttpPost]
         [Route("ReviewsGivenByUser")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsGivenByUser(string username = null/*long[] adIds = null*/)
+        public async Task<IServiceResponse<IEnumerable<ReviewResponse>>> ReviewsGivenByUser(string username = null/*long[] adIds = null*/)
         {//working - no data
             var urn = username ?? serviceHelper.GetCurrentUserEmail();
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
+                var response = new ServiceResponse<IEnumerable<ReviewResponse>>();
                 var data = await adService.ReviewsGivenByUser(urn/*, adIds*/);
                 response.Object = data;
                 return response;
@@ -192,10 +192,10 @@ namespace EkiHire.WebAPI.Controllers
         [HttpPost]
         [Route("ReviewsForAd")]
         [Route("ReviewsForAd/{adId}")]
-        public async Task<IServiceResponse<IEnumerable<AdFeedback>>> ReviewsForAd(long? adId = null/*long[] adIds = null*/)
+        public async Task<IServiceResponse<IEnumerable<ReviewResponse>>> ReviewsForAd(long? adId = null/*long[] adIds = null*/)
         {//working - no data
             return await HandleApiOperationAsync(async () => {
-                var response = new ServiceResponse<IEnumerable<AdFeedback>>();
+                var response = new ServiceResponse<IEnumerable<ReviewResponse>>();
                 var data = await adService.ReviewsForAd(adId/*, adIds*/);
                 response.Object = data;
                 return response;
@@ -882,6 +882,56 @@ namespace EkiHire.WebAPI.Controllers
             return await HandleApiOperationAsync(async () => {
                 var response = new ServiceResponse<List<string>>();
                 var data = await adService.DeclinedReason();
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ServiceResponse<bool>> SaveContactUsDetails(ContactUsRequest contactUsRequest)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.SaveContactUsDetails( contactUsRequest);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ServiceResponse<ContactUsResponseList>> GetContactUs(string? name = null, string? email = null, string? message = null, long? id = null, int page = 1, int size = 25)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<ContactUsResponseList>();
+                var data = await adService.GetContactUs(name, email , message, id, allowanonymous , page, size);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]/{id}")]
+        public async Task<ServiceResponse<ContactUsResponse>> GetContactUsById(long id)
+        {
+            var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<ContactUsResponse>();
+                var data = await adService.GetContactUsById(id, allowanonymous);
+                response.Object = data;
+                return response;
+            });
+        }
+
+        [HttpPost]
+        [Route("[action]/{id}")]
+        public async Task<ServiceResponse<bool>> DeleteContactUsDetail(long id)
+        {
+            return await HandleApiOperationAsync(async () => {
+                var response = new ServiceResponse<bool>();
+                var data = await adService.DeleteContactUsDetail(id);
                 response.Object = data;
                 return response;
             });
