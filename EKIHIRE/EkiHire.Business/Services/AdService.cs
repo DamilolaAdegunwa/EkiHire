@@ -27,7 +27,7 @@ namespace EkiHire.Business.Services
     {
         Task<long?> AddAd(AddAdRequest model, /*IFormFileCollection images,*/ string username);
         Task<bool> CloseAd(long model, string username);
-        Task<bool> EditAd(Ad adDto, long model, string username);
+        Task<bool> EditAd(Ad adDto/*, long model, string username*/);
         Task<bool> PromoteAd(long model, string username);
         Task<bool> CreateItem(Item model, string username);
         Task<bool> EditItemKeywords(List<string> keywords, long ItemId, string username);
@@ -824,8 +824,150 @@ namespace EkiHire.Business.Services
                 return false;
             }
         }
+        public async Task<bool> EditAd(Ad adDto)
+        {
+            int retry = 0; int retries = 2;
+            retry:
+            var username = _serviceHelper.GetCurrentUserEmail();
+            try
+            {
+                #region validate the data given
+                if (string.IsNullOrWhiteSpace(username))
+                {
+                    retry = retries;//don't retry
+                    throw await _serviceHelper.GetExceptionAsync("Please input a username!");
+                }
+                
+                var loggedInUser = await _userSvc.FindFirstAsync(x => x.UserName == username && x.IsDeleted == false);
+                if (loggedInUser == null)
+                {
+                    retry = retries;//don't retry
+                    throw await _serviceHelper.GetExceptionAsync("Unauthorized access! Please login");
+                }
+                //check that the model carries data
+                if (adDto == null)
+                {
+                    retry = retries;//don't retry
+                    throw await _serviceHelper.GetExceptionAsync("no input provided!");
+                }
+                var ad = adRepository.FirstOrDefault(x => x.Id == adDto.Id && x.IsDeleted == false);
+                if (ad == null)
+                {
+                    retry = retries;//don't retry
+                    throw await _serviceHelper.GetExceptionAsync("could not find ad! please try refreshing");
+                }
+                //check that it is the owner of the ad that is editing it
+                if (loggedInUser.Id != adDto.UserId && loggedInUser.UserType != UserType.Administrator && loggedInUser.UserType != UserType.SuperAdministrator)
+                {
+                    retry = retries;//don't retry
+                    throw await _serviceHelper.GetExceptionAsync("you are not authorized to edit this ad!");
+                }
+                #endregion
 
-        public async Task<bool> EditAd(Ad adDto, long adid, string username)
+                #region update the ad
+                _unitOfWork.BeginTransaction();
+                //
+                //adDto.AdReference = ad.AdReference;
+                //adDto.SubcategoryId = ad.SubcategoryId;
+                //adDto.UserId = ad.UserId;
+
+                ////basic properties
+                //adDto.CreationTime = ad.CreationTime;
+                //adDto.CreatorUserId = ad.CreatorUserId;
+                //adDto.IsDeleted = ad.IsDeleted;
+                //adDto.LastModificationTime = DateTime.Now;
+                //adDto.LastModifierUserId = loggedInUser.Id;
+                //adDto.DeleterUserId = ad.DeleterUserId;
+                //adDto.DeletionTime = ad.DeletionTime;
+                //adDto.Id = ad.Id;
+                //adRepository.Update(adDto);
+                //
+                ad.Name = adDto.Name;
+                ad.Address = adDto.Address;
+                ad.Amount = adDto.Amount;
+                ad.AdClass = adDto.AdClass;
+                ad.PhoneNumber = adDto.PhoneNumber;
+                ad.Location = adDto.Location;
+                ad.Description = adDto.Description;
+                ad.VideoPath = adDto.VideoPath;
+                ad.Keywords = adDto.Keywords;
+                ad.IsActive = adDto.IsActive;
+                ad.AdsStatus = adDto.AdsStatus;
+                ad.Negotiable = adDto.Negotiable;
+                ad.ContactForPrice = adDto.ContactForPrice;
+
+                ad.LastModificationTime = DateTime.Now;
+                ad.LastModifierUserId = loggedInUser.Id;
+                adRepository.Update(ad);
+                //images
+                //delete all images
+                var imgs = _AdImageRepo.GetAll().Where(i => i.AdId == adDto.Id && !i.IsDeleted).ToList();
+                foreach(var i in imgs)
+                {
+                    i.IsDeleted = true;
+                    i.DeleterUserId = loggedInUser.Id;
+                    i.DeletionTime = DateTime.Now;
+                    _AdImageRepo.Update(i);
+                }
+                foreach(var i in adDto.AdImages)
+                {
+                    i.AdId = adDto.Id;
+
+                    //basic properties
+                    i.CreationTime = DateTime.Now;
+                    i.CreatorUserId = loggedInUser.Id;
+                    i.IsDeleted = false;
+                    i.LastModificationTime = DateTime.Now;
+                    i.LastModifierUserId = loggedInUser.Id;
+                    i.DeleterUserId = null;
+                    i.DeletionTime = null;
+                    i.Id = 0;
+                    _AdImageRepo.Insert(i);
+                }
+
+                //property value
+                //delete all property value
+                var apv = _adPropertyValueRepo.GetAll().Where(v => v.AdId == adDto.Id).ToList();
+                foreach(var v in apv)
+                {
+                    v.IsDeleted = true;
+                    v.DeleterUserId = loggedInUser.Id;
+                    v.DeletionTime = DateTime.Now;
+                    _adPropertyValueRepo.Update(v);
+                }
+                foreach(var v in adDto.AdPropertyValue)
+                {
+                    v.AdId = adDto.Id;
+
+                    //basic properties
+                    v.CreationTime = DateTime.Now;
+                    v.CreatorUserId = loggedInUser.Id;
+                    v.IsDeleted = false;
+                    v.LastModificationTime = DateTime.Now;
+                    v.LastModifierUserId = loggedInUser.Id;
+                    v.DeleterUserId = null;
+                    v.DeletionTime = null;
+                    v.Id = 0;
+                    _adPropertyValueRepo.Insert(v);
+                }
+                _unitOfWork.Commit();
+                #endregion
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _unitOfWork.Rollback();
+                log.Error($"error while editing ad for user ({username}) :: stackTrace => {ex.StackTrace}", ex);
+                if (retry < retries)
+                {
+                    retry++;
+                    goto retry;
+                }
+                //return false;
+                throw;
+            }
+        }
+        public async Task<bool> EditAd1(Ad adDto, long adid, string username)
         {
             try
             {

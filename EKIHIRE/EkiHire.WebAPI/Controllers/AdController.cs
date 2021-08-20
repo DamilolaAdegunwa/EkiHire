@@ -49,12 +49,12 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
-        [HttpPost, Route("EditAd/{adId}")]
-        public async Task<IServiceResponse<bool>> EditAd(Ad dto, long adId)
+        [HttpPost, Route("EditAd")]
+        public async Task<IServiceResponse<bool>> EditAd(Ad dto)
         {//working
             return await HandleApiOperationAsync(async () =>
             {
-                bool result = await adService.EditAd(dto, adId, serviceHelper.GetCurrentUserEmail());
+                bool result = await adService.EditAd(dto);
                 var response = new ServiceResponse<bool>(result);
                 return response;
             });
