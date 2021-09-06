@@ -46,8 +46,4 @@
     <ProjectReference Include="..\EkiHire.Data\EkiHire.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\" />
-  </ItemGroup>
-
 </Project>

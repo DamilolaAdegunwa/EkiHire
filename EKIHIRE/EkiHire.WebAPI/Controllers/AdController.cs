@@ -138,6 +138,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("GetCategories")]
         [Route("GetCategories/{withOtherData:bool}")]
@@ -165,6 +166,7 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [Route("GetSubcategoriesByCategoryId/{categoryId}")]
         public async Task<IServiceResponse<IEnumerable<Subcategory>>> GetSubcategoriesByCategoryId(long categoryId)
@@ -463,10 +465,10 @@ namespace EkiHire.WebAPI.Controllers
             });
         }
 
+        [AllowAnonymous]
         [HttpPost]
         [Route("TopAvailable")]
         [Route("TopAvailable/{count}")]
-        [AllowAnonymous]
         public async Task<ServiceResponse<IEnumerable<Ad>>> TopAvailable(int count = 8)
         {
             var allowanonymous = string.IsNullOrWhiteSpace(serviceHelper.GetCurrentUserEmail()) || serviceHelper.GetCurrentUserEmail() == "Anonymous" ? true : false;
