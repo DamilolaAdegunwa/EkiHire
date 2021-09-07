@@ -15,4 +15,16 @@ https://nigeriastateandlocalgovtarea.herokuapp.com/lgalists
 
 git push upstream main -f https://github.com/Ekihire/Asp.net
 
+git remote add origin -f https://github.com/Ekihire/Asp.net
+
+git remote remove upstream
+
+git push upstream main -f https://github.com/Ekihire/Asp.net
+
+git push upstream main -f 
+
+git push upstream main
+
+git push -u upstream main
+
 done
