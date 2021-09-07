@@ -14,3 +14,5 @@ ranking = (numberOfReviews * ReviewsWeight + numberOfLikes * likesWeight + numbe
 https://nigeriastateandlocalgovtarea.herokuapp.com/lgalists
 
 git push upstream main -f https://github.com/Ekihire/Asp.net
+
+done
