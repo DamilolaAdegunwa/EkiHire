@@ -39,6 +39,7 @@ namespace EkiHire.Core.Utils
             public const string AdminHireBookingEmail = "wwwroot/messaging/emailtemplates/hirebooking-admin.html";
             public const string CustomerHireBookingEmail = "wwwroot/messaging/emailtemplates/hirebooking.html";
             public const string ContactEmail = "wwwroot/messaging/emailtemplates/contact-us-email.html";
+            public const string AdReactionEmail = "wwwroot/messaging/emailtemplates/ad-reaction-email.html";
         }
 
         public class AdOptions

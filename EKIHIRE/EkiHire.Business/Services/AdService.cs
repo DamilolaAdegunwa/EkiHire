@@ -1471,8 +1471,18 @@ namespace EkiHire.Business.Services
                 data.Id = 0;
                 var feedback = adFeedbackRepository.FirstOrDefault(f => f.UserId == loggedInUser.Id && f.AdId == model.AdId);
                 _unitOfWork.BeginTransaction();
+
+                //review, like, rating
+                var review = "";
+                var like = "";
+                var rating = "";
+                //
+
                 if(feedback == null)
                 {
+                    review = data.Review;
+                    like = data.Like.GetValueOrDefault() == false ? "No" : "Yes";
+                    rating = data.Rating == null ? "" : data.Rating.ToString();
                     adFeedbackRepository.Insert(data);
                 }
                 else
@@ -1489,10 +1499,38 @@ namespace EkiHire.Business.Services
                     {
                         feedback.Rating = data.Rating;
                     }
+                    review = feedback.Review;
+                    like = feedback.Like.GetValueOrDefault() == false ? "No" : "Yes";
+                    rating = feedback.Rating == null ? "" : feedback.Rating.ToString();
                     adFeedbackRepository.Update(feedback);
                 }
                 _unitOfWork.Commit();
+                //send mail
+                try
+                {
+                    var adOwner = _userRepo.FirstOrDefault(a => a.Id == ad.UserId);
+                    var to = adOwner?.UserName;
+                    var filePath = Path.Combine(_hostingEnvironment.ContentRootPath, CoreConstants.Url.AdReactionEmail);
+                    if (File.Exists(filePath))
+                    {
+                        var fileString = File.ReadAllText(filePath);
+                        if (!string.IsNullOrWhiteSpace(fileString))
+                        {
+                            fileString = fileString.Replace("{{Someone}}", $"{loggedInUser.FirstName ?? loggedInUser.UserName}");
+                            fileString = fileString.Replace("{{Review}}", $"{review}");
+                            fileString = fileString.Replace("{{Like}}", $"{like}");
+                            fileString = fileString.Replace("{{Rating}}", $"{rating}");
 
+                            //_serviceHelper.SendEMail(to, fileString, $"{loggedInUser.FirstName ?? loggedInUser.UserName} reacted to your ad!");
+                            _serviceHelper.SendEMail("damee1993@gmail.com", fileString, $"{loggedInUser.FirstName ?? loggedInUser.UserName} reacted to your ad!");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    log.Error("error occured while trying to send the reaction email!");
+                }
+                //
                 return true;
             }
             catch (Exception ex)
