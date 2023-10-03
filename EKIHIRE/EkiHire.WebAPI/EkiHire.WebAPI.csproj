@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <Nullable>annotations</Nullable>
     <UserSecretsId>088167e7-c40a-407f-8448-8ec78ff5d87e</UserSecretsId>
 	<AllowUntrustedCertificate>true</AllowUntrustedCertificate>
+	  <LangVersion>11</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
