@@ -154,3 +154,6 @@
 /EKIHIRE/EkiHire.WebAPI/bin/Release/net5.0/System.Net.WebSockets.WebSocketProtocol.dll
 /EKIHIRE/EkiHire.WebAPI/bin/Release/net5.0/System.Runtime.Caching.dll
 /EKIHIRE/EkiHire.WebAPI/bin/Release/net5.0/System.Security.Cryptography.ProtectedData.dll
+/EKIHIRE/EkiHire.Business/bin/Debug/netstandard2.1/EkiHire.Business.deps.json
+/EKIHIRE/EkiHire.Core/bin/Debug/netstandard2.1/EkiHire.Core.deps.json
+/EKIHIRE/EkiHire.Data/bin/Debug/netstandard2.1/EkiHire.Data.deps.json
